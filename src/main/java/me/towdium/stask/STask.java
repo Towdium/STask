@@ -15,9 +15,12 @@ public class STask {
         Window.run(new IWidget() {
             @Override
             public void onDraw() {
-                Painter.drawString("一段\n测试\n文本", 220, Painter.fontAscent);
+                Painter.drawText("一段\n测试\n文本", 330, Painter.fontAscent);
                 Painter.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
                 Painter.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
+                Painter.clipSet(220, 0, 100, 100);
+                Painter.drawTexture("pic.png", 220, 0, 120, 120, 305, 0, 10, 10, 2);
+                Painter.clipRemove();
             }
         }, () -> {
         });

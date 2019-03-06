@@ -17,6 +17,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 @NotNull
 public class Window {
     static long id;
+    public static int windowHeight, windowWidth;
 
     public static void run(IWidget root, Runnable update) {
         try {
@@ -55,19 +56,19 @@ public class Window {
         GLFWVidMode vm = glfwGetVideoMode(glfwGetPrimaryMonitor());
         if (vm == null) throw new IllegalStateException("No display found");
 
-        int w = vm.width() / 2;
-        int h = vm.height() / 2;
+        windowWidth = vm.width() / 2;
+        windowHeight = vm.height() / 2;
 
-        id = glfwCreateWindow(w, h, "STask", NULL, NULL);
+        id = glfwCreateWindow(windowWidth, windowHeight, "STask", NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
 
         glfwMakeContextCurrent(id);
-        glfwSetWindowPos(id, (vm.width() - w) / 2, (vm.height() - h) / 2);
+        glfwSetWindowPos(id, (vm.width() - windowWidth) / 2, (vm.height() - windowHeight) / 2);
         GL.createCapabilities();
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0.0, w, h, 0.0, -1.0, 1.0);
+        glOrtho(0.0, windowWidth, windowHeight, 0.0, -1.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
