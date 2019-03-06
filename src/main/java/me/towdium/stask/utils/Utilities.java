@@ -1,5 +1,6 @@
 package me.towdium.stask.utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
  * Author: Towdium
  * Date: 04/03/19
  */
+@NotNull
 public class Utilities {
     @Nullable
     public static ByteBuffer read(String resource) {

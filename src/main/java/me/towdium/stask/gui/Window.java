@@ -1,5 +1,6 @@
-package me.towdium.stask.render;
+package me.towdium.stask.gui;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
@@ -13,15 +14,18 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * Author: Towdium
  * Date: 04/03/19
  */
-public abstract class Window {
-    long id;
+@NotNull
+public class Window {
+    static long id;
 
-    public void run() {
+    public static void run(IWidget root, Runnable update) {
         try {
             init();
             while (!glfwWindowShouldClose(id)) {
                 glfwPollEvents();
-                loop();
+                glClear(GL_COLOR_BUFFER_BIT);
+                update.run();
+                root.onDraw();
                 glfwSwapBuffers(id);
             }
         } finally {
@@ -33,7 +37,7 @@ public abstract class Window {
         }
     }
 
-    void destroy() {
+    static void destroy() {
         GL.setCapabilities(null);
         glfwFreeCallbacks(id);
         glfwDestroyWindow(id);
@@ -42,7 +46,7 @@ public abstract class Window {
         if (ec != null) ec.free();
     }
 
-    void init() {
+    static void init() {
         GLFWErrorCallback.createPrint().set();
         if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
         glfwDefaultWindowHints();
@@ -54,12 +58,11 @@ public abstract class Window {
         int w = vm.width() / 2;
         int h = vm.height() / 2;
 
-        this.id = glfwCreateWindow(w, h, "STB HelloWorld Demo", NULL, NULL);
+        id = glfwCreateWindow(w, h, "STask", NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
 
         glfwMakeContextCurrent(id);
         glfwSetWindowPos(id, (vm.width() - w) / 2, (vm.height() - h) / 2);
-        // glfwSetWindowRefreshCallback(window, window -> render());
         GL.createCapabilities();
 
         glMatrixMode(GL_PROJECTION);
@@ -74,6 +77,4 @@ public abstract class Window {
         glfwSwapInterval(1);
         glfwShowWindow(id);
     }
-
-    public abstract void loop();
 }
