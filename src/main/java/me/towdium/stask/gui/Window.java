@@ -8,7 +8,6 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL30;
 
-import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
@@ -57,7 +56,6 @@ public class Window {
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
         GLFWVidMode vm = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
         if (vm == null) throw new IllegalStateException("No display found");
-
         windowWidth = vm.width() / 2;
         windowHeight = vm.height() / 2;
 
@@ -68,7 +66,14 @@ public class Window {
         GLFW.glfwSetWindowPos(id, (vm.width() - windowWidth) / 2, (vm.height() - windowHeight) / 2);
         GL.createCapabilities();
 
-        GL30.glEnable(GL_MULTISAMPLE);
+        GL30.glEnable(GL30.GL_MULTISAMPLE);
+        GL30.glEnable(GL30.GL_CLIP_PLANE0);
+        GL30.glEnable(GL30.GL_CLIP_PLANE1);
+        GL30.glEnable(GL30.GL_CLIP_PLANE2);
+        GL30.glEnable(GL30.GL_CLIP_PLANE3);
+        GL30.glEnable(GL30.GL_CLIP_PLANE4);
+        GL30.glEnable(GL30.GL_CLIP_PLANE5);
+
         GL30.glEnable(GL30.GL_TEXTURE_2D);
         GL30.glEnable(GL30.GL_BLEND);
         GL30.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
