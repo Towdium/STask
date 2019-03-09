@@ -11,7 +11,10 @@ import org.jetbrains.annotations.NotNull;
  */
 @NotNull
 public class STask {
+    static int shader;
+
     public static void main(String[] args) {
+
         Window.run(new IWidget() {
             @Override
             public void onDraw() {

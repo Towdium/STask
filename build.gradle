@@ -1,6 +1,7 @@
 apply plugin: "java"
 
 project.ext.lwjglVersion = "3.2.1"
+project.ext.jomlVersion = "1.9.13"
 
 repositories {
     mavenCentral()
@@ -28,6 +29,7 @@ dependencies {
     compile "org.lwjgl:lwjgl-stb:${lwjglVersion}:natives-macos"
     compile "org.lwjgl:lwjgl-glfw:${lwjglVersion}:natives-macos"
     compile "org.lwjgl:lwjgl-opengl:${lwjglVersion}:natives-macos"
+    compile "org.joml:joml:${jomlVersion}"
     compile 'org.jetbrains:annotations:17.0.0'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.4.0'
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.4.0'

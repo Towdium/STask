@@ -6,6 +6,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import static org.lwjgl.BufferUtils.createByteBuffer;
 
@@ -16,16 +18,29 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
 @NotNull
 public class Utilities {
     @Nullable
-    public static ByteBuffer read(String resource) {
-        try {
-            InputStream is = Utilities.class.getResourceAsStream(resource);
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static ByteBuffer readBytes(String resource) {
+        try (InputStream is = Utilities.class.getResourceAsStream(resource)) {
+            Objects.requireNonNull(is, "Resource not found: " + resource);
             byte[] buffer = new byte[is.available()];
-            //noinspection ResultOfMethodCallIgnored
             is.read(buffer);
             ByteBuffer ret = createByteBuffer(buffer.length);
             ret.put(buffer);
             ret.flip();
             return ret;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static String readString(String resource) {
+        try (InputStream is = Utilities.class.getResourceAsStream(resource)) {
+            Objects.requireNonNull(is, "Resource not found: " + resource);
+            byte[] buffer = new byte[is.available()];
+            is.read(buffer);
+            return new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException e) {
             return null;
         }
