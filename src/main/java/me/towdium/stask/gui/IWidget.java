@@ -1,6 +1,7 @@
 package me.towdium.stask.gui;
 
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector2i;
 
 import java.util.List;
 
@@ -10,14 +11,13 @@ import java.util.List;
  */
 @NotNull
 public interface IWidget {
-    default void onDraw() {
+    static boolean inside(Vector2i mouse, int xs, int ys) {
+        return mouse.x >= 0 && mouse.y >= 0 && mouse.x < xs && mouse.y < ys;
     }
 
-    default boolean onTooltip(List<String> tooltip) {
-        return false;
-    }
+    void onDraw(Vector2i mouse);
 
-    default boolean onClicked(int button) {
+    default boolean onTooltip(Vector2i mouse, List<String> tooltip) {
         return false;
     }
 
@@ -25,7 +25,11 @@ public interface IWidget {
         return false;
     }
 
-    default boolean onScroll(int diff) {
+    default boolean onMouse(Vector2i mouse, int button, boolean state) {
+        return false;
+    }
+
+    default boolean onScroll(Vector2i mouse, int diff) {
         return false;
     }
 

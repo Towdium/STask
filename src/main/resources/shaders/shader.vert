@@ -7,7 +7,6 @@ uniform vec4 clip[6];
 in vec2 pos;
 in vec2 tex;
 out vec2 tex_;
-out vec4 debug_;
 
 void main() {
     vec4 space = mat * vec4(pos, 0, 1);

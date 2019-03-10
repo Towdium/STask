@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
@@ -39,7 +39,7 @@ public class Painter {
     static Stack<Quad> masks = new Stack<>();
     static Stack<Integer> colors = new Stack<>();
     static int shaderMModel;
-    static int shaderAlpha;
+    static int shaderIMode;
     static int shaderVColor;
     static int shaderMProj;
     static int shaderVClip;
@@ -65,38 +65,40 @@ public class Painter {
 
         // initialize shader
         IntBuffer ib = BufferUtils.createIntBuffer(1);
-        int vert = GL30.glCreateShader(GL30.GL_VERTEX_SHADER);
-        GL30.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
-        GL30.glCompileShader(vert);
-        GL30.glGetShaderiv(vert, GL30.GL_COMPILE_STATUS, ib);
-        if (ib.get(0) == 0) System.out.println(GL30.glGetShaderInfoLog(vert));
-        int frag = GL30.glCreateShader(GL30.GL_FRAGMENT_SHADER);
-        GL30.glShaderSource(frag, Utilities.readString("/shaders/shader.frag"));
-        GL30.glCompileShader(frag);
-        GL30.glGetShaderiv(frag, GL30.GL_COMPILE_STATUS, ib);
-        if (ib.get(0) == 0) System.out.println(GL30.glGetShaderInfoLog(frag));
-        shader = GL30.glCreateProgram();
-        GL30.glAttachShader(shader, vert);
-        GL30.glAttachShader(shader, frag);
-        GL30.glLinkProgram(shader);
-        GL30.glDeleteShader(vert);
-        GL30.glDeleteShader(frag);
-        GL30.glUseProgram(shader);
-        shaderMModel = GL30.glGetUniformLocation(shader, "mat");
-        shaderVColor = GL30.glGetUniformLocation(shader, "color");
-        shaderAlpha = GL30.glGetUniformLocation(shader, "alpha");
-        shaderMProj = GL30.glGetUniformLocation(shader, "proj");
-        shaderVClip = GL30.glGetUniformLocation(shader, "clip");
+        int vert = GL30C.glCreateShader(GL30C.GL_VERTEX_SHADER);
+        GL30C.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
+        GL30C.glCompileShader(vert);
+        GL30C.glGetShaderiv(vert, GL30C.GL_COMPILE_STATUS, ib);
+        if (ib.get(0) == 0) System.out.println(GL30C.glGetShaderInfoLog(vert));
+        int frag = GL30C.glCreateShader(GL30C.GL_FRAGMENT_SHADER);
+        GL30C.glShaderSource(frag, Utilities.readString("/shaders/shader.frag"));
+        GL30C.glCompileShader(frag);
+        GL30C.glGetShaderiv(frag, GL30C.GL_COMPILE_STATUS, ib);
+        if (ib.get(0) == 0) System.out.println(GL30C.glGetShaderInfoLog(frag));
+        shader = GL30C.glCreateProgram();
+        GL30C.glAttachShader(shader, vert);
+        GL30C.glAttachShader(shader, frag);
+        GL30C.glLinkProgram(shader);
+        GL30C.glDeleteShader(vert);
+        GL30C.glDeleteShader(frag);
+        GL30C.glUseProgram(shader);
+        shaderMModel = GL30C.glGetUniformLocation(shader, "mat");
+        shaderVColor = GL30C.glGetUniformLocation(shader, "color");
+        shaderIMode = GL30C.glGetUniformLocation(shader, "mode");
+        shaderMProj = GL30C.glGetUniformLocation(shader, "proj");
+        shaderVClip = GL30C.glGetUniformLocation(shader, "clip");
 
         // initialize states
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        GL30.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
-                .ortho2D(0, Window.windowWidth, Window.windowHeight, 0).get(fb));
-        matrices.push(new Matrix4f());
+        GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
+                .ortho(0, Window.windowWidth, Window.windowHeight, 0, 0, 4096)
+                .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
+        matrices.push(new Matrix4f().translate(0, 0, -1));
         colors.push(0xFFFFFF);
         matUpdate();
         colorUpdate();
-        setAlpha(false);
+        Source.TEXTURE.apply();
+        Priority.NORMAL.apply();
         maskUpdate();
     }
 
@@ -156,32 +158,37 @@ public class Painter {
     }
 
     public static int drawChar(char c, int x, int y) {
-        setAlpha(true);
+        Source.ALPHA.apply();
         Painter.Glyph g = Painter.glyphs.get(c);
+        g.bind();
 
         bufTexture.put(fullQuad);
         bufVertex.put(g.vertex);
 
         matPush();
         matTranslate(x, y);
-        flush(g);
+        flush();
         matPop();
-        setAlpha(false);
+        Source.TEXTURE.apply();
         return g.advance;
     }
 
+
     public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds, int xsp, int ysp) {
+        textures.get(texture).bind();
         put(xdp, ydp, xdp + xds, ydp + yds, xsp, ysp, xsp + xds, ysp + yds);
-        flush(textures.get(texture));
+        flush();
     }
 
     public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
-            int xsp, int ysp, int xss, int yss, int b) {
+                                   int xsp, int ysp, int xss, int yss, int b) {
         drawTexture(texture, xdp, ydp, xds, yds, xsp, ysp, xss, yss, b, b, b, b);
     }
 
     public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
-            int xsp, int ysp, int xss, int yss, int xl, int yt, int xr, int yb) {
+                                   int xsp, int ysp, int xss, int yss, int xl, int yt, int xr, int yb) {
+        textures.get(texture).bind();
+
         int xdl = xdp + xl, xdr = xdp + xds - xr;
         int ydt = ydp + yt, ydb = ydp + yds - yb;
         int xsl = xsp + xl, xsr = xsp + xss - xr;
@@ -199,20 +206,24 @@ public class Painter {
         put(xdl, ydb, xdr, yd1, xsl, ysb, xsr, ys1, true);
         put(xdl, ydt, xdr, ydb, xsl, yst, xsr, ysb, true);
 
-        flush(textures.get(texture));
+        flush();
     }
 
-    private static void flush(Texture texture) {
+    public static void drawRect(int xp, int yp, int xs, int ys) {
+        put(xp, yp, xp + xs, yp + ys, 0, 0, 0, 0);
+        flush();
+    }
+
+    private static void flush() {
         bufTexture.flip();
         bufVertex.flip();
-        texture.bind();
-        GL30.glEnableVertexAttribArray(0);
-        GL30.glEnableVertexAttribArray(1);
-        GL30.glVertexAttribPointer(0, 2, GL30.GL_FLOAT, false, 0, bufVertex);
-        GL30.glVertexAttribPointer(1, 2, GL30.GL_FLOAT, false, 0, bufTexture);
-        GL30.glDrawArrays(GL30.GL_QUADS, 0, bufVertex.remaining() / 2);
-        GL30.glDisableVertexAttribArray(0);
-        GL30.glDisableVertexAttribArray(1);
+        GL30C.glEnableVertexAttribArray(0);
+        GL30C.glEnableVertexAttribArray(1);
+        GL30C.glVertexAttribPointer(0, 2, GL30C.GL_FLOAT, false, 0, bufVertex);
+        GL30C.glVertexAttribPointer(1, 2, GL30C.GL_FLOAT, false, 0, bufTexture);
+        GL30C.glDrawArrays(GL30C.GL_QUADS, 0, bufVertex.remaining() / 2);
+        GL30C.glDisableVertexAttribArray(0);
+        GL30C.glDisableVertexAttribArray(1);
         bufTexture.clear();
         bufVertex.clear();
     }
@@ -260,13 +271,17 @@ public class Painter {
     }
 
     public static void matTranslate(float x, float y) {
-        matrices.peek().translate(x, y, 0);
+        matTranslate(x, y, 0);
+    }
+
+    public static void matTranslate(float x, float y, float z) {
+        matrices.peek().translate(x, y, z);
         matUpdate();
     }
 
     private static void matUpdate() {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        GL30.glUniformMatrix4fv(shaderMModel, false, Painter.matrices.peek().get(fb));
+        GL30C.glUniformMatrix4fv(shaderMModel, false, Painter.matrices.peek().get(fb));
     }
 
     public static void maskPush(int xp, int yp, int xs, int ys) {
@@ -296,7 +311,7 @@ public class Painter {
         float r = (c >> 16 & 255) / 255.0F;
         float g = (c >> 8 & 255) / 255.0F;
         float b = (c & 255) / 255.0F;
-        GL30.glUniform4f(shaderVColor, r, g, b, a);
+        GL30C.glUniform4f(shaderVColor, r, g, b, a);
     }
 
     private static void maskUpdate() {
@@ -313,11 +328,7 @@ public class Painter {
             fb.put(0).put(0).put(-1).put(q.b.z);
         }
         fb.flip();
-        GL30.glUniform4fv(shaderVClip, fb);
-    }
-
-    private static void setAlpha(boolean b) {
-        GL30.glUniform1ui(shaderAlpha, b ? 1 : 0);
+        GL30C.glUniform4fv(shaderVClip, fb);
     }
 
     static class Quad {
@@ -355,6 +366,22 @@ public class Painter {
         }
     }
 
+    enum Source {
+        SOLID, ALPHA, TEXTURE;
+
+        public void apply() {
+            GL30C.glUniform1i(shaderIMode, ordinal());
+        }
+    }
+
+    public enum Priority {
+        PRIORITIZED, NORMAL;
+
+        public void apply() {
+            GL30C.glStencilMask(this == PRIORITIZED ? 0xFF : 0);
+        }
+    }
+
     public static class Texture {
         int id;
 
@@ -382,21 +409,21 @@ public class Painter {
                 c = cb.get(0);
             }
 
-            int format = c == 3 ? GL30.GL_RGB : GL30.GL_RGBA;
-            id = GL30.glGenTextures();
-            GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
-            GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-            GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-            GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-            GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-            if (c == 3 && (x & 3) != 0) GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 2 - (x & 1));
-            GL30.glTexImage2D(GL30.GL_TEXTURE_2D, 0, format, x, y, 0, format, GL30.GL_UNSIGNED_BYTE, image);
+            int format = c == 3 ? GL30C.GL_RGB : GL30C.GL_RGBA;
+            id = GL30C.glGenTextures();
+            GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_S, GL30C.GL_CLAMP_TO_EDGE);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
+            if (c == 3 && (x & 3) != 0) GL30C.glPixelStorei(GL30C.GL_UNPACK_ALIGNMENT, 2 - (x & 1));
+            GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, format, x, y, 0, format, GL30C.GL_UNSIGNED_BYTE, image);
 
             STBImage.stbi_image_free(image);
         }
 
         public void bind() {
-            GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
+            GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
         }
     }
 
@@ -405,7 +432,7 @@ public class Painter {
         public int advance;
 
         public Glyph(char ch) {
-            super(GL30.glGenTextures());
+            super(GL30C.glGenTextures());
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 IntBuffer a = stack.mallocInt(1);
                 IntBuffer b = stack.mallocInt(1);
@@ -413,12 +440,12 @@ public class Painter {
                 IntBuffer d = stack.mallocInt(1);
                 ByteBuffer bitmap = STBTruetype.stbtt_GetCodepointBitmap(
                         fontInfo, fontScale, fontScale, ch, a, b, c, d);
-                GL30.glBindTexture(GL30.GL_TEXTURE_2D, id);
-                GL30.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
-                GL30.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_ALPHA, a.get(0), b.get(0),
-                        0, GL30.GL_ALPHA, GL30.GL_UNSIGNED_BYTE, bitmap);
-                GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-                GL30.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+                GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
+                GL30C.glPixelStorei(GL30C.GL_UNPACK_ALIGNMENT, 1);
+                GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, GL30C.GL_ALPHA, a.get(0), b.get(0),
+                        0, GL30C.GL_ALPHA, GL30C.GL_UNSIGNED_BYTE, bitmap);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
                 if (bitmap != null) STBTruetype.stbtt_FreeBitmap(bitmap);
                 STBTruetype.stbtt_GetCodepointBitmapBox(fontInfo, ch, fontScale, fontScale, a, b, c, d);
                 float x0f = a.get(0);
