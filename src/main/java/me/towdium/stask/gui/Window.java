@@ -30,9 +30,7 @@ public class Window {
             init();
             while (!GLFW.glfwWindowShouldClose(id)) {
                 GLFW.glfwPollEvents();
-                GL30C.glStencilMask(0xFF);
                 GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
-                GL30C.glStencilMask(0);
                 update.run();
                 root.onDraw(mouse());
                 GLFW.glfwSwapBuffers(id);
@@ -86,8 +84,6 @@ public class Window {
                 root.onMouse(mouse(), button, action == GLFW.GLFW_PRESS));
 
         GL30C.glEnable(GL30C.GL_STENCIL_TEST);
-        GL30C.glStencilFunc(GL30C.GL_NOTEQUAL, 1, 0xFF);
-        GL30C.glStencilOp(GL30C.GL_KEEP, GL30C.GL_REPLACE, GL30C.GL_REPLACE);
         GL30C.glEnable(GL30C.GL_MULTISAMPLE);
         GL30C.glEnable(GL30C.GL_CLIP_DISTANCE0);
         GL30C.glEnable(GL30C.GL_CLIP_DISTANCE1);

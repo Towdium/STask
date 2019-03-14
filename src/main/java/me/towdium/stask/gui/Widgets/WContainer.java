@@ -1,7 +1,7 @@
 package me.towdium.stask.gui.Widgets;
 
 import me.towdium.stask.gui.IWidget;
-import me.towdium.stask.gui.Painter;
+import me.towdium.stask.gui.States;
 import me.towdium.stask.utils.Pair;
 import org.joml.Vector2i;
 
@@ -20,10 +20,10 @@ public class WContainer implements IWidget {
     public void onDraw(Vector2i mouse) {
         for (int i = 0; i < widgets.size(); i++) {
             Pair<Vector2i, IWidget> w = widgets.get(i);
-            Painter.matPush();
-            Painter.matTranslate(w.one.x, w.one.y);
-            w.two.onDraw(mouse.sub(w.one, new Vector2i()));
-            Painter.matPop();
+            try (States.SMatrix mat = States.matrix()) {
+                mat.translate(w.one.x, w.one.y);
+                w.two.onDraw(mouse.sub(w.one, new Vector2i()));
+            }
         }
     }
 

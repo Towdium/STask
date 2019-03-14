@@ -4,7 +4,6 @@ import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
@@ -17,7 +16,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.text.BreakIterator;
 import java.util.Objects;
-import java.util.Stack;
 
 /**
  * Author: Towdium
@@ -25,25 +23,22 @@ import java.util.Stack;
  */
 @NotNull
 public class Painter {
+    static final FloatBuffer BUF_TEXTURE = BufferUtils.createFloatBuffer(65536);
+    static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
+    static final float TEXTURE_SIZE = 1024;
+    static final float[] FULL_QUAD = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     public static int fontHeight = 32;
     public static int fontAscent, fontDescent, fontGap;
     static Cache<String, Texture> textures = new Cache<>(Texture::new);
     static STBTTFontinfo fontInfo;
     static float fontScale;
     static Cache<Character, Glyph> glyphs = new Cache<>(Glyph::new);
-    static Stack<Matrix4f> matrices = new Stack<>();
-    static FloatBuffer bufTexture = BufferUtils.createFloatBuffer(65536);
-    static FloatBuffer bufVertex = BufferUtils.createFloatBuffer(65536);
-    static float textureSize = 1024;
-    static float[] fullQuad = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    static Stack<Quad> masks = new Stack<>();
-    static Stack<Integer> colors = new Stack<>();
     static int shaderMModel;
     static int shaderIMode;
     static int shaderVColor;
     static int shaderMProj;
     static int shaderVClip;
-    static int shader;
+    static int shaderID;
 
     static {
         // initialize font
@@ -63,7 +58,7 @@ public class Painter {
             fontGap = (int) (gap.get(0) * fontScale);
         }
 
-        // initialize shader
+        // initialize shaderID
         IntBuffer ib = BufferUtils.createIntBuffer(1);
         int vert = GL30C.glCreateShader(GL30C.GL_VERTEX_SHADER);
         GL30C.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
@@ -75,75 +70,66 @@ public class Painter {
         GL30C.glCompileShader(frag);
         GL30C.glGetShaderiv(frag, GL30C.GL_COMPILE_STATUS, ib);
         if (ib.get(0) == 0) System.out.println(GL30C.glGetShaderInfoLog(frag));
-        shader = GL30C.glCreateProgram();
-        GL30C.glAttachShader(shader, vert);
-        GL30C.glAttachShader(shader, frag);
-        GL30C.glLinkProgram(shader);
+        shaderID = GL30C.glCreateProgram();
+        GL30C.glAttachShader(shaderID, vert);
+        GL30C.glAttachShader(shaderID, frag);
+        GL30C.glLinkProgram(shaderID);
         GL30C.glDeleteShader(vert);
         GL30C.glDeleteShader(frag);
-        GL30C.glUseProgram(shader);
-        shaderMModel = GL30C.glGetUniformLocation(shader, "mat");
-        shaderVColor = GL30C.glGetUniformLocation(shader, "color");
-        shaderIMode = GL30C.glGetUniformLocation(shader, "mode");
-        shaderMProj = GL30C.glGetUniformLocation(shader, "proj");
-        shaderVClip = GL30C.glGetUniformLocation(shader, "clip");
-
-        // initialize states
+        GL30C.glUseProgram(shaderID);
+        shaderMModel = GL30C.glGetUniformLocation(shaderID, "mat");
+        shaderVColor = GL30C.glGetUniformLocation(shaderID, "color");
+        shaderIMode = GL30C.glGetUniformLocation(shaderID, "mode");
+        shaderMProj = GL30C.glGetUniformLocation(shaderID, "proj");
+        shaderVClip = GL30C.glGetUniformLocation(shaderID, "clip");
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
                 .ortho(0, Window.windowWidth, Window.windowHeight, 0, 0, 4096)
                 .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
-        matrices.push(new Matrix4f().translate(0, 0, -1));
-        colors.push(0xFFFFFF);
-        matUpdate();
-        colorUpdate();
-        Source.TEXTURE.apply();
-        Priority.NORMAL.apply();
-        maskUpdate();
     }
 
     public static void drawText(String s, int xp, int yp, int xs) {
-        matPush();
-        matTranslate(xp, yp);
-        BreakIterator it = BreakIterator.getLineInstance();
-        it.setText(s);
-        int old = 0, x = 0, y = 0;
-        for (int i = it.next(); i != BreakIterator.DONE; i = it.next()) {
-            int pos = x;
-            for (int j = old; j < i; j++) {
-                char ch = s.charAt(j);
-                if (ch != ' ' && ch != '　' && ch != '\n')
-                    pos += glyphs.get(s.charAt(j)).advance;
-                if (pos > xs) break;
-            }
-            if (pos > xs) {
-                x = 0;
-                y += fontHeight;
+        try (States.SMatrix mat = States.matrix()) {
+            mat.translate(xp, yp);
+            BreakIterator it = BreakIterator.getLineInstance();
+            it.setText(s);
+            int old = 0, x = 0, y = 0;
+            for (int i = it.next(); i != BreakIterator.DONE; i = it.next()) {
+                int pos = x;
                 for (int j = old; j < i; j++) {
                     char ch = s.charAt(j);
-                    if (ch == '\n') {
-                        x = 0;
-                        y += fontHeight;
-                    } else if (x + glyphs.get(ch).advance < xs) {
-                        x += drawChar(ch, x, y);
-                    } else if (ch != ' ' && ch != '　') {
-                        y += fontHeight;
-                        x = drawChar(ch, 0, y);
+                    if (ch != ' ' && ch != '　' && ch != '\n')
+                        pos += glyphs.get(s.charAt(j)).advance;
+                    if (pos > xs) break;
+                }
+                if (pos > xs) {
+                    x = 0;
+                    y += fontHeight;
+                    for (int j = old; j < i; j++) {
+                        char ch = s.charAt(j);
+                        if (ch == '\n') {
+                            x = 0;
+                            y += fontHeight;
+                        } else if (x + glyphs.get(ch).advance < xs) {
+                            x += drawChar(ch, x, y);
+                        } else if (ch != ' ' && ch != '　') {
+                            y += fontHeight;
+                            x = drawChar(ch, 0, y);
+                        }
+                    }
+                } else {
+                    for (int j = old; j < i; j++) {
+                        char ch = s.charAt(j);
+                        if (ch != '\n') x += drawChar(ch, x, y);
+                        else {
+                            x = 0;
+                            y += fontHeight;
+                        }
                     }
                 }
-            } else {
-                for (int j = old; j < i; j++) {
-                    char ch = s.charAt(j);
-                    if (ch != '\n') x += drawChar(ch, x, y);
-                    else {
-                        x = 0;
-                        y += fontHeight;
-                    }
-                }
+                old = i;
             }
-            old = i;
         }
-        matPop();
     }
 
     public static void drawText(String s, int xp, int yp) {
@@ -158,21 +144,18 @@ public class Painter {
     }
 
     public static int drawChar(char c, int x, int y) {
-        Source.ALPHA.apply();
         Painter.Glyph g = Painter.glyphs.get(c);
         g.bind();
 
-        bufTexture.put(fullQuad);
-        bufVertex.put(g.vertex);
+        BUF_TEXTURE.put(FULL_QUAD);
+        BUF_VERTEX.put(g.vertex);
 
-        matPush();
-        matTranslate(x, y);
-        flush();
-        matPop();
-        Source.TEXTURE.apply();
+        try (States.SMatrix mat = States.matrix()) {
+            mat.translate(x, y);
+            flush();
+        }
         return g.advance;
     }
-
 
     public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds, int xsp, int ysp) {
         textures.get(texture).bind();
@@ -210,22 +193,23 @@ public class Painter {
     }
 
     public static void drawRect(int xp, int yp, int xs, int ys) {
+        Texture.NULL.bind();
         put(xp, yp, xp + xs, yp + ys, 0, 0, 0, 0);
         flush();
     }
 
     private static void flush() {
-        bufTexture.flip();
-        bufVertex.flip();
+        BUF_TEXTURE.flip();
+        BUF_VERTEX.flip();
         GL30C.glEnableVertexAttribArray(0);
         GL30C.glEnableVertexAttribArray(1);
-        GL30C.glVertexAttribPointer(0, 2, GL30C.GL_FLOAT, false, 0, bufVertex);
-        GL30C.glVertexAttribPointer(1, 2, GL30C.GL_FLOAT, false, 0, bufTexture);
-        GL30C.glDrawArrays(GL30C.GL_QUADS, 0, bufVertex.remaining() / 2);
+        GL30C.glVertexAttribPointer(0, 2, GL30C.GL_FLOAT, false, 0, BUF_VERTEX);
+        GL30C.glVertexAttribPointer(1, 2, GL30C.GL_FLOAT, false, 0, BUF_TEXTURE);
+        GL30C.glDrawArrays(GL30C.GL_QUADS, 0, BUF_VERTEX.remaining() / 2);
         GL30C.glDisableVertexAttribArray(0);
         GL30C.glDisableVertexAttribArray(1);
-        bufTexture.clear();
-        bufVertex.clear();
+        BUF_TEXTURE.clear();
+        BUF_VERTEX.clear();
     }
 
     private static void put(int xd0, int yd0, int xd1, int yd1, int xs0, int ys0, int xs1, int ys1) {
@@ -234,12 +218,12 @@ public class Painter {
 
     @SuppressWarnings("Duplicates")
     private static void put(int xd0, int yd0, int xd1, int yd1, int xs0, int ys0, int xs1, int ys1, boolean expand) {
-        float xt0 = xs0 / textureSize, xt1 = xs1 / textureSize;
-        float yt0 = ys0 / textureSize, yt1 = ys1 / textureSize;
+        float xt0 = xs0 / TEXTURE_SIZE, xt1 = xs1 / TEXTURE_SIZE;
+        float yt0 = ys0 / TEXTURE_SIZE, yt1 = ys1 / TEXTURE_SIZE;
         if (expand) {
             int xd = xs1 - xs0, yd = ys1 - ys0;
-            float xtp = xt0 + ((xd1 - xd0) % xd) / textureSize;
-            float ytp = yt0 + ((yd1 - yd0) % yd) / textureSize;
+            float xtp = xt0 + ((xd1 - xd0) % xd) / TEXTURE_SIZE;
+            float ytp = yt0 + ((yd1 - yd0) % yd) / TEXTURE_SIZE;
 
             for (int yp0 = yd0; yp0 < yd1; ) {
                 int yp1 = yp0 + yd;
@@ -249,140 +233,21 @@ public class Painter {
                     float yt = yp1 > yd1 ? ytp : yt1;
                     int xp = Math.min(xp1, xd1);
                     int yp = Math.min(yp1, yd1);
-                    bufTexture.put(xt0).put(yt0).put(xt).put(yt0).put(xt).put(yt).put(xt0).put(yt);
-                    bufVertex.put(xp0).put(yp0).put(xp).put(yp0).put(xp).put(yp).put(xp0).put(yp);
+                    BUF_TEXTURE.put(xt0).put(yt0).put(xt).put(yt0).put(xt).put(yt).put(xt0).put(yt);
+                    BUF_VERTEX.put(xp0).put(yp0).put(xp).put(yp0).put(xp).put(yp).put(xp0).put(yp);
                     xp0 = xp1;
                 }
                 yp0 = yp1;
             }
         } else {
-            bufTexture.put(xt0).put(yt0).put(xt1).put(yt0).put(xt1).put(yt1).put(xt0).put(yt1);
-            bufVertex.put(xd0).put(yd0).put(xd1).put(yd0).put(xd1).put(yd1).put(xd0).put(yd1);
-        }
-    }
-
-    public static void matPush() {
-        matrices.push(new Matrix4f(matrices.peek()));
-    }
-
-    public static void matPop() {
-        matrices.pop();
-        matUpdate();
-    }
-
-    public static void matTranslate(float x, float y) {
-        matTranslate(x, y, 0);
-    }
-
-    public static void matTranslate(float x, float y, float z) {
-        matrices.peek().translate(x, y, z);
-        matUpdate();
-    }
-
-    private static void matUpdate() {
-        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        GL30C.glUniformMatrix4fv(shaderMModel, false, Painter.matrices.peek().get(fb));
-    }
-
-    public static void maskPush(int xp, int yp, int xs, int ys) {
-        Quad quad = new Quad(xp, yp, xs, ys).transformed(matrices.peek());
-        masks.push(masks.isEmpty() ? quad : new Quad(masks.peek()).intersect(quad));
-        maskUpdate();
-    }
-
-    public static void maskPop() {
-        masks.pop();
-        maskUpdate();
-    }
-
-    public static void colorPush(int color) {
-        colors.push(color);
-        colorUpdate();
-    }
-
-    public static void colorPop() {
-        colors.pop();
-        colorUpdate();
-    }
-
-    private static void colorUpdate() {
-        int c = colors.peek();
-        float a = 1 - (c >> 24 & 255) / 255.0F;
-        float r = (c >> 16 & 255) / 255.0F;
-        float g = (c >> 8 & 255) / 255.0F;
-        float b = (c & 255) / 255.0F;
-        GL30C.glUniform4f(shaderVColor, r, g, b, a);
-    }
-
-    private static void maskUpdate() {
-        FloatBuffer fb = BufferUtils.createFloatBuffer(24);
-        if (masks.isEmpty()) {
-            for (int i = 0; i < 24; i++) fb.put(24);
-        } else {
-            Quad q = masks.peek();
-            fb.put(1).put(0).put(0).put(-q.a.x);
-            fb.put(-1).put(0).put(0).put(q.b.x);
-            fb.put(0).put(1).put(0).put(-q.a.y);
-            fb.put(0).put(-1).put(0).put(q.b.y);
-            fb.put(0).put(0).put(1).put(-q.a.z);
-            fb.put(0).put(0).put(-1).put(q.b.z);
-        }
-        fb.flip();
-        GL30C.glUniform4fv(shaderVClip, fb);
-    }
-
-    static class Quad {
-        Vector4f a, b;
-
-        public Quad(int xp, int yp, int xs, int ys) {
-            if (xs < 0 || ys < 0) throw new RuntimeException("Size cannot be negative");
-            a = new Vector4f(xp, yp, 0, 1);
-            b = new Vector4f(xp + xs, yp + ys, 0, 1);
-        }
-
-        public Quad(Quad q) {
-            a = new Vector4f(q.a);
-            b = new Vector4f(q.b);
-        }
-
-        public Quad intersect(Quad q) {
-            a = new Vector4f(Math.max(a.x, q.a.x), Math.max(a.y, q.a.y), Math.max(a.z, q.a.z), 1);
-            b = new Vector4f(Math.min(b.x, q.b.x), Math.min(b.y, q.b.y), Math.min(b.z, q.b.z), 1);
-            return this;
-        }
-
-        public Quad transformed(Matrix4f m) {
-            a.mulProject(m);
-            b.mulProject(m);
-            for (int i = 0; i < 3; i++) {
-                float f1 = a.get(i);
-                float f2 = b.get(i);
-                if (f2 < f1) {
-                    a.setComponent(i, f2);
-                    b.setComponent(i, f1);
-                }
-            }
-            return this;
-        }
-    }
-
-    enum Source {
-        SOLID, ALPHA, TEXTURE;
-
-        public void apply() {
-            GL30C.glUniform1i(shaderIMode, ordinal());
-        }
-    }
-
-    public enum Priority {
-        PRIORITIZED, NORMAL;
-
-        public void apply() {
-            GL30C.glStencilMask(this == PRIORITIZED ? 0xFF : 0);
+            BUF_TEXTURE.put(xt0).put(yt0).put(xt1).put(yt0).put(xt1).put(yt1).put(xt0).put(yt1);
+            BUF_VERTEX.put(xd0).put(yd0).put(xd1).put(yd0).put(xd1).put(yd1).put(xd0).put(yd1);
         }
     }
 
     public static class Texture {
+        static final int SOLID = 0, ALPHA = 1, TEXTURE = 2;
+        static final Texture NULL = new Texture(-1);
         int id;
 
         protected Texture(int id) {
@@ -423,7 +288,13 @@ public class Painter {
         }
 
         public void bind() {
-            GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
+            if (this == NULL) {
+                GL30C.glUniform1i(shaderIMode, SOLID);
+            } else {
+                GL30C.glUniform1i(shaderIMode, TEXTURE);
+                GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
+            }
+
         }
     }
 
@@ -456,6 +327,12 @@ public class Painter {
                 STBTruetype.stbtt_GetCodepointHMetrics(fontInfo, ch, a, b);
                 advance = (int) Math.ceil(a.get(0) * fontScale);
             }
+        }
+
+        @Override
+        public void bind() {
+            GL30C.glUniform1i(shaderIMode, ALPHA);
+            GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
         }
     }
 }
