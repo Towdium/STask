@@ -23,7 +23,6 @@ public class Discover {
     static final String SERVER = "Knock knock from STask server";
     static final String CLIENT = "Knock knock from STask client";
     static NioEventLoopGroup group;
-    static Thread thread;
     static Channel channel;
     static BooleanSupplier status;
     static Consumer<InetAddress> search;
@@ -38,27 +37,14 @@ public class Discover {
                     @Override
                     public void initChannel(final NioDatagramChannel ch) {
                         ChannelPipeline p = ch.pipeline();
-                        p.addLast(new DatagramHandler());
+                        p.addLast(new Handler());
                     }
                 }).bind(new InetSocketAddress(25566))
                 .syncUninterruptibly().channel();
-        thread = new Thread(() -> {
-            try {
-                channel.closeFuture().await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-        thread.start();
     }
 
     public static void shutdown() {
         group.shutdownGracefully();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void activate(Consumer<InetAddress> consumer) {
@@ -91,7 +77,7 @@ public class Discover {
         return new InetSocketAddress(broadcast, 25566);
     }
 
-    public static class DatagramHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+    public static class Handler extends SimpleChannelInboundHandler<DatagramPacket> {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) {
             final ByteBuf buf = msg.content();
