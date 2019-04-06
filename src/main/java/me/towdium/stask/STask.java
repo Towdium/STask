@@ -8,6 +8,7 @@ import me.towdium.stask.gui.States.State;
 import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Widgets.WDrag;
 import me.towdium.stask.gui.Window;
+import me.towdium.stask.network.Discover;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
@@ -20,8 +21,16 @@ import java.util.IdentityHashMap;
  */
 @NotNull
 public class STask {
+    static volatile boolean alive = true;
+
     @SuppressWarnings("unused")
     public static void main(String[] args) {
+        Discover.setup(() -> true);
+        Discover.activate(System.out::println);
+
+
+
+
         WContainer root = new WContainer();
         root.add(0, 0, i -> {
             try (SMatrix mat = States.matrix();
@@ -49,6 +58,9 @@ public class STask {
 
         Window.run(root, () -> {
         });
+
+        Discover.deactivate();
+        Discover.shutdown();
     }
 
     static class WDTestA extends WDrag {
