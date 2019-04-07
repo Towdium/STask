@@ -4,12 +4,15 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.io.Closeable;
 import java.util.List;
@@ -24,6 +27,15 @@ public interface Tunnel extends Closeable {
 
     @Override
     void close();
+
+    class Grouper extends ChannelInboundHandlerAdapter {
+        ChannelGroup group = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx) {
+            group.add(ctx.channel());
+        }
+    }
 
     class Listener extends SimpleChannelInboundHandler<Packet> {
         Consumer<Packet> consumer;
@@ -64,7 +76,7 @@ public interface Tunnel extends Closeable {
     class Server implements Tunnel {
         EventLoopGroup boss = new NioEventLoopGroup();
         EventLoopGroup worker = new NioEventLoopGroup();
-        ChannelFuture channel;
+        Grouper grouper = new Grouper();
 
         public Server(Consumer<Packet> c) {
             ServerBootstrap b = new ServerBootstrap();
@@ -73,12 +85,12 @@ public interface Tunnel extends Closeable {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) {
-                            ch.pipeline().addLast(new Encoder(), new Decoder(), new Listener(c));
+                            ch.pipeline().addLast(grouper, new Encoder(), new Decoder(), new Listener(c));
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
-            channel = b.bind(25566);
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .bind(25566);
         }
 
         @Override
@@ -90,7 +102,7 @@ public interface Tunnel extends Closeable {
 
         @Override
         public void send(Packet p) {
-            channel.channel().writeAndFlush(p);
+            grouper.group.flushAndWrite(p);
         }
     }
 

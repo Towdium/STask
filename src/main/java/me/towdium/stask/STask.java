@@ -9,6 +9,7 @@ import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Widgets.WDrag;
 import me.towdium.stask.gui.Window;
 import me.towdium.stask.network.Discover;
+import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.Server;
 import me.towdium.stask.network.Tunnel;
 import me.towdium.stask.network.packates.PString;
@@ -28,8 +29,7 @@ public class STask {
     public static void main(String[] args) {
         try (Discover d = new Discover();
              Server s = new Server();
-             Tunnel c = new Tunnel.Client(i -> {
-             })) {
+             Tunnel c = new Tunnel.Client(Packet::handle)) {
 
             d.setDiscoverable(true);
             d.activate(System.out::println);
