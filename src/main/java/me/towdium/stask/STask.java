@@ -9,6 +9,9 @@ import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Widgets.WDrag;
 import me.towdium.stask.gui.Window;
 import me.towdium.stask.network.Discover;
+import me.towdium.stask.network.Server;
+import me.towdium.stask.network.Tunnel;
+import me.towdium.stask.network.packates.PString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
@@ -21,46 +24,45 @@ import java.util.IdentityHashMap;
  */
 @NotNull
 public class STask {
-    static volatile boolean alive = true;
-
     @SuppressWarnings("unused")
     public static void main(String[] args) {
-        Discover.setup(() -> true);
-        Discover.activate(System.out::println);
+        try (Discover d = new Discover();
+             Server s = new Server();
+             Tunnel c = new Tunnel.Client(i -> {
+             })) {
+
+            d.setDiscoverable(true);
+            d.activate(System.out::println);
+            c.send(new PString("Hello"));
 
 
-
-
-        WContainer root = new WContainer();
-        root.add(0, 0, i -> {
-            try (SMatrix mat = States.matrix();
-                 State color1 = States.color(0xFFAA00)) {
-                mat.translate(50, 50);
-                Painter.drawText("Here is some test text. 这是一段测试文本。", 440, Painter.fontAscent, 250);
-                Painter.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
-                Painter.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
-                try (State mask1 = States.mask(330, 0, 99, 100);
-                     State mask2 = States.mask(330, 0, 100, 99)) {
-                    Painter.drawTexture("pic.png", 330, 0, 100, 100, 305, 0, 10, 10, 2);
+            WContainer root = new WContainer();
+            root.add(0, 0, i -> {
+                try (SMatrix mat = States.matrix();
+                     State color1 = States.color(0xFFAA00)) {
+                    mat.translate(50, 50);
+                    Painter.drawText("Here is some test text. 这是一段测试文本。", 440, Painter.fontAscent, 250);
+                    Painter.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
+                    Painter.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
+                    try (State mask1 = States.mask(330, 0, 99, 100);
+                         State mask2 = States.mask(330, 0, 100, 99)) {
+                        Painter.drawTexture("pic.png", 330, 0, 100, 100, 305, 0, 10, 10, 2);
+                    }
+                    Painter.drawRect(220, 0, 100, 100);
+                    try (State color2 = States.color(0xAAFF0000)) {
+                        Painter.drawRect(220, 0, 50, 100);
+                    }
                 }
-                Painter.drawRect(220, 0, 100, 100);
-                try (State color2 = States.color(0xAAFF0000)) {
-                    Painter.drawRect(220, 0, 50, 100);
-                }
+            });
 
-            }
-        });
+            root.add(50, 200, new WDTestA(true));
+            root.add(110, 200, new WDTestA(false));
+            root.add(170, 200, new WDTestA(false));
+            root.add(280, 200, new WDTestB());
 
-        root.add(50, 200, new WDTestA(true));
-        root.add(110, 200, new WDTestA(false));
-        root.add(170, 200, new WDTestA(false));
-        root.add(280, 200, new WDTestB());
-
-        Window.run(root, () -> {
-        });
-
-        Discover.deactivate();
-        Discover.shutdown();
+            Window.run(root, () -> {
+            });
+        }
     }
 
     static class WDTestA extends WDrag {
