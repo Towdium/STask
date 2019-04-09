@@ -5,6 +5,7 @@ import me.towdium.stask.gui.States;
 import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Widgets.WDrag;
 import me.towdium.stask.gui.Window;
+import me.towdium.stask.utils.Ticker;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -15,6 +16,8 @@ import java.util.IdentityHashMap;
  * Date: 08/04/19
  */
 public class Render {
+    static Ticker ticker = new Ticker(1 / 200f);
+
     public static void main(String[] args) {
         WContainer root = new WContainer();
         root.add(0, 0, i -> {
@@ -40,7 +43,10 @@ public class Render {
         root.add(170, 200, new WDTestA(false));
         root.add(280, 200, new WDTestB());
         Window.display(root);
-        while (!Window.finished()) Window.tick();
+        while (!Window.finished()) {
+            Window.tick();
+            ticker.sync();
+        }
         Window.destroy();
     }
 

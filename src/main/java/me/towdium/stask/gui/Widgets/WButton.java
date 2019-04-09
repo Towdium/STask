@@ -29,7 +29,7 @@ public abstract class WButton extends WArea {
 
     @Override
     public boolean onMouse(Vector2i mouse, int button, boolean state) {
-        if (inside(mouse) && button == 0 && listener != null) {
+        if (inside(mouse) && button == 0 && !state && listener != null) {
             listener.invoke(this);
             return true;
         } else return false;

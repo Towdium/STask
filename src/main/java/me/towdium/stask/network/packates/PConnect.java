@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import me.towdium.stask.network.Client;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.Server;
+import me.towdium.stask.utils.Log;
 
 /**
  * Author: Towdium
@@ -39,7 +40,7 @@ public class PConnect extends Packet {
     @Override
     public void handle(Client.Context c) {
         c.connect(index);
-        System.out.println("Connected as client " + index);
+        Log.network.info("Connected as client " + index);
     }
 
     @Override

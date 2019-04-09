@@ -45,4 +45,20 @@ public class Utilities {
             return null;
         }
     }
+
+    public static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sleep(long ms, int ns) {
+        try {
+            Thread.sleep(ms, ns);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -8,6 +8,7 @@ import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.Server;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
+import me.towdium.stask.utils.Ticker;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
  */
 @NotNull
 public class STask extends Client {
+    Ticker ticker = new Ticker(1 / 200f);
+
     public STask() {
         tunnel.send(new PString("Hello"));
         Window.display(new WContainer());
@@ -39,6 +42,7 @@ public class STask extends Client {
         super.tick();
         Window.tick();
         if (Window.finished()) close();
+        ticker.sync();
     }
 
     @Override

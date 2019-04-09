@@ -9,6 +9,8 @@ import me.towdium.stask.network.Client;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.Server;
 import me.towdium.stask.network.packates.PConnect;
+import me.towdium.stask.utils.Log;
+import me.towdium.stask.utils.Ticker;
 import org.joml.Vector2i;
 
 /**
@@ -17,8 +19,10 @@ import org.joml.Vector2i;
  */
 public class Network extends Client {
     WTest test = new WTest();
+    Ticker ticker = new Ticker(1 / 200f);
 
     public Network() {
+        Log.network.setLevel(Log.Priority.TRACE);
         Packet.Registry.register(PMouse.IDENTIFIER, PMouse::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
@@ -48,6 +52,7 @@ public class Network extends Client {
         super.tick();
         Window.tick();
         if (Window.finished()) close();
+        ticker.sync();
     }
 
     @Override
@@ -145,13 +150,13 @@ public class Network extends Client {
         @Override
         public void handle(Server.Context c) {
             c.relay(new PMouse(x, y));
-            System.out.println("Server received");
+            Log.network.trace("Server received");
         }
 
         @Override
         public void handle(Context c) {
             test.move(x, y);
-            System.out.println("Client " + getIndex() + " received");
+            Log.network.trace("Client " + getIndex() + " received");
         }
 
         @Override

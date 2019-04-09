@@ -59,7 +59,7 @@ public class Window {
         GL30C.glBlendFunc(GL30C.GL_SRC_ALPHA, GL30C.GL_ONE_MINUS_SRC_ALPHA);
         GL30C.glClearColor(43f / 255f, 43f / 255f, 43f / 255f, 0f);
 
-        GLFW.glfwSwapInterval(1);
+        GLFW.glfwSwapInterval(0);
     }
 
     public static void display(Widget root) {
