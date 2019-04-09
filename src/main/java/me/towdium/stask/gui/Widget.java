@@ -10,11 +10,7 @@ import java.util.List;
  * Date: 05/03/19
  */
 @NotNull
-public interface IWidget {
-    static boolean inside(Vector2i mouse, int xs, int ys) {
-        return mouse.x >= 0 && mouse.y >= 0 && mouse.x < xs && mouse.y < ys;
-    }
-
+public interface Widget {
     void onDraw(Vector2i mouse);
 
     default boolean onTooltip(Vector2i mouse, List<String> tooltip) {
@@ -34,12 +30,12 @@ public interface IWidget {
     }
 
     @FunctionalInterface
-    interface ListenerValue<W extends IWidget, V> {
+    interface ListenerValue<W extends Widget, V> {
         void invoke(W widget, V value);
     }
 
     @FunctionalInterface
-    interface ListenerAction<W extends IWidget> {
+    interface ListenerAction<W extends Widget> {
         void invoke(W widget);
     }
 }

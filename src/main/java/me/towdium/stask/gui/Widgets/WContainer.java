@@ -1,7 +1,7 @@
 package me.towdium.stask.gui.Widgets;
 
-import me.towdium.stask.gui.IWidget;
 import me.towdium.stask.gui.States;
+import me.towdium.stask.gui.Widget;
 import me.towdium.stask.utils.Pair;
 import org.joml.Vector2i;
 
@@ -12,17 +12,17 @@ import java.util.List;
  * Author: Towdium
  * Date: 09/03/19
  */
-public class WContainer implements IWidget {
-    List<Pair<Vector2i, IWidget>> widgets = new ArrayList<>();
+public class WContainer implements Widget {
+    protected List<Pair<Vector2i, Widget>> widgets = new ArrayList<>();
 
     @Override
     @SuppressWarnings("ForLoopReplaceableByForEach")
     public void onDraw(Vector2i mouse) {
         for (int i = 0; i < widgets.size(); i++) {
-            Pair<Vector2i, IWidget> w = widgets.get(i);
+            Pair<Vector2i, Widget> w = widgets.get(i);
             try (States.SMatrix mat = States.matrix()) {
-                mat.translate(w.one.x, w.one.y);
-                w.two.onDraw(mouse.sub(w.one, new Vector2i()));
+                mat.translate(w.a.x, w.a.y);
+                w.b.onDraw(mouse.sub(w.a, new Vector2i()));
             }
         }
     }
@@ -30,8 +30,8 @@ public class WContainer implements IWidget {
     @Override
     public boolean onTooltip(Vector2i mouse, List<String> tooltip) {
         for (int i = widgets.size() - 1; i >= 0; i--) {
-            Pair<Vector2i, IWidget> w = widgets.get(i);
-            if (w.two.onTooltip(mouse.sub(w.one, new Vector2i()), tooltip)) return true;
+            Pair<Vector2i, Widget> w = widgets.get(i);
+            if (w.b.onTooltip(mouse.sub(w.a, new Vector2i()), tooltip)) return true;
         }
         return false;
     }
@@ -39,8 +39,8 @@ public class WContainer implements IWidget {
     @Override
     public boolean onMouse(Vector2i mouse, int button, boolean state) {
         for (int i = widgets.size() - 1; i >= 0; i--) {
-            Pair<Vector2i, IWidget> w = widgets.get(i);
-            if (w.two.onMouse(mouse.sub(w.one, new Vector2i()), button, state)) return true;
+            Pair<Vector2i, Widget> w = widgets.get(i);
+            if (w.b.onMouse(mouse.sub(w.a, new Vector2i()), button, state)) return true;
         }
         return false;
     }
@@ -48,8 +48,8 @@ public class WContainer implements IWidget {
     @Override
     public boolean onKey(char ch, int code) {
         for (int i = widgets.size() - 1; i >= 0; i--) {
-            Pair<Vector2i, IWidget> w = widgets.get(i);
-            if (w.two.onKey(ch, code)) return true;
+            Pair<Vector2i, Widget> w = widgets.get(i);
+            if (w.b.onKey(ch, code)) return true;
         }
         return false;
     }
@@ -57,19 +57,24 @@ public class WContainer implements IWidget {
     @Override
     public boolean onScroll(Vector2i mouse, int diff) {
         for (int i = widgets.size() - 1; i >= 0; i++) {
-            Pair<Vector2i, IWidget> w = widgets.get(i);
-            if (w.two.onScroll(mouse, diff)) return true;
+            Pair<Vector2i, Widget> w = widgets.get(i);
+            if (w.b.onScroll(mouse, diff)) return true;
         }
         return false;
     }
 
-    public WContainer add(int x, int y, IWidget widget) {
+    public WContainer add(int x, int y, Widget widget) {
         widgets.add(new Pair<>(new Vector2i(x, y), widget));
         return this;
     }
 
-    public WContainer remove(IWidget widget) {
-        widgets.removeIf(i -> i.two == widget);
+    public WContainer remove(Widget widget) {
+        widgets.removeIf(i -> i.b == widget);
+        return this;
+    }
+
+    public WContainer clear() {
+        widgets.clear();
         return this;
     }
 }

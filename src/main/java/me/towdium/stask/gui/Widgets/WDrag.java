@@ -1,6 +1,5 @@
 package me.towdium.stask.gui.Widgets;
 
-import me.towdium.stask.gui.IWidget;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -8,8 +7,12 @@ import org.joml.Vector2i;
  * Author: Towdium
  * Date: 10/03/19
  */
-public abstract class WDrag implements IWidget {
-    protected static WDrag sender, receiver;
+public abstract class WDrag extends WArea {
+    public static WDrag sender, receiver;
+
+    public WDrag(int x, int y) {
+        super(x, y);
+    }
 
     @Override
     public void onDraw(Vector2i mouse) {
@@ -41,18 +44,20 @@ public abstract class WDrag implements IWidget {
         return false;
     }
 
-    public void onReceived() {
-
-    }
+    public abstract void onReceived();
 
     public abstract boolean canReceive(Object o);
 
-    public void onSent() {
-
-    }
+    public abstract void onSent();
 
     @Nullable
     public abstract Object canSend();
 
-    protected abstract boolean inside(Vector2i mouse);
+    protected boolean isSending() {
+        return sender == this;
+    }
+
+    protected boolean isReceiving() {
+        return receiver == this;
+    }
 }

@@ -8,36 +8,36 @@ import org.jetbrains.annotations.NotNull;
  */
 @NotNull
 public class Pair<K, V> {
-    public K one;
-    public V two;
+    public K a;
+    public V b;
 
-    public Pair(K one, V two) {
-        this.one = one;
-        this.two = two;
+    public Pair(K a, V b) {
+        this.a = a;
+        this.b = b;
     }
 
     @Override
     public int hashCode() {
-        int hash = one.hashCode();
-        return (hash << 16) ^ (hash >> 16) ^ two.hashCode();
+        int hash = a.hashCode();
+        return (hash << 16) ^ (hash >> 16) ^ b.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Pair) {
             Pair p = (Pair) obj;
-            return one.equals(p.one) && two.equals(p.two);
+            return a.equals(p.a) && b.equals(p.b);
         }
         return false;
     }
 
-    public Pair<K, V> setOne(K one) {
-        this.one = one;
+    public Pair<K, V> setA(K a) {
+        this.a = a;
         return this;
     }
 
-    public Pair<K, V> setTwo(V two) {
-        this.two = two;
+    public Pair<K, V> setB(V b) {
+        this.b = b;
         return this;
     }
 }

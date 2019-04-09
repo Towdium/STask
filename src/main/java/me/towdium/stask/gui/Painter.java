@@ -88,7 +88,7 @@ public class Painter {
                 .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
     }
 
-    public static void drawText(String s, int xp, int yp, int xs) {
+    public static void drawTextWrapped(String s, int xp, int yp, int xs) {
         try (States.SMatrix mat = States.matrix()) {
             mat.translate(xp, yp);
             BreakIterator it = BreakIterator.getLineInstance();
@@ -132,6 +132,26 @@ public class Painter {
         }
     }
 
+    public static void drawTextCut(String s, int xp, int yp, int xs) {
+        int dots = Painter.glyphs.get('.').advance * 3;
+        int cut = 0;
+        boolean full = true;
+        int index = 0;
+        for (; index < s.length() && cut < xs - dots; index++) {
+            cut += glyphs.get(s.charAt(index)).advance;
+        }
+        int len = cut;
+        for (int i = index; i < s.length(); i++) {
+            len += glyphs.get(s.charAt(i)).advance;
+            if (len > xs) {
+                full = false;
+                break;
+            }
+        }
+        if (full) drawText(s, xp + (xs - len) / 2, yp);
+        else drawText(s.substring(0, index), xp + (xs - cut - dots) / 2, yp);
+    }
+
     public static void drawText(String s, int xp, int yp) {
         int p = xp;
         for (int i = 0; i < s.length(); i++) {
@@ -144,6 +164,7 @@ public class Painter {
     }
 
     public static int drawChar(char c, int x, int y) {
+        y += fontAscent;
         Painter.Glyph g = Painter.glyphs.get(c);
         g.bind();
 

@@ -7,34 +7,39 @@ import me.towdium.stask.network.Server;
 
 /**
  * Author: Towdium
- * Date: 07/04/19
+ * Date: 09/04/19
  */
-public class PString extends Packet {
-    public static final String IDENTIFIER = "string";
+public class PConnect extends Packet {
+    public static final String IDENTIFIER = "connect";
+    int index;
 
-    String str;
-
-    public PString(ByteBuf buf) {
-        str = readString(buf);
+    public PConnect(int index) {
+        this.index = index;
     }
 
-    public PString(String s) {
-        this.str = s;
+    public PConnect() {
+        this(-1);
+    }
+
+    public PConnect(ByteBuf buf) {
+        index = buf.readInt();
     }
 
     @Override
     public void serialize(ByteBuf b) {
-        writeString(str, b);
+        b.writeInt(index);
     }
 
     @Override
     public void handle(Server.Context c) {
-        System.out.println("Server received: " + str);
+        int index = c.connect();
+        c.reply(new PConnect(index));
     }
 
     @Override
     public void handle(Client.Context c) {
-        System.out.println("Client received: " + str);
+        c.connect(index);
+        System.out.println("Connected as client " + index);
     }
 
     @Override
