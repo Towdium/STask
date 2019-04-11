@@ -20,6 +20,7 @@ import org.joml.Vector2i;
 public class Network extends Client {
     WTest test = new WTest();
     Ticker ticker = new Ticker(1 / 200f);
+    Window window = new Window("Network", 800, 600, new WContainer().add(0, 0, test));
 
     public Network() {
         Log.network.setLevel(Log.Priority.TRACE);
@@ -27,7 +28,7 @@ public class Network extends Client {
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
         tunnel.send(new PConnect());
-        Window.display(new WContainer().add(0, 0, test));
+        window.display();
     }
 
     @SuppressWarnings("unused")
@@ -50,15 +51,9 @@ public class Network extends Client {
     @Override
     protected void tick() {
         super.tick();
-        Window.tick();
-        if (Window.finished()) close();
+        window.tick();
+        if (window.isClosed()) close();
         ticker.sync();
-    }
-
-    @Override
-    public synchronized void close() {
-        super.close();
-        Window.destroy();
     }
 
     class WTest extends WContainer {
@@ -77,8 +72,8 @@ public class Network extends Client {
         }
 
         @Override
-        public void onDraw(Vector2i mouse) {
-            super.onDraw(mouse);
+        public void onDraw(Painter p, Vector2i mouse) {
+            super.onDraw(p, mouse);
             if (dirty) {
                 tunnel.send(new PMouse(mouse.x, mouse.y));
                 dirty = false;
@@ -99,14 +94,14 @@ public class Network extends Client {
             }
 
             @Override
-            public void onDraw(Vector2i mouse) {
+            public void onDraw(Painter p, Vector2i mouse) {
                 if (picked) {
-                    Painter.drawRect(mouse.x - 20, mouse.y - 20, 40, 40);
+                    p.drawRect(mouse.x - 20, mouse.y - 20, 40, 40);
                     if (!mouse.equals(last)) {
                         dirty = true;
                         last = mouse;
                     }
-                } else Painter.drawRect(0, 0, 40, 40);
+                } else p.drawRect(0, 0, 40, 40);
             }
 
             @Override

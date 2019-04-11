@@ -34,7 +34,7 @@ public class Ticker {
         long time = System.nanoTime();
         if (time >= next) {
             int skipped = (int) ((time - next) / step);
-            if (skipped > 0) callback.accept(skipped);
+            if (skipped > 0 && callback != null) callback.accept(skipped);
             next += skipped * step + step;
         } else {
             Utilities.sleep((next - time) / 1000000, (int) ((next - time) % 100000));

@@ -1,5 +1,6 @@
 package me.towdium.stask.gui.Widgets;
 
+import me.towdium.stask.gui.Painter;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -15,7 +16,7 @@ public abstract class WDrag extends WArea {
     }
 
     @Override
-    public void onDraw(Vector2i mouse) {
+    public void onDraw(Painter p, Vector2i mouse) {
         if (sender == this) {
             if (canSend() == null) sender = receiver = null;
         } else if (receiver == this) {

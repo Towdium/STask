@@ -1,6 +1,6 @@
 package me.towdium.stask.gui.Widgets;
 
-import me.towdium.stask.gui.States;
+import me.towdium.stask.gui.Painter;
 import me.towdium.stask.gui.Widget;
 import me.towdium.stask.utils.Pair;
 import org.joml.Vector2i;
@@ -17,12 +17,12 @@ public class WContainer implements Widget {
 
     @Override
     @SuppressWarnings("ForLoopReplaceableByForEach")
-    public void onDraw(Vector2i mouse) {
+    public void onDraw(Painter p, Vector2i mouse) {
         for (int i = 0; i < widgets.size(); i++) {
             Pair<Vector2i, Widget> w = widgets.get(i);
-            try (States.SMatrix mat = States.matrix()) {
+            try (Painter.SMatrix mat = p.matrix()) {
                 mat.translate(w.a.x, w.a.y);
-                w.b.onDraw(mouse.sub(w.a, new Vector2i()));
+                w.b.onDraw(p, mouse.sub(w.a, new Vector2i()));
             }
         }
     }

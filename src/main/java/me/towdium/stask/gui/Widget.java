@@ -11,7 +11,7 @@ import java.util.List;
  */
 @NotNull
 public interface Widget {
-    void onDraw(Vector2i mouse);
+    void onDraw(Painter p, Vector2i mouse);
 
     default boolean onTooltip(Vector2i mouse, List<String> tooltip) {
         return false;

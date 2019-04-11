@@ -1,9 +1,11 @@
 package me.towdium.stask.gui;
 
 import me.towdium.stask.utils.Cache;
+import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Vector2i;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
@@ -11,11 +13,13 @@ import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryStack;
 
+import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.text.BreakIterator;
 import java.util.Objects;
+import java.util.Stack;
 
 /**
  * Author: Towdium
@@ -27,18 +31,10 @@ public class Painter {
     static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
     static final float TEXTURE_SIZE = 1024;
     static final float[] FULL_QUAD = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    public static int fontHeight = 32;
-    public static int fontAscent, fontDescent, fontGap;
-    static Cache<String, Texture> textures = new Cache<>(Texture::new);
+    public static final int fontHeight = 32;
+    public static final int fontAscent, fontDescent, fontGap;
+    static final float fontScale;
     static STBTTFontinfo fontInfo;
-    static float fontScale;
-    static Cache<Character, Glyph> glyphs = new Cache<>(Glyph::new);
-    static int shaderMModel;
-    static int shaderIMode;
-    static int shaderVColor;
-    static int shaderMProj;
-    static int shaderVClip;
-    static int shaderID;
 
     static {
         // initialize font
@@ -57,8 +53,26 @@ public class Painter {
             fontDescent = (int) (des.get(0) * fontScale);
             fontGap = (int) (gap.get(0) * fontScale);
         }
+    }
 
-        // initialize shaderID
+    Cache<String, Texture> textures = new Cache<>(Texture::new);
+    Stack<Matrix4f> matrices = new Stack<>();
+    Stack<Quad> masks = new Stack<>();
+    Stack<Integer> colors = new Stack<>();
+    Stack<Boolean> priority = new Stack<>();
+    Cache<Character, Glyph> glyphs = new Cache<>(Glyph::new);
+    Texture empty = new Texture(-1);
+    int shaderMModel;
+    int shaderIMode;
+    int shaderVColor;
+    int shaderMProj;
+    int shaderVClip;
+    int shaderID;
+    Window window;
+
+    public Painter(Window window) {
+        this.window = window;
+        window.bind();
         IntBuffer ib = BufferUtils.createIntBuffer(1);
         int vert = GL30C.glCreateShader(GL30C.GL_VERTEX_SHADER);
         GL30C.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
@@ -83,13 +97,22 @@ public class Painter {
         shaderMProj = GL30C.glGetUniformLocation(shaderID, "proj");
         shaderVClip = GL30C.glGetUniformLocation(shaderID, "clip");
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        Vector2i size = window.getSize();
         GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
-                .ortho(0, Window.windowWidth, Window.windowHeight, 0, 0, 4096)
+                .ortho(0, size.x, size.y, 0, 0, 4096)
                 .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
+        matrices.push(new Matrix4f().translate(0, 0, 0));
+        updateMatrix();
+        colors.push(0xFFFFFF);
+        updateColor();
+        priority.push(false);
+        updatePriority();
+        maskUpdate();
     }
 
-    public static void drawTextWrapped(String s, int xp, int yp, int xs) {
-        try (States.SMatrix mat = States.matrix()) {
+    public void drawTextWrapped(String s, int xp, int yp, int xs) {
+        window.bind();
+        try (SMatrix mat = matrix()) {
             mat.translate(xp, yp);
             BreakIterator it = BreakIterator.getLineInstance();
             it.setText(s);
@@ -132,8 +155,9 @@ public class Painter {
         }
     }
 
-    public static void drawTextCut(String s, int xp, int yp, int xs) {
-        int dots = Painter.glyphs.get('.').advance * 3;
+    public void drawTextCut(String s, int xp, int yp, int xs) {
+        window.bind();
+        int dots = glyphs.get('.').advance * 3;
         int cut = 0;
         boolean full = true;
         int index = 0;
@@ -152,7 +176,8 @@ public class Painter {
         else drawText(s.substring(0, index), xp + (xs - cut - dots) / 2, yp);
     }
 
-    public static void drawText(String s, int xp, int yp) {
+    public void drawText(String s, int xp, int yp) {
+        window.bind();
         int p = xp;
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
@@ -163,34 +188,37 @@ public class Painter {
         }
     }
 
-    public static int drawChar(char c, int x, int y) {
+    public int drawChar(char c, int x, int y) {
+        window.bind();
         y += fontAscent;
-        Painter.Glyph g = Painter.glyphs.get(c);
+        Painter.Glyph g = glyphs.get(c);
         g.bind();
 
         BUF_TEXTURE.put(FULL_QUAD);
         BUF_VERTEX.put(g.vertex);
 
-        try (States.SMatrix mat = States.matrix()) {
+        try (SMatrix mat = matrix()) {
             mat.translate(x, y);
             flush();
         }
         return g.advance;
     }
 
-    public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds, int xsp, int ysp) {
+    public void drawTexture(String texture, int xdp, int ydp, int xds, int yds, int xsp, int ysp) {
+        window.bind();
         textures.get(texture).bind();
         put(xdp, ydp, xdp + xds, ydp + yds, xsp, ysp, xsp + xds, ysp + yds);
         flush();
     }
 
-    public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
-                                   int xsp, int ysp, int xss, int yss, int b) {
+    public void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
+                            int xsp, int ysp, int xss, int yss, int b) {
         drawTexture(texture, xdp, ydp, xds, yds, xsp, ysp, xss, yss, b, b, b, b);
     }
 
-    public static void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
-                                   int xsp, int ysp, int xss, int yss, int xl, int yt, int xr, int yb) {
+    public void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
+                            int xsp, int ysp, int xss, int yss, int xl, int yt, int xr, int yb) {
+        window.bind();
         textures.get(texture).bind();
 
         int xdl = xdp + xl, xdr = xdp + xds - xr;
@@ -213,10 +241,116 @@ public class Painter {
         flush();
     }
 
-    public static void drawRect(int xp, int yp, int xs, int ys) {
-        Texture.NULL.bind();
+    public void drawRect(int xp, int yp, int xs, int ys) {
+        window.bind();
+        empty.bind();
         put(xp, yp, xp + xs, yp + ys, 0, 0, 0, 0);
         flush();
+    }
+
+    public SMatrix matrix() {
+        return matrix(0);
+    }
+
+    public SMatrix matrix(int i) {
+        matrices.push(new Matrix4f(matrices.get(matrices.size() - 1 - i)));
+        if (i != 0) updateMatrix();
+        return new SMatrix();
+    }
+
+    public State mask(int xp, int yp, int xs, int ys) {
+        Quad quad = new Quad(xp, yp, xs, ys).transformed(matrices.peek());
+        masks.push(masks.isEmpty() ? quad : new Quad(masks.peek()).intersect(quad));
+        maskUpdate();
+        return () -> {
+            masks.pop();
+            maskUpdate();
+        };
+    }
+
+    public State color(int color) {
+        colors.push(color);
+        updateColor();
+        return () -> {
+            colors.pop();
+            updateColor();
+        };
+    }
+
+    public State priority(boolean prioritized) {
+        priority.push(prioritized);
+        updatePriority();
+        return () -> {
+            priority.pop();
+            updatePriority();
+        };
+    }
+
+    private void updateColor() {
+        int c = colors.peek();
+        float a = 1 - (c >> 24 & 255) / 255.0F;
+        float r = (c >> 16 & 255) / 255.0F;
+        float g = (c >> 8 & 255) / 255.0F;
+        float b = (c & 255) / 255.0F;
+        GL30C.glUniform4f(shaderVColor, r, g, b, a);
+    }
+
+    private void maskUpdate() {
+        FloatBuffer fb = BufferUtils.createFloatBuffer(24);
+        if (masks.isEmpty()) {
+            for (int i = 0; i < 24; i++) fb.put(24);
+        } else {
+            Quad q = masks.peek();
+            fb.put(1).put(0).put(0).put(-q.a.x);
+            fb.put(-1).put(0).put(0).put(q.b.x);
+            fb.put(0).put(1).put(0).put(-q.a.y);
+            fb.put(0).put(-1).put(0).put(q.b.y);
+            fb.put(0).put(0).put(1).put(-q.a.z);
+            fb.put(0).put(0).put(-1).put(q.b.z);
+        }
+        fb.flip();
+        GL30C.glUniform4fv(shaderVClip, fb);
+    }
+
+    private void updatePriority() {
+        if (priority.peek()) {
+            GL30C.glStencilFunc(GL30C.GL_ALWAYS, 1, 0xFF);
+            GL30C.glStencilOp(GL30C.GL_REPLACE, GL30C.GL_REPLACE, GL30C.GL_REPLACE);
+        } else {
+            GL30C.glStencilFunc(GL30C.GL_NOTEQUAL, 1, 0xFF);
+            GL30C.glStencilOp(GL30C.GL_KEEP, GL30C.GL_KEEP, GL30C.GL_KEEP);
+        }
+    }
+
+    private void updateMatrix() {
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        GL30C.glUniformMatrix4fv(shaderMModel, false, matrices.peek().get(fb));
+    }
+
+    @FunctionalInterface
+    public interface State extends Closeable {
+        @Override
+        void close();
+    }
+
+    public class SMatrix implements State {
+        private SMatrix() {
+        }
+
+        public void translate(float x, float y) {
+            translate(x, y, 0);
+        }
+
+        public void translate(float x, float y, float z) {
+            matrices.peek().translate(x, y, z);
+            updateMatrix();
+        }
+
+        @Override
+        public void close() {
+            matrices.pop();
+            updateMatrix();
+        }
     }
 
     private static void flush() {
@@ -266,9 +400,9 @@ public class Painter {
         }
     }
 
-    public static class Texture {
+    private class Texture {
         static final int SOLID = 0, ALPHA = 1, TEXTURE = 2;
-        static final Texture NULL = new Texture(-1);
+
         int id;
 
         protected Texture(int id) {
@@ -309,17 +443,16 @@ public class Painter {
         }
 
         public void bind() {
-            if (this == NULL) {
+            if (this == empty) {
                 GL30C.glUniform1i(shaderIMode, SOLID);
             } else {
                 GL30C.glUniform1i(shaderIMode, TEXTURE);
                 GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
             }
-
         }
     }
 
-    public static class Glyph extends Texture {
+    private class Glyph extends Texture {
         public float[] vertex;
         public int advance;
 

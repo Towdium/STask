@@ -88,8 +88,8 @@ public class Server implements Closeable, Runnable {
     }
 
     class Tunnel implements Closeable {
-        EventLoopGroup boss = new NioEventLoopGroup();
-        EventLoopGroup worker = new NioEventLoopGroup();
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup(1);
 
         public Tunnel() {
             ServerBootstrap b = new ServerBootstrap();

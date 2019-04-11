@@ -48,7 +48,7 @@ public class Client implements Closeable, Runnable {
     }
 
     public class Tunnel implements Closeable {
-        EventLoopGroup worker = new NioEventLoopGroup();
+        EventLoopGroup worker = new NioEventLoopGroup(1);
         Channel channel;
 
         public Tunnel() {

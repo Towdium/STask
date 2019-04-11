@@ -1,7 +1,6 @@
 package me.towdium.stask;
 
 import me.towdium.stask.gui.Painter;
-import me.towdium.stask.gui.States;
 import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Widgets.WDrag;
 import me.towdium.stask.gui.Window;
@@ -20,20 +19,21 @@ public class Render {
 
     public static void main(String[] args) {
         WContainer root = new WContainer();
-        root.add(0, 0, i -> {
-            try (States.SMatrix mat = States.matrix();
-                 States.State col = States.color(0xFFAA00)) {
+        Window window = new Window("Render", 800, 600, root);
+        root.add(0, 0, (p, m) -> {
+            try (Painter.SMatrix mat = p.matrix();
+                 Painter.State col = p.color(0xFFAA00)) {
                 mat.translate(50, 50);
-                Painter.drawTextWrapped("Here is some test text. 这是一段测试文本。", 440, 0, 250);
-                Painter.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
-                Painter.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
-                try (States.State mask1 = States.mask(330, 0, 99, 100);
-                     States.State mask2 = States.mask(330, 0, 100, 99)) {
-                    Painter.drawTexture("pic.png", 330, 0, 100, 100, 305, 0, 10, 10, 2);
+                p.drawTextWrapped("Here is some test text. 这是一段测试文本。", 440, 0, 250);
+                p.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
+                p.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
+                try (Painter.State mask1 = p.mask(330, 0, 99, 100);
+                     Painter.State mask2 = p.mask(330, 0, 100, 99)) {
+                    p.drawTexture("pic.png", 330, 0, 100, 100, 305, 0, 10, 10, 2);
                 }
-                Painter.drawRect(220, 0, 100, 100);
-                try (States.State color2 = States.color(0xAAFF0000)) {
-                    Painter.drawRect(220, 0, 50, 100);
+                p.drawRect(220, 0, 100, 100);
+                try (Painter.State color2 = p.color(0xAAFF0000)) {
+                    p.drawRect(220, 0, 50, 100);
                 }
             }
         });
@@ -42,12 +42,11 @@ public class Render {
         root.add(110, 200, new WDTestA(false));
         root.add(170, 200, new WDTestA(false));
         root.add(280, 200, new WDTestB());
-        Window.display(root);
-        while (!Window.finished()) {
-            Window.tick();
+        window.display();
+        while (!window.isClosed()) {
+            window.tick();
             ticker.sync();
         }
-        Window.destroy();
     }
 
     static class WDTestA extends WDrag {
@@ -60,27 +59,27 @@ public class Render {
 
         @Override
         @SuppressWarnings("unused")
-        public void onDraw(Vector2i mouse) {
-            super.onDraw(mouse);
-            try (States.State color = States.color(0x111111)) {
-                Painter.drawRect(0, 0, 50, 50);
+        public void onDraw(Painter p, Vector2i mouse) {
+            super.onDraw(p, mouse);
+            try (Painter.State color = p.color(0x111111)) {
+                p.drawRect(0, 0, 50, 50);
             }
 
             if (hold) {
-                try (States.State prior = States.priority(true);
-                     States.SMatrix mat = States.matrix()) {
+                try (Painter.State prior = p.priority(true);
+                     Painter.SMatrix mat = p.matrix()) {
                     if (isSending()) mat.translate(mouse.x - 25, mouse.y - 25);
-                    try (States.State color = States.color(0x888888)) {
-                        Painter.drawRect(0, 0, 50, 50);
+                    try (Painter.State color = p.color(0x888888)) {
+                        p.drawRect(0, 0, 50, 50);
                     }
-                    try (States.State color = States.color(0x777777)) {
-                        Painter.drawRect(10, 10, 30, 30);
+                    try (Painter.State color = p.color(0x777777)) {
+                        p.drawRect(10, 10, 30, 30);
                     }
                 }
             } else {
                 if (isReceiving()) {
-                    try (States.State color = States.color(0x444444)) {
-                        Painter.drawRect(0, 0, 50, 50);
+                    try (Painter.State color = p.color(0x444444)) {
+                        p.drawRect(0, 0, 50, 50);
                     }
                 }
             }
@@ -123,14 +122,14 @@ public class Render {
         }
 
         @Override
-        public void onDraw(Vector2i mouse) {
-            super.onDraw(mouse);
+        public void onDraw(Painter p, Vector2i mouse) {
+            super.onDraw(p, mouse);
             if (pos.containsKey(WDrag.sender) && pos.containsKey(WDrag.receiver)) {
                 int x1 = pos.get(WDrag.sender).x;
                 int x2 = pos.get(WDrag.receiver).x;
-                Painter.drawRect(Math.min(x1, x2) + 25, 58, Math.abs(x2 - x1), 2);
-                Painter.drawRect(x1 + 24, 50, 2, 10);
-                Painter.drawRect(x2 + 24, 50, 2, 10);
+                p.drawRect(Math.min(x1, x2) + 25, 58, Math.abs(x2 - x1), 2);
+                p.drawRect(x1 + 24, 50, 2, 10);
+                p.drawRect(x2 + 24, 50, 2, 10);
             }
         }
 

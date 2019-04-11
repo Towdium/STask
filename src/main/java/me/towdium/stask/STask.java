@@ -18,10 +18,11 @@ import org.jetbrains.annotations.NotNull;
 @NotNull
 public class STask extends Client {
     Ticker ticker = new Ticker(1 / 200f);
+    Window window = new Window("STask", 800, 600, new WContainer());
 
     public STask() {
         tunnel.send(new PString("Hello"));
-        Window.display(new WContainer());
+        window.display();
     }
 
     @SuppressWarnings("unused")
@@ -40,14 +41,8 @@ public class STask extends Client {
     @Override
     protected void tick() {
         super.tick();
-        Window.tick();
-        if (Window.finished()) close();
+        window.tick();
+        if (window.isClosed()) close();
         ticker.sync();
-    }
-
-    @Override
-    public synchronized void close() {
-        super.close();
-        Window.destroy();
     }
 }

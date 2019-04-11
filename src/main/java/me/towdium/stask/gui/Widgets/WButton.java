@@ -1,7 +1,6 @@
 package me.towdium.stask.gui.Widgets;
 
 import me.towdium.stask.gui.Painter;
-import me.towdium.stask.gui.States;
 import org.joml.Vector2i;
 
 /**
@@ -21,9 +20,9 @@ public abstract class WButton extends WArea {
     }
 
     @Override
-    public void onDraw(Vector2i mouse) {
-        try (States.State s = States.color(inside(mouse) ? 0xCCCCCC : 0xAAAAAA)) {
-            Painter.drawRect(0, 0, x, y);
+    public void onDraw(Painter p, Vector2i mouse) {
+        try (Painter.State s = p.color(inside(mouse) ? 0xCCCCCC : 0xAAAAAA)) {
+            p.drawRect(0, 0, x, y);
         }
     }
 

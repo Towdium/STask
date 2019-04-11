@@ -16,8 +16,8 @@ public class WButtonText extends WButton {
     }
 
     @Override
-    public void onDraw(Vector2i mouse) {
-        super.onDraw(mouse);
-        Painter.drawTextCut(s, 0, (y - Painter.fontHeight) / 2, x);
+    public void onDraw(Painter p, Vector2i mouse) {
+        super.onDraw(p, mouse);
+        p.drawTextCut(s, 0, (y - Painter.fontHeight) / 2, x);
     }
 }

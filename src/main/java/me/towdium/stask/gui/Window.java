@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL30C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -20,30 +21,33 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  */
 @NotNull
 public class Window {
-    static long id;
-    static Widget root;
-    public static int windowHeight, windowWidth;
+    static int counter;
+    static GLFWVidMode display;
+    long id;
+    Widget root;
+    Painter painter;
+    boolean closed;
 
-    static {
-        GLFWErrorCallback.createPrint().set();
-        if (!GLFW.glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
-        GLFW.glfwDefaultWindowHints();
-        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
-        GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
-        GLFWVidMode vm = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-        if (vm == null) throw new IllegalStateException("No display found");
-        windowWidth = vm.width() / 2;
-        windowHeight = vm.height() / 2;
-
-        id = GLFW.glfwCreateWindow(windowWidth, windowHeight, "STask", NULL, NULL);
+    public Window(String title, int width, int height, Widget root) {
+        if (counter == 0) {
+            GLFWErrorCallback.createPrint().set();
+            if (!GLFW.glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
+            GLFW.glfwDefaultWindowHints();
+            GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
+            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
+            display = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+        }
+        counter++;
+        this.root = root;
+        if (display == null) throw new IllegalStateException("No display found");
+        id = GLFW.glfwCreateWindow(width, height, title, NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
-
         GLFW.glfwMakeContextCurrent(id);
-        GLFW.glfwSetWindowPos(id, (vm.width() - windowWidth) / 2, (vm.height() - windowHeight) / 2);
+        GLFW.glfwSetWindowPos(id, (display.width() - width) / 2, (display.height() - height) / 2);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) ->
-                root.onMouse(mouse(), button, action == GLFW.GLFW_PRESS));
+                this.root.onMouse(mouse(), button, action == GLFW.GLFW_PRESS));
 
         GL30C.glEnable(GL30C.GL_STENCIL_TEST);
         GL30C.glEnable(GL30C.GL_MULTISAMPLE);
@@ -60,39 +64,58 @@ public class Window {
         GL30C.glClearColor(43f / 255f, 43f / 255f, 43f / 255f, 0f);
 
         GLFW.glfwSwapInterval(0);
+        painter = new Painter(this);
     }
 
-    public static void display(Widget root) {
-        Window.root = root;
+    public void bind() {
+        GLFW.glfwMakeContextCurrent(id);
+    }
+
+    public void display() {
         GLFW.glfwShowWindow(id);
     }
 
-    public static boolean finished() {
-        return GLFW.glfwWindowShouldClose(id);
+    public Vector2i getSize() {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer x = stack.mallocInt(1);
+            IntBuffer y = stack.mallocInt(1);
+            GLFW.glfwGetWindowSize(id, x, y);
+            return new Vector2i(x.get(0), y.get(0));
+        }
     }
 
-    public static void tick() {
-        GLFW.glfwPollEvents();
-        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
-        root.onDraw(mouse());
-        GLFW.glfwSwapBuffers(id);
+    public boolean isClosed() {
+        return closed;
     }
 
-    static Vector2i mouse() {
+    public void tick() {
+        if (closed) return;
+        GLFW.glfwMakeContextCurrent(id);
+        if (GLFW.glfwWindowShouldClose(id)) {
+            closed = true;
+            Callbacks.glfwFreeCallbacks(id);
+            GLFW.glfwDestroyWindow(id);
+            counter--;
+            if (counter == 0) {
+                GL.setCapabilities(null);
+                GLFW.glfwTerminate();
+                GLFWErrorCallback ec = GLFW.glfwSetErrorCallback(null);
+                if (ec != null) ec.free();
+            }
+        } else {
+            GLFW.glfwPollEvents();
+            GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
+            root.onDraw(painter, mouse());
+            GLFW.glfwSwapBuffers(id);
+        }
+    }
+
+    Vector2i mouse() {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             DoubleBuffer x = stack.mallocDouble(1);
             DoubleBuffer y = stack.mallocDouble(1);
             GLFW.glfwGetCursorPos(id, x, y);
             return new Vector2i((int) x.get(0), (int) y.get(0));
         }
-    }
-
-    public static void destroy() {
-        GL.setCapabilities(null);
-        Callbacks.glfwFreeCallbacks(id);
-        GLFW.glfwDestroyWindow(id);
-        GLFW.glfwTerminate();
-        GLFWErrorCallback ec = GLFW.glfwSetErrorCallback(null);
-        if (ec != null) ec.free();
     }
 }
