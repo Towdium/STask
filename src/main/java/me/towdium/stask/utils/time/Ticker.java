@@ -1,4 +1,6 @@
-package me.towdium.stask.utils;
+package me.towdium.stask.utils.time;
+
+import me.towdium.stask.utils.Utilities;
 
 import java.util.function.IntConsumer;
 

@@ -1,4 +1,4 @@
-package me.towdium.stask.gui;
+package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Closeable;
 import me.towdium.stask.utils.Tickable;

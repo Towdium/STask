@@ -1,12 +1,12 @@
 package me.towdium.stask;
 
-import me.towdium.stask.gui.Widgets.WButtonText;
-import me.towdium.stask.gui.Widgets.WContainer;
-import me.towdium.stask.gui.Window;
-import me.towdium.stask.utils.Counter;
+import me.towdium.stask.client.Widgets.WButtonText;
+import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
-import me.towdium.stask.utils.Ticker;
 import me.towdium.stask.utils.Utilities;
+import me.towdium.stask.utils.time.Counter;
+import me.towdium.stask.utils.time.Ticker;
 
 /**
  * Author: Towdium

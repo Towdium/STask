@@ -2,15 +2,15 @@ package me.towdium.stask;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.local.LocalAddress;
-import me.towdium.stask.gui.Painter;
-import me.towdium.stask.gui.Widgets.WArea;
-import me.towdium.stask.gui.Widgets.WContainer;
-import me.towdium.stask.gui.Window;
+import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widgets.WArea;
+import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Window;
 import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.utils.Log;
-import me.towdium.stask.utils.Ticker;
+import me.towdium.stask.utils.time.Ticker;
 import org.joml.Vector2i;
 
 import java.net.InetSocketAddress;

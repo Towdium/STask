@@ -1,8 +1,8 @@
-package me.towdium.stask.gui.Widgets;
+package me.towdium.stask.client.Widgets;
 
-import me.towdium.stask.gui.Painter;
-import me.towdium.stask.gui.Widget;
-import me.towdium.stask.utils.Pair;
+import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widget;
+import me.towdium.stask.utils.wrap.Pair;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;

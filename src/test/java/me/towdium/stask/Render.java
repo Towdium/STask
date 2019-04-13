@@ -1,10 +1,10 @@
 package me.towdium.stask;
 
-import me.towdium.stask.gui.Painter;
-import me.towdium.stask.gui.Widgets.WContainer;
-import me.towdium.stask.gui.Widgets.WDrag;
-import me.towdium.stask.gui.Window;
-import me.towdium.stask.utils.Ticker;
+import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Widgets.WDrag;
+import me.towdium.stask.client.Window;
+import me.towdium.stask.utils.time.Ticker;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 

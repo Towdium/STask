@@ -1,12 +1,12 @@
 package me.towdium.stask;
 
-import me.towdium.stask.gui.Widgets.WContainer;
-import me.towdium.stask.gui.Window;
+import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Window;
 import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
-import me.towdium.stask.utils.Ticker;
+import me.towdium.stask.utils.time.Ticker;
 import org.jetbrains.annotations.NotNull;
 
 /**

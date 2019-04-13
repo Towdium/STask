@@ -1,4 +1,4 @@
-package me.towdium.stask.utils;
+package me.towdium.stask.utils.wrap;
 
 import org.jetbrains.annotations.NotNull;
 

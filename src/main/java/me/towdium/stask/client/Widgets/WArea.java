@@ -1,6 +1,6 @@
-package me.towdium.stask.gui.Widgets;
+package me.towdium.stask.client.Widgets;
 
-import me.towdium.stask.gui.Widget;
+import me.towdium.stask.client.Widget;
 import org.joml.Vector2i;
 
 /**

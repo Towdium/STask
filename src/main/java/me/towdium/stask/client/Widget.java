@@ -1,4 +1,4 @@
-package me.towdium.stask.gui;
+package me.towdium.stask.client;
 
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;

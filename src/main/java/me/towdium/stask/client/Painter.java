@@ -1,4 +1,4 @@
-package me.towdium.stask.gui;
+package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Quad;
@@ -410,20 +410,19 @@ public class Painter {
         }
 
         public Texture(String s) {
-            ByteBuffer image = Utilities.readBytes("/textures/" + s);
-            if (image == null) throw new IllegalStateException("Failed to load texture: " + s);
-
             int c, x, y;
+            ByteBuffer image = Utilities.readBytes("/textures/" + s);
+            if (image == null) throw new RuntimeException("Failed to load texture: " + s);
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 IntBuffer wb = stack.mallocInt(1);
                 IntBuffer hb = stack.mallocInt(1);
                 IntBuffer cb = stack.mallocInt(1);
-
                 image = STBImage.stbi_load_from_memory(image, wb, hb, cb, 0);
-                if (image == null)
-                    throw new RuntimeException("Failed to load image: " + STBImage.stbi_failure_reason());
-
+                if (image == null) {
+                    String err = STBImage.stbi_failure_reason();
+                    throw new RuntimeException("Failed to load image: " + err);
+                }
                 x = wb.get(0);
                 y = hb.get(0);
                 c = cb.get(0);

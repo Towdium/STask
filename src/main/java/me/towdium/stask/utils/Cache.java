@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -27,5 +28,9 @@ public class Cache<K, V> {
             data.put(key, ret);
         }
         return ret;
+    }
+
+    public void foreach(BiConsumer<K, V> c) {
+        data.forEach(c);
     }
 }

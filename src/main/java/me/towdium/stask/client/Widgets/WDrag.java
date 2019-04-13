@@ -1,6 +1,6 @@
-package me.towdium.stask.gui.Widgets;
+package me.towdium.stask.client.Widgets;
 
-import me.towdium.stask.gui.Painter;
+import me.towdium.stask.client.Painter;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
