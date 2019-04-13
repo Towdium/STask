@@ -1,9 +1,8 @@
 package me.towdium.stask.network.packates;
 
 import io.netty.buffer.ByteBuf;
-import me.towdium.stask.network.Client;
+import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
-import me.towdium.stask.network.Server;
 
 /**
  * Author: Towdium
@@ -28,12 +27,12 @@ public class PString extends Packet {
     }
 
     @Override
-    public void handle(Server.Context c) {
+    public void handle(Network.Server.Context c) {
         System.out.println("Server received: " + str);
     }
 
     @Override
-    public void handle(Client.Context c) {
+    public void handle(Network.Client.Context c) {
         System.out.println("Client received: " + str);
     }
 

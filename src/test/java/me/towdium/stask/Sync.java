@@ -1,62 +1,69 @@
 package me.towdium.stask;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.local.LocalAddress;
 import me.towdium.stask.gui.Painter;
 import me.towdium.stask.gui.Widgets.WArea;
 import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Window;
-import me.towdium.stask.network.Client;
+import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
-import me.towdium.stask.network.Server;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Ticker;
 import org.joml.Vector2i;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 /**
  * Author: Towdium
  * Date: 08/04/19
  */
-public class Network {
+public class Sync {
     WTest test = new WTest();
-    Client client;
-    Window window;
+    Network network;
+    boolean master;
 
-    public Network() {
+    public Sync(boolean master) {
         Log.network.setLevel(Log.Priority.TRACE);
         Packet.Registry.register(PMouse.IDENTIFIER, PMouse::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
+        this.master = master;
     }
 
     @SuppressWarnings("unused")
     public static void main(String[] args) {
         if (args.length != 1) return;
-
-        if ("0".equals(args[0])) {
-            try (Server s = new Server()) {
-                new Thread(() -> {
-                    while (!s.isClosed()) s.tick();
-                }).start();
-                new Network().run();
-            }
-        } else if ("1".equals(args[0])) new Network().run();
-    }
-
-    void move(int x, int y) {
-        test.move(x, y);
+        if ("0".equals(args[0])) new Sync(true).run();
+        else if ("1".equals(args[0])) new Sync(false).run();
     }
 
     public void run() {
-        try (Client c = new Client();
-             Window w = new Window("Network", 800, 600, new WContainer().add(0, 0, test))) {
-            client = c;
-            window = w;
-            window.display();
-            client.send(new PConnect());
+        try (Window w = new Window("Sync", 800, 600, new WContainer().add(0, 0, test));
+             Network n = new Network()) {
+            network = n;
+            w.display();
+
+            if (master) {
+                n.getDiscover().discoverable(true);
+                n.getServer().bind(new InetSocketAddress(25566));
+                SocketAddress a = n.getServer().bind(LocalAddress.ANY);
+                n.getClient().connect(a);
+                n.getClient().send(new PConnect());
+                new Thread(() -> {
+                    while (!n.isClosed()) n.getServer().tick();
+                }).start();
+            } else {
+                n.getDiscover().search(i -> {
+                    n.getClient().connect(new InetSocketAddress(i, 25566));
+                    n.getClient().send(new PConnect());
+                });
+            }
             Ticker ticker = new Ticker(1 / 200f);
-            while (!window.isFinished()) {
-                client.tick();
-                window.tick();
+            while (!w.isFinished()) {
+                n.getClient().tick();
+                w.tick();
                 ticker.sync();
             }
         }
@@ -81,7 +88,7 @@ public class Network {
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
             if (dirty) {
-                client.send(new PMouse(mouse.x, mouse.y));
+                network.getClient().send(new PMouse(mouse.x, mouse.y));
                 dirty = false;
             }
         }
@@ -149,15 +156,15 @@ public class Network {
         }
 
         @Override
-        public void handle(Server.Context c) {
+        public void handle(Network.Server.Context c) {
             c.relay(new PMouse(x, y));
             Log.network.trace("Server received");
         }
 
         @Override
-        public void handle(Client.Context c) {
+        public void handle(Network.Client.Context c) {
             test.move(x, y);
-            Log.network.trace("Client " + client.getIndex() + " received");
+            Log.network.trace("Client " + network.getClient().getIndex() + " received");
         }
 
         @Override

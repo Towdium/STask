@@ -29,9 +29,9 @@ public abstract class Packet {
 
     public abstract void serialize(ByteBuf b);
 
-    public abstract void handle(Server.Context c);
+    public abstract void handle(Network.Server.Context c);
 
-    public abstract void handle(Client.Context c);
+    public abstract void handle(Network.Client.Context c);
 
     public abstract String identifier();
 

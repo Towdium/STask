@@ -2,10 +2,8 @@ package me.towdium.stask;
 
 import me.towdium.stask.gui.Widgets.WContainer;
 import me.towdium.stask.gui.Window;
-import me.towdium.stask.network.Client;
-import me.towdium.stask.network.Discover;
+import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
-import me.towdium.stask.network.Server;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
 import me.towdium.stask.utils.Ticker;
@@ -23,18 +21,17 @@ public class STask {
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
         Ticker ticker = new Ticker(1 / 200f);
-        try (Discover d = new Discover();
-             Server s = new Server();
-             Client c = new Client();
-             Window w = new Window("STask", 800, 600, new WContainer())) {
-            c.send(new PString("Hello"));
+        try (Window w = new Window("STask", 800, 600, new WContainer());
+             Network n = new Network()) {
+            n.getClient().send(new PString("Hello"));
             w.display();
             while (w.isFinished()) {
-                s.tick();
-                c.tick();
+                n.getClient().tick();
+                n.getServer().tick();
                 w.tick();
                 ticker.sync();
             }
         }
+
     }
 }

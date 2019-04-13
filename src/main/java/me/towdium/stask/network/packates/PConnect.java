@@ -1,9 +1,8 @@
 package me.towdium.stask.network.packates;
 
 import io.netty.buffer.ByteBuf;
-import me.towdium.stask.network.Client;
+import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
-import me.towdium.stask.network.Server;
 import me.towdium.stask.utils.Log;
 
 /**
@@ -32,13 +31,13 @@ public class PConnect extends Packet {
     }
 
     @Override
-    public void handle(Server.Context c) {
+    public void handle(Network.Server.Context c) {
         int index = c.connect();
         c.reply(new PConnect(index));
     }
 
     @Override
-    public void handle(Client.Context c) {
+    public void handle(Network.Client.Context c) {
         c.connect(index);
         Log.network.info("Connected as client " + index);
     }
