@@ -29,11 +29,12 @@ public class Windows {
 
         for (Window w : windows) w.display();
         while (!windows.isEmpty()) {
-
             for (Iterator<Window> i = windows.iterator(); i.hasNext(); ) {
                 Window window = i.next();
-                if (window.isClosed()) i.remove();
-                else window.tick();
+                if (window.isFinished()) {
+                    window.close();
+                    i.remove();
+                } else window.tick();
             }
             ticker.sync();
         }

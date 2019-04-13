@@ -1,5 +1,7 @@
 package me.towdium.stask.gui;
 
+import me.towdium.stask.utils.Closeable;
+import me.towdium.stask.utils.Tickable;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
@@ -20,13 +22,12 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * Date: 04/03/19
  */
 @NotNull
-public class Window {
+public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
     long id;
     Widget root;
     Painter painter;
-    boolean closed;
 
     public Window(String title, int width, int height, Widget root) {
         if (counter == 0) {
@@ -67,7 +68,7 @@ public class Window {
         painter = new Painter(this);
     }
 
-    public void bind() {
+    void bind() {
         GLFW.glfwMakeContextCurrent(id);
     }
 
@@ -84,30 +85,19 @@ public class Window {
         }
     }
 
-    public boolean isClosed() {
-        return closed;
+    public boolean isFinished() {
+        return GLFW.glfwWindowShouldClose(id);
     }
 
+    @Override
     public void tick() {
         if (closed) return;
         GLFW.glfwMakeContextCurrent(id);
-        if (GLFW.glfwWindowShouldClose(id)) {
-            closed = true;
-            Callbacks.glfwFreeCallbacks(id);
-            GLFW.glfwDestroyWindow(id);
-            counter--;
-            if (counter == 0) {
-                GL.setCapabilities(null);
-                GLFW.glfwTerminate();
-                GLFWErrorCallback ec = GLFW.glfwSetErrorCallback(null);
-                if (ec != null) ec.free();
-            }
-        } else {
-            GLFW.glfwPollEvents();
-            GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
-            root.onDraw(painter, mouse());
-            GLFW.glfwSwapBuffers(id);
-        }
+        GLFW.glfwPollEvents();
+        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
+        root.onDraw(painter, mouse());
+        GLFW.glfwSwapBuffers(id);
+
     }
 
     Vector2i mouse() {
@@ -116,6 +106,20 @@ public class Window {
             DoubleBuffer y = stack.mallocDouble(1);
             GLFW.glfwGetCursorPos(id, x, y);
             return new Vector2i((int) x.get(0), (int) y.get(0));
+        }
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        Callbacks.glfwFreeCallbacks(id);
+        GLFW.glfwDestroyWindow(id);
+        counter--;
+        if (counter == 0) {
+            GL.setCapabilities(null);
+            GLFW.glfwTerminate();
+            GLFWErrorCallback ec = GLFW.glfwSetErrorCallback(null);
+            if (ec != null) ec.free();
         }
     }
 }

@@ -17,18 +17,15 @@ import org.joml.Vector2i;
  * Author: Towdium
  * Date: 08/04/19
  */
-public class Network extends Client {
+public class Network {
     WTest test = new WTest();
-    Ticker ticker = new Ticker(1 / 200f);
-    Window window = new Window("Network", 800, 600, new WContainer().add(0, 0, test));
+    Client client;
+    Window window;
 
     public Network() {
         Log.network.setLevel(Log.Priority.TRACE);
         Packet.Registry.register(PMouse.IDENTIFIER, PMouse::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
-
-        tunnel.send(new PConnect());
-        window.display();
     }
 
     @SuppressWarnings("unused")
@@ -36,24 +33,33 @@ public class Network extends Client {
         if (args.length != 1) return;
 
         if ("0".equals(args[0])) {
-            try (Server s = new Server();
-                 Client c = new Network()) {
-                new Thread(s).start();
-                c.run();
+            try (Server s = new Server()) {
+                new Thread(() -> {
+                    while (!s.isClosed()) s.tick();
+                }).start();
+                new Network().run();
             }
-        } else if ("1".equals(args[0])) {
-            try (Client c = new Network()) {
-                c.run();
-            }
-        }
+        } else if ("1".equals(args[0])) new Network().run();
     }
 
-    @Override
-    protected void tick() {
-        super.tick();
-        window.tick();
-        if (window.isClosed()) close();
-        ticker.sync();
+    void move(int x, int y) {
+        test.move(x, y);
+    }
+
+    public void run() {
+        try (Client c = new Client();
+             Window w = new Window("Network", 800, 600, new WContainer().add(0, 0, test))) {
+            client = c;
+            window = w;
+            window.display();
+            client.send(new PConnect());
+            Ticker ticker = new Ticker(1 / 200f);
+            while (!window.isFinished()) {
+                client.tick();
+                window.tick();
+                ticker.sync();
+            }
+        }
     }
 
     class WTest extends WContainer {
@@ -75,7 +81,7 @@ public class Network extends Client {
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
             if (dirty) {
-                tunnel.send(new PMouse(mouse.x, mouse.y));
+                client.send(new PMouse(mouse.x, mouse.y));
                 dirty = false;
             }
         }
@@ -149,9 +155,9 @@ public class Network extends Client {
         }
 
         @Override
-        public void handle(Context c) {
+        public void handle(Client.Context c) {
             test.move(x, y);
-            Log.network.trace("Client " + getIndex() + " received");
+            Log.network.trace("Client " + client.getIndex() + " received");
         }
 
         @Override

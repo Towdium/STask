@@ -70,7 +70,7 @@ public class Painter {
     int shaderID;
     Window window;
 
-    public Painter(Window window) {
+    Painter(Window window) {
         this.window = window;
         window.bind();
         IntBuffer ib = BufferUtils.createIntBuffer(1);

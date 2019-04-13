@@ -6,7 +6,7 @@ import java.util.function.IntConsumer;
  * Author: Towdium
  * Date: 09/04/19
  */
-public class Counter {
+public class Counter implements Tickable {
     int stored = 0;
     int count = 0;
     long step;
@@ -30,10 +30,6 @@ public class Counter {
         this.callback = callback;
     }
 
-    public void count() {
-        count(1);
-    }
-
     public int stored() {
         return stored;
     }
@@ -48,5 +44,10 @@ public class Counter {
             next += (int) ((now - next) / step) * step + step;
             if (callback != null) callback.accept(stored);
         } else count += i;
+    }
+
+    @Override
+    public void tick() {
+        count(1);
     }
 }

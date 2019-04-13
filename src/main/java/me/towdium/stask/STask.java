@@ -16,33 +16,25 @@ import org.jetbrains.annotations.NotNull;
  * Date: 04/03/19
  */
 @NotNull
-public class STask extends Client {
-    Ticker ticker = new Ticker(1 / 200f);
-    Window window = new Window("STask", 800, 600, new WContainer());
+public class STask {
 
-    public STask() {
-        tunnel.send(new PString("Hello"));
-        window.display();
-    }
-
-    @SuppressWarnings("unused")
     public static void main(String[] args) {
         Packet.Registry.register(PString.IDENTIFIER, PString::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
+        Ticker ticker = new Ticker(1 / 200f);
         try (Discover d = new Discover();
              Server s = new Server();
-             STask c = new STask()) {
-            new Thread(s).start();
-            c.run();
+             Client c = new Client();
+             Window w = new Window("STask", 800, 600, new WContainer())) {
+            c.send(new PString("Hello"));
+            w.display();
+            while (w.isFinished()) {
+                s.tick();
+                c.tick();
+                w.tick();
+                ticker.sync();
+            }
         }
-    }
-
-    @Override
-    protected void tick() {
-        super.tick();
-        window.tick();
-        if (window.isClosed()) close();
-        ticker.sync();
     }
 }

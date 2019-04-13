@@ -7,8 +7,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import me.towdium.stask.network.Packet.Decoder;
 import me.towdium.stask.network.Packet.Encoder;
+import me.towdium.stask.utils.Closeable;
+import me.towdium.stask.utils.Tickable;
 
-import java.io.Closeable;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -16,15 +17,25 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Author: Towdium
  * Date: 08/04/19
  */
-public class Client implements Closeable, Runnable {
+public class Client extends Closeable implements Tickable {
     final Context context = new Context();
-    protected Tunnel tunnel;
-    protected int index = -1;
-    volatile BlockingDeque<Packet> queue = new LinkedBlockingDeque<>();
-    volatile boolean close = false;
+    final BlockingDeque<Packet> queue = new LinkedBlockingDeque<>();
+    private EventLoopGroup worker = new NioEventLoopGroup(1);
+    private Channel channel;
+    private int index = -1;
 
     public Client() {
-        tunnel = new Tunnel();
+        Bootstrap b = new Bootstrap();
+        b.group(worker);
+        b.channel(NioSocketChannel.class);
+        b.option(ChannelOption.SO_KEEPALIVE, true);
+        b.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            public void initChannel(SocketChannel ch) {
+                ch.pipeline().addLast(new Decoder(), new Encoder(), new Handler());
+            }
+        });
+        channel = b.connect("127.0.0.1", 25566).syncUninterruptibly().channel();
     }
 
     public int getIndex() {
@@ -33,51 +44,23 @@ public class Client implements Closeable, Runnable {
 
     @Override
     public synchronized void close() {
-        tunnel.close();
-        close = true;
+        super.close();
+        worker.shutdownGracefully();
     }
 
     @Override
-    public void run() {
-        while (!close) tick();
-    }
-
-    protected void tick() {
+    public void tick() {
         Packet p;
         while ((p = queue.poll()) != null) p.handle(context);
     }
 
-    public class Tunnel implements Closeable {
-        EventLoopGroup worker = new NioEventLoopGroup(1);
-        Channel channel;
-
-        public Tunnel() {
-            Bootstrap b = new Bootstrap();
-            b.group(worker);
-            b.channel(NioSocketChannel.class);
-            b.option(ChannelOption.SO_KEEPALIVE, true);
-            b.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                public void initChannel(SocketChannel ch) {
-                    ch.pipeline().addLast(new Decoder(), new Encoder(), new Handler());
-                }
-            });
-            channel = b.connect("127.0.0.1", 25566).syncUninterruptibly().channel();
-        }
-
-        @Override
-        public void close() {
-            worker.shutdownGracefully();
-        }
-
-        public void send(Packet p) {
-            channel.writeAndFlush(p);
-        }
+    public void send(Packet p) {
+        channel.writeAndFlush(p);
     }
 
     public class Context {
         public void reply(Packet p) {
-            tunnel.channel.writeAndFlush(p);
+            channel.writeAndFlush(p);
         }
 
         public void connect(int index) {

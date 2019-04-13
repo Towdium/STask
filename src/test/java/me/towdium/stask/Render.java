@@ -15,11 +15,8 @@ import java.util.IdentityHashMap;
  * Date: 08/04/19
  */
 public class Render {
-    static Ticker ticker = new Ticker(1 / 200f);
-
     public static void main(String[] args) {
         WContainer root = new WContainer();
-        Window window = new Window("Render", 800, 600, root);
         root.add(0, 0, (p, m) -> {
             try (Painter.SMatrix mat = p.matrix();
                  Painter.State col = p.color(0xFFAA00)) {
@@ -42,11 +39,16 @@ public class Render {
         root.add(110, 200, new WDTestA(false));
         root.add(170, 200, new WDTestA(false));
         root.add(280, 200, new WDTestB());
-        window.display();
-        while (!window.isClosed()) {
-            window.tick();
-            ticker.sync();
+
+        Ticker ticker = new Ticker(1 / 200f);
+        try (Window w = new Window("Render", 800, 600, root)) {
+            w.display();
+            while (!w.isFinished()) {
+                w.tick();
+                ticker.sync();
+            }
         }
+
     }
 
     static class WDTestA extends WDrag {
