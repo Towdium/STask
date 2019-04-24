@@ -24,6 +24,8 @@
 \newdateformat{monthyeardate}{%
   \monthname[\THEMONTH] \THEYEAR}
 
+
+
 \parindent=0pt          %  Switch off indent of paragraphs 
 \parskip=5pt            %  Put 5pt between each paragraph  
 \Urlmuskip=0mu plus 1mu %  Better line breaks for URLs
@@ -68,7 +70,7 @@
 %                       Insert your abstract HERE
 %                       
 \begin{abstract}
-    This project aims to develop an game-like application to introduce the concept and details parallel task scheduling to students. The report starts with backgrounds in parallel programming, providing the general scope, then describes the complexity of task graph scheduling problems, including all the variants to be included in the application. Afterwards, the design of the application is introduced, including ways of interaction, appearance of interface and selection of libraries. Finally, it briefly introduces the evaluation method, expected outcomes and planning of the project.
+    This project aims to develop an game-like application to introduce the concept and details of parallel task scheduling to students. The report starts with backgrounds in parallel programming, providing the general scope, then describes the complexity of task graph scheduling problems, including all the variants to be included in the application. Afterwards, the design of the application is introduced, including ways of interaction, appearance of interface and selection of libraries. Finally, it briefly introduces the evaluation method, expected outcomes and planning of the project.
 \end{abstract}
 
 \vspace*{1cm}
@@ -114,9 +116,9 @@ In this project, the learning outcome will not be compared to that of traditiona
 
 \subsection{Timeliness and Novelty}
 
-For the content to be introduced, although some of the scheduling algorithms are invented tens of years before, they are still meaningful to learn and widely used in industrial practice, because parallel computing is gaining popularity to solve computation intensive problems. Many companies now rely on distributed computing frameworks like Hadoop and Spark for data processing, where YARN, a resource management system, is used to allocate computing tasks to processors. Task scheduling algorithms are important theory backgrounds in design of such systems. 
+For the content to be introduced, although some of the scheduling algorithms are invented tens of years before, they are still meaningful to learn and widely used in industrial practice, because parallel computing is gaining popularity to solve computation intensive problems \cite{Taboada2013}. Many companies now rely on distributed computing frameworks like Hadoop and Spark for data processing, where YARN, a resource management system, is used to allocate computing tasks to processors. Task scheduling algorithms are important theory backgrounds in design of such systems. 
 
-Secondly, although it is not common, it is a trend to use such applications or games to assist teaching in university education, since the volume of knowledge sometimes makes it hard for students to learn in limited time, while using such applications is promising to produce better learning outcomes. There seems to be no such projects related to task scheduling algorithms, so this project can propose a possible application of this teaching method in such area.
+Secondly, although it is not common, it is a trend to use such applications or games to assist teaching in university education \cite{Shabanah2010,Becker2001,Harteveld}, since the volume of knowledge sometimes makes it hard for students to learn in limited time, while using such applications is promising to produce better learning outcomes. There seems to be no such projects related to task scheduling algorithms, so this project can propose a possible application of this teaching method in such area.
 
 \subsection{Significance} \label{sec:sig}
 
@@ -153,18 +155,16 @@ To enable a big task for paralleled execution, a common way is to divide the ori
 Figure \ref{fig:graph} shows an example of task graph, where each task is described in the format of ``identifier (duration)'' and dependencies are given as arrows pointing to dependant. An arrow pointing from task A to task B means task A have to be finished before the start of task B. Figure \ref{fig:schedule} shows an example schedule using two processors P1 and P2, where lines with arrows shows that one processor is allocated to one task in given period. It can be observed that the schedule reduces total execution time from 23 units sequentially to 14 units. In most of schedules, processors can not be made running during the entire period due to the dependencies, so that scheduling algorithms are used to better utilize the processors.
 
 The complexity of this topic is the variation of models. The model given in figure \ref{fig:example} is based on the simplest assumption: each task takes same time on different processors and data can be distributed to other processors immediately. However, to better describe practical tasks, models are given more details. Here are several well-developed variances of models:
-
 \begin{itemize}
     \item Homogeneous vs.\ heterogeneous in performance of each processor: For homogeneous clusters, the processors are considered to be equally powerful. For heterogeneous clusters \cite{Topcuoglu}, a simple model is to have different multipliers for each processor, making some of them faster to finish one task compared to other processors. In addition, complex models can include specialized processors in the cluster, usually related to specialized instruction sets or usage of co-processors, making them faster only for certain types of tasks. 
-    \item Ideal (immediate) vs.\ practical in communication performance: For ideal situation, it is considered to happen immediately to transfer data from one processor to another, while it can take some time in practical models. With more details, the time consumption of communication can also depend on the size of messages. In this case the algorithms have to consider size of messages between each tasks due to the difference in time delay.
+    \item Ideal (immediate) vs.\ practical in communication performance: For ideal situation, it is considered to happen immediately to transfer data from one processor to another, while it can take some time in practical models. With more details, the time consumption of communication can also depend on the size of messages \cite{Robert2011}. In this case the algorithms have to consider size of messages between each tasks due to the difference in time delay.
     \item Multiple vs.\ single communication channel in each processor: For models assuming multiple communication channels, each processor can communicate with many processors simultaneously, while it is considered to be able to send or receive data from only one processor in models assuming single communication channel.
 \end{itemize}
-
 There are also variances in scheduling algorithms. For the well discussed algorithm, list scheduling algorithm, different functions can be used to determine the priority of tasks, such as longest path, longest time and critical path, which can have significant effect to allocation results. This project will try to cover all the variances described above.
 
 \subsection{Education Software}
 
-There are many projects trying to develop applications for teaching assistance, for topics including algorithms, data structures or more complex concepts like programming. Shabanah et al.\ developed several applications to introduce basic algorithms like binary search and data structures like linked list and binary search tree\cite{Shabanah2010}. The robot game Karel is used by many universities to teach programming, especially for ideas related to sequence control, making the learning process more enjoyable\cite{Becker2001}. In addition, Harteveld et al. reviewed 36 projects for similar purposes \cite{Harteveld}.
+There are many projects trying to develop applications for teaching assistance, for topics including algorithms, data structures or more complex concepts like programming. Shabanah et al.\ developed several applications to introduce basic algorithms like binary search and data structures like linked list and binary search tree \cite{Shabanah2010}. The robot game Karel is used by many universities to teach programming, especially for ideas related to sequence control, making the learning process more enjoyable \cite{Becker2001}. In addition, Harteveld et al. reviewed 36 projects for similar purposes \cite{Harteveld}.
 
 There are more games designed based on engineering tasks. The game company Zachtronics is famous for such games. For example, ``TIS-300'' is designed based on the model with a mixture of assembly programming and manycore parallelism and ``Infinityfactory'' is designed based on production line management and geometric relationships. In addition, the game ``Screeps'' uses Javascript, a widely used programming language, as the main method to play the game, by programming AI of entities in the in-game world, for which the game is also suggested as a tool to learn programing.
 
@@ -172,17 +172,17 @@ There are more games designed based on engineering tasks. The game company Zacht
 
 \subsection{Learning experience} \label{sec:modes}
 
-This applications is expected to provide a complete description of different scenarios of task graph scheduling. For example, static systems are required to be optimized for only one task graph, but for dynamic systems, the have to adapt to changes in task graphs or to discover new tasks in real-time, which could lead to difference in preferred allocation. Therefore, it is designed to have different modes for different purposes:
+This application is expected to provide a complete description of different scenarios of task graph scheduling. For example, static systems are required to be optimized for only one task graph, but for dynamic systems, they have to adapt to changes in task graphs or to discover new tasks in real-time, which could lead to difference in preferred allocation. Therefore, it is designed to have different modes for different purposes:
 
 \begin{enumerate}
     \item \textbf{Static:} The user is required to discover a schedule with requirements like total time or utilization rate, base on one fixed task graph. There is no time limit.
     \item \textbf{Dynamic:} The user is required to schedule and finish all the tasks from a dynamically expanding task graph. The processors will run in real time and the task graph will be gradually revealed. So the user have to determine the allocation quickly.
-    \item \textbf{Leaning:} The user is required to provide the schedules generated by existing algorithms. The application will provide instructions to learn the algorithms and check if the provided schedule matches the expected one.
+    \item \textbf{Learning:} The user is required to provide the schedules generated by existing algorithms. The application will provide instructions to learn the algorithms and check if the provided schedule matches the expected one.
     \item \textbf{Multiplayer:} Similar to dynamic mode, but multiple players are competing to finish the tasks in shortest time.
     \item \textbf{Testing:} The user can develop a scheduling algorithm (possibly in Java), then the application will run the algorithm and show the result.
 \end{enumerate}
 
-Some modes like static mode and dynamic mode seems simple to implement, while modes like testing mode seems challenging, especially when letting the user to write programs inside the application. Therefore, testing mode will be implemented only if time allows, while other modes are expected to be finished.
+Some modes like static mode and dynamic mode seems simple to implement, while modes like testing mode seems challenging, especially when letting the user to write programs inside the application. Therefore, testing mode will be implemented only if time allows, while other modes are expected to be fully finished.
 
 \subsection{Appearance} \label{sec:aprc}
 
@@ -190,7 +190,6 @@ There are many choices to be made in design of this project. An important part i
 
 \begin{figure}
 \begin{minipage}{\textwidth}
-    \vspace{1em}
     \hfill
     \begin{minipage}[b]{0.4\textwidth}
         \centering
@@ -214,16 +213,17 @@ There are many choices to be made in design of this project. An important part i
         \label{tab:repr}
     \end{minipage}
     \hfill
-    \vspace{1em}
 \end{minipage}
+\vspace{-1em}
 \end{figure}
 
 In addition to details, the quality of layout also contributes to the overall usability. Figure \ref{fig:layout} shows an typical layout of interface, showing task graph on the left side, status of processors on the right side and allocation of tasks in the bottom. One possible method to represent task allocation is to have several rows, each for one processor, to show the timeline of processors, so that the user can drag and drop tasks into the timeline of any processor with results shown in real-time. There can be many choices in layout, but it should provide significant amount of information to the user.
 
 \begin{figure}[htpb]
     \centering
-    \includegraphics[width=0.5\columnwidth]{layout.pdf}
+    \includegraphics[width=0.45\columnwidth]{layout.pdf}
     \caption{A example layout of interface}
+    \vspace{-1.5em}
     \label{fig:layout}
 \end{figure}
 
@@ -237,7 +237,7 @@ As is described in section \ref{sec:aprc}, this program might require usage of t
 
 This project will mainly be evaluated in two aspects: quality of design, which is more important, and quality of implementation. Since the application is developed for education purpose, the design will be evaluated according to learning results of testers. Although there are some arguments, the application will be tested base on five user assumption \cite{Virzi1992}, due to the limit of time. According to the assumption, 5 students will be invited to use the application to learn task graph scheduling algorithms. The testers will be suggested to continuously describe their thoughts about the experience, so that the entire process can be recorded. Afterwards, the testers will be asked some questions to evaluate their understanding of the algorithms. Ideally, the users are expected to know variances described in section \ref{sec:tgs} and tell the detailed execution of algorithms in different models.
 
-The process is expected to take less than 4 hours, because it will become hard to arrange if it takes longer. The duration seems not sufficient for a student to understand all the details of the algorithms. In this case, if the tester is willing to, he/she can copy the application for further study and provide more feedback on user experience.
+The process is expected to take less than 4 hours per tester, because it will become hard to arrange if it takes longer. The duration seems not sufficient for a student to understand all the details of the algorithms. In this case, if the tester is willing to, he/she can copy the application for further study and provide more feedback on user experience.
 
 For quality of implementation, it will be evaluated according to compatibility in different environments like variant operating systems, hardware configurations and screen resolution. It should at least run successfully out-of-box on DICE machines and is highly expected to run correctly on Linux and Windows. In addition, criterions like quality of documentation and program structure will be discussed.
 
@@ -247,95 +247,109 @@ Since this project is mainly development based, the main outcome is the compiled
 
 \section{Research Plan, Milestones and Deliverables}
 
-% \definecolor{barblue}{RGB}{153,204,254}
-% \definecolor{groupblue}{RGB}{51,102,254}
-% \definecolor{linkred}{RGB}{165,0,33} 
+Milestones are given in table \ref{tab:milestones} and deliverables are given in table \ref{tab:deliverables}. Figure \ref{fig:gantt} shows the Gantt chart of activities in this project. The time cost for multiplayer mode and testing mode is hard to be accurately estimated due to the complexity of implementation. Therefore, the implementation details of these modes will be determined according to the progress.
 
-% \begin{figure}[htbp]
-% \begin{ganttchart}[
-%     y unit title=0.4cm,
-%     y unit chart=0.5cm,
-%     vgrid,hgrid,
-%     x unit=1.55mm,
-%     time slot format=isodate,
-%     title/.append style={draw=none, fill=barblue},
-%     title label font=\sffamily\bfseries\color{white},
-%     title label node/.append style={below=-1.6ex},
-%     title left shift=.05,
-%     title right shift=-.05,
-%     title height=1,
-%     bar/.append style={draw=none, fill=groupblue},
-%     bar height=.6,
-%     bar label font=\normalsize\color{black!50},
-%     group right shift=0,
-%     group top shift=.6,
-%     group height=.3,
-%     group peaks height=.2,
-%     bar incomplete/.append style={fill=green}
-%    ]{2018-06-01}{2018-08-16}
-%    \gantttitlecalendar{month=name}\\
-%    \ganttbar[
-%     progress=100,
-%     bar progress label font=\small\color{barblue},
-%     bar progress label node/.append style={right=4pt},
-%     bar label font=\normalsize\color{barblue},
-%     name=pp
-%    ]{Background Reading}{2018-06-01}{2018-06-14} \\
-% \ganttset{progress label text={}, link/.style={black, -to}}
-% \ganttgroup{Objective 1}{2018-06-14}{2018-06-30} \\
-% \ganttbar[progress=4, name=T1A]{Task A}{2018-06-14}{2018-06-21} \\
-% \ganttlinkedbar[progress=0]{Task B}{2018-06-21}{2018-06-30} \\
-% \ganttgroup{Objective 2}{2018-07-01}{2018-07-14} \\
-% \ganttbar[progress=15, name=T2A]{Task A}{2018-07-01}{2018-07-07} \\
-% \ganttlinkedbar[progress=0]{Task B}{2018-07-07}{2018-07-14} \\
-% \ganttgroup{Dissertation    }{2018-07-14}{2018-08-16} \\
-%   \ganttbar[progress=0]{Task A}{2018-07-14}{2018-08-16}
-%   \ganttset{link/.style={green}}
-%   \ganttlink[link mid=.4]{pp}{T1A}
-%   \ganttlink[link mid=.159]{pp}{T2A}
-% \end{ganttchart}
-% \caption{Gantt Chart of the activities defined for this project.}
-% \label{fig:gantt}
-% \end{figure}
-
-\begin{table}[htbp]
+\begin{table}[!htb]
     \begin{center}
         \begin{tabular}{|c|c|l|}
         \hline
         \textbf{Milestone} & \textbf{Week} & \textbf{Description} \\
         \hline
-        $M_1$ & 2 & Building blocks and utilities completed \\
-        $M_2$ & 5 & Static, dynamic and learning mode completed \\
-        $M_3$ & 8 & Multiplayer and testing mode completed \\
-        $M_4$ & 9 & Testing completed \\
+        $M_1$ & 1 & Building blocks and utilities completed \\
+        $M_2$ & 3 & Static, dynamic and learning mode completed \\
+        $M_3$ & 7 & Multiplayer and testing mode completed \\
+        $M_4$ & 8 & Testing completed \\
         $M_5$ & 10 & Submission of dissertation \\
         \hline
         \end{tabular} 
     \end{center}
+    \vspace{-1em}
     \caption{Milestones defined in this project.}
-    \label{fig:milestones}
+    \label{tab:milestones}
 \end{table}
 
-% \begin{table}[htbp]
-%     \begin{center}
-%         \begin{tabular}{|c|c|l|}
-%         \hline
-%         \textbf{Deliverable} & \textbf{Week} & \textbf{Description} \\
-%         \hline
-%         $D_1$ & 6 & Software tool for \dots\\
-%         $D_2$ & 8 & Evaluation report on \dots\\
-%         $D_3$ & 10 & Dissertation \\
-%         \hline
-%         \end{tabular} 
-%     \end{center}
-%     \caption{List of deliverables defined in this project.}
-%     \label{fig:deliverables}
-% \end{table}
+\begin{table}[!htb]
+    \begin{center}
+        \begin{tabular}{|c|c|l|}
+        \hline
+        \textbf{Deliverable} & \textbf{Week} & \textbf{Description} \\
+        \hline
+        $D_1$ & 7 & Source code and compiled application \\
+        $D_2$ & 9 & Evaluation report on user experience\\
+        $D_3$ & 10 & Dissertation \\
+        \hline
+        \end{tabular} 
+    \end{center}
+    \vspace{-1em}
+    \caption{List of deliverables defined in this project.}
+    \label{tab:deliverables}
+\end{table}
 
+\begin{figure}[!htb]
+\begin{ganttchart}[
+    y unit title=0.5cm,
+    y unit chart=0.5cm,
+    vgrid={
+        draw=none, draw=none, dotted, draw=none, 
+        draw=none, draw=none, draw=none
+    },
+    title label anchor/.style={below=-1.6ex},
+    x unit=1.55mm,
+    time slot format=isodate,
+    title left shift=.05,
+    title right shift=-.05,
+    title height=1,
+    progress label text={},
+    bar height=.8,
+    bar label font=\small,
+    bar top shift =.3,
+    bar height =.4,
+    group right shift=.5,
+    group left shift=-.5,
+    group top shift=.4,
+    group height=.3,
+    group peaks height=.2,
+    group peaks tip position=0.5,
+    group peaks width=1,
+    calendar week text={\currentweek},
+    progress label text={},
+    link/.style={black, -to},
+    link bulge=1
+]{2018-06-01}{2018-08-16}
+    \gantttitlecalendar{month=shortname, week=0}\\
+    \ganttgroup[name=D]{Development}{2018-06-01}{2018-07-22} \\
+    \ganttbar[progress=0,name=D1]{Framework}{2018-06-01}{2018-06-10} \\
+    \ganttbar[progress=0,name=D2]{Static mode}{2018-06-11}{2018-06-14} \\
+    \ganttbar[progress=100,name=L1,bar/.append style={draw=none,fill=none}]{}{2018-06-11}{2018-06-10}
+    \ganttbar[progress=0,name=D3]{Learning mode}{2018-06-15}{2018-06-21} \\
+    \ganttbar[progress=100,name=L2,bar/.append style={draw=none,fill=none}]{}{2018-06-11}{2018-06-10}
+    \ganttbar[progress=0,name=D4]{Dynamic mode}{2018-06-22}{2018-06-26} \\
+    \ganttlinkedbar[progress=0,name=D5]{Multiplayer mode}{2018-06-27}{2018-07-04} \\
+    \ganttbar[progress=100,name=L3,bar/.append style={draw=none,fill=none}]{}{2018-06-11}{2018-06-10}
+    \ganttbar[progress=0,name=D6]{Testing mode}{2018-07-05}{2018-07-22} \\
+    \ganttgroup{Testing}{2018-07-23}{2018-08-05} \\
+    \ganttbar[progress=0,name=T1]{User testing}{2018-07-23}{2018-07-29} \\
+    \ganttlinkedbar[progress=0,name=T2]{Testing report}{2018-07-30}{2018-08-05} \\
+    \ganttgroup{Dissertation}{2018-07-30}{2018-08-16} \\
+    \ganttbar[progress=0]{Draft report}{2018-07-30}{2018-08-05} \\
+    \ganttlinkedbar[progress=0]{Final report}{2018-08-06}{2018-08-16}
+    \ganttlink{D1}{D2}
+    \ganttlink[link/.style={}, link mid=0.25]{D1}{L1}
+    \ganttlink{L1}{D3}
+    \ganttlink[link/.style={}, link mid=0.166667]{D1}{L2}
+    \ganttlink{L2}{D4}
+    \ganttlink[link/.style={}, link mid=0.1]{D1}{L3}
+    \ganttlink{L3}{D6}
+    %\ganttlink[link mid=.159]{pp}{T2A}
+\end{ganttchart}
+\vspace{-0.3em}
+\caption{Gantt chart of the activities defined for this project.}
+\label{fig:gantt}
+\end{figure}
 
 %                Now build the reference list
 \FloatBarrier
-\bibliographystyle{unsrt}   % The reference style
+\bibliographystyle{myunsrt}   % The reference style
 %                This is plain and unsorted, so in the order
 %                they appear in the document.
 
