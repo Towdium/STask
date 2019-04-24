@@ -1,7 +1,6 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.utils.*;
-import me.towdium.stask.utils.time.Timer;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.ALC;
@@ -13,10 +12,8 @@ import org.lwjgl.system.libc.LibCStdlib;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Author: Towdium
@@ -27,8 +24,8 @@ public class Speaker extends Closeable implements Tickable {
     static long device;
     long context;
     Cache<String, Audio> audios = new Cache<>(Audio::new);
-    List<Integer> sources = new ArrayList<>();
-    Timer timer = new Timer(1d, i -> this.recollect());
+    Circulator<Integer> sources = new Circulator<>();
+    Iterator<Integer> iterator = sources.iterator();
 
     public Speaker() {
         if (count == 0) {
@@ -54,25 +51,29 @@ public class Speaker extends Closeable implements Tickable {
         super.close();
         ALC10.alcDestroyContext(context);
         audios.foreach((k, v) -> v.delete());
-        sources.forEach(AL10::alDeleteSources);
+        Iterator<Integer> it = sources.iterator();
+        while (it.hasNext()) {
+            Integer i = it.next();
+            AL10.alDeleteSources(i);
+            it.remove();
+        }
         count--;
         if (count == 0) ALC10.alcCloseDevice(device);
     }
 
     @Override
     public void tick() {
-        timer.tick();
-    }
-
-    private void recollect() {
-        sources = sources.stream().filter(i -> {
-            int state = AL10.alGetSourcei(i, AL10.AL_SOURCE_STATE);
-            if (state == AL10.AL_STOPPED) {
-                AL10.alDeleteSources(i);
-                Log.client.trace("Removed source " + i);
-                return false;
-            } else return true;
-        }).collect(Collectors.toList());
+        for (int i = 0; i < (sources.size() + 9) / 10; i++) {
+            if (iterator.hasNext()) {
+                int source = iterator.next();
+                int state = AL10.alGetSourcei(source, AL10.AL_SOURCE_STATE);
+                if (state == AL10.AL_STOPPED) {
+                    AL10.alDeleteSources(i);
+                    Log.client.trace("Removed source " + source);
+                    iterator.remove();
+                }
+            }
+        }
     }
 
     static class Audio {

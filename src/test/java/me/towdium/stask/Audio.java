@@ -13,13 +13,16 @@ import me.towdium.stask.utils.time.Ticker;
 
 
 public class Audio {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Ticker ticker = new Ticker(1 / 200f, i -> Log.client.debug("Dropping " + i + " frame(s)"));
         try (Window w = new Window("Audio", 200, 100, new WContainer());
              Speaker s = new Speaker()) {
             Log.client.setLevel(Log.Priority.TRACE);
             w.display();
-            s.play("example.ogg");
+            for (int i = 0; i < 2; i++) {
+                s.play("example.ogg");
+                Thread.sleep(200);
+            }
             while (!w.isFinished()) {
                 w.tick();
                 s.tick();
