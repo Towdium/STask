@@ -18,12 +18,22 @@ public class Audio {
         try (Window w = new Window("Audio", 200, 100, new WContainer());
              Speaker s = new Speaker()) {
             Log.client.setLevel(Log.Priority.TRACE);
+            Speaker.Source a = s.source();
+            Speaker.Source b = s.source();
             w.display();
-            for (int i = 0; i < 2; i++) {
-                s.play("example.ogg");
-                Thread.sleep(200);
-            }
+            long start = System.currentTimeMillis();
+            a.play("example.ogg");
+            Thread.sleep(200);
+            b.play("example.ogg");
+            boolean cleaned = false;
             while (!w.isFinished()) {
+                if (!cleaned && System.currentTimeMillis() - start > 20000) {
+                    Log.client.debug("Reference cleaned");
+                    cleaned = true;
+                    //noinspection UnusedAssignment
+                    a = b = null;
+                    System.gc();
+                }
                 w.tick();
                 s.tick();
                 ticker.sync();

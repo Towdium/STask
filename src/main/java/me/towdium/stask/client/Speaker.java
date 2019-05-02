@@ -9,10 +9,14 @@ import org.lwjgl.stb.STBVorbis;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.libc.LibCStdlib;
 
+import java.lang.ref.PhantomReference;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -24,8 +28,8 @@ public class Speaker extends Closeable implements Tickable {
     static long device;
     long context;
     Cache<String, Audio> audios = new Cache<>(Audio::new);
-    Circulator<Integer> sources = new Circulator<>();
-    Iterator<Integer> iterator = sources.iterator();
+    Map<Reference<? extends Source>, Runnable> sources = new HashMap<>();
+    ReferenceQueue<Source> queue = new ReferenceQueue<>();
 
     public Speaker() {
         if (count == 0) {
@@ -38,42 +42,27 @@ public class Speaker extends Closeable implements Tickable {
         AL.createCapabilities(ALC.createCapabilities(device));
     }
 
-    public void play(String s) {
-        int id = audios.get(s).id;
-        int source = AL10.alGenSources();
-        AL10.alSourcei(source, AL10.AL_BUFFER, id);
-        AL10.alSourcePlay(source);
-        sources.add(source);
-    }
-
     @Override
     public void close() {
         super.close();
         ALC10.alcDestroyContext(context);
         audios.foreach((k, v) -> v.delete());
-        Iterator<Integer> it = sources.iterator();
-        while (it.hasNext()) {
-            Integer i = it.next();
-            AL10.alDeleteSources(i);
-            it.remove();
-        }
+        sources.forEach((k, v) -> v.run());
         count--;
         if (count == 0) ALC10.alcCloseDevice(device);
     }
 
     @Override
     public void tick() {
-        for (int i = 0; i < (sources.size() + 9) / 10; i++) {
-            if (iterator.hasNext()) {
-                int source = iterator.next();
-                int state = AL10.alGetSourcei(source, AL10.AL_SOURCE_STATE);
-                if (state == AL10.AL_STOPPED) {
-                    AL10.alDeleteSources(i);
-                    Log.client.trace("Removed source " + source);
-                    iterator.remove();
-                }
-            }
-        }
+        Reference<? extends Source> s;
+        while ((s = queue.poll()) != null) sources.get(s).run();
+    }
+
+    public Source source() {
+        Source ret = new Source();
+        PhantomReference<Source> ref = new PhantomReference<>(ret, queue);
+        sources.put(ref, ret.cleaner());
+        return ret;
     }
 
     static class Audio {
@@ -100,6 +89,27 @@ public class Speaker extends Closeable implements Tickable {
 
         public void delete() {
             AL10.alDeleteBuffers(id);
+        }
+    }
+
+    public class Source {
+        int id;
+
+        public Source() {
+            id = AL10.alGenSources();
+        }
+
+        public void play(String s) {
+            AL10.alSourcei(id, AL10.AL_BUFFER, audios.get(s).id);
+            AL10.alSourcePlay(id);
+        }
+
+        public Runnable cleaner() {
+            final int i = id;
+            return () -> {
+                AL10.alDeleteSources(i);
+                Log.client.debug("Removing source " + i);
+            };
         }
     }
 }
