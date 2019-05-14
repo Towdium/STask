@@ -5,7 +5,6 @@ import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import org.joml.Vector2i;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
@@ -96,11 +95,6 @@ public class Painter {
         shaderIMode = GL30C.glGetUniformLocation(shaderID, "mode");
         shaderMProj = GL30C.glGetUniformLocation(shaderID, "proj");
         shaderVClip = GL30C.glGetUniformLocation(shaderID, "clip");
-        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        Vector2i size = window.getSize();
-        GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
-                .ortho(0, size.x, size.y, 0, 0, 4096)
-                .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
         matrices.push(new Matrix4f().translate(0, 0, 0));
         updateMatrix();
         colors.push(0xFFFFFF);
@@ -108,6 +102,13 @@ public class Painter {
         priority.push(false);
         updatePriority();
         maskUpdate();
+    }
+
+    void onResize(int width, int height) {
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
+                .ortho(0, width, height, 0, 0, 4096)
+                .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
     }
 
     public void drawTextWrapped(String s, int xp, int yp, int xs) {
@@ -259,7 +260,7 @@ public class Painter {
     }
 
     public State mask(int xp, int yp, int xs, int ys) {
-        Quad quad = new Quad(xp, yp, xs, ys).transformed(matrices.peek());
+        Quad quad = new Quad(xp - 1, yp - 1, xs - 1, ys - 1).transformed(matrices.peek());
         masks.push(masks.isEmpty() ? quad : new Quad(masks.peek()).intersect(quad));
         maskUpdate();
         return () -> {
@@ -343,6 +344,15 @@ public class Painter {
 
         public void translate(float x, float y, float z) {
             matrices.peek().translate(x, y, z);
+            updateMatrix();
+        }
+
+        public void scale(float x, float y) {
+            scale(x, y, 0);
+        }
+
+        public void scale(float x, float y, float z) {
+            matrices.peek().scale(x, y, z);
             updateMatrix();
         }
 

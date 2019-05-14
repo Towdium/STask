@@ -1,7 +1,7 @@
 package me.towdium.stask;
 
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Speaker;
-import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.time.Ticker;
@@ -15,7 +15,7 @@ import me.towdium.stask.utils.time.Ticker;
 public class Audio {
     public static void main(String[] args) throws InterruptedException {
         Ticker ticker = new Ticker(1 / 200f, i -> Log.client.debug("Dropping " + i + " frame(s)"));
-        try (Window w = new Window("Audio", 200, 100, new WContainer());
+        try (Window w = new Window("Audio", new Page.Simple());
              Speaker s = new Speaker()) {
             Log.client.setLevel(Log.Priority.TRACE);
             Speaker.Source a = s.source();

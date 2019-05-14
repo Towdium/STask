@@ -2,6 +2,7 @@ package me.towdium.stask;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.local.LocalAddress;
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WArea;
 import me.towdium.stask.client.Widgets.WContainer;
@@ -40,7 +41,9 @@ public class Sync {
     }
 
     public void run() {
-        try (Window w = new Window("Sync", 800, 600, new WContainer().add(0, 0, test));
+        Page.Simple s = new Page.Simple();
+        s.add(0, 0, test);
+        try (Window w = new Window("Sync", s);
              Network n = new Network()) {
             network = n;
             w.display();

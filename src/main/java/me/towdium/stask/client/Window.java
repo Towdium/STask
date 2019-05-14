@@ -26,29 +26,40 @@ public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
     long id;
-    Widget root;
+    Page root;
     Painter painter;
 
-    public Window(String title, int width, int height, Widget root) {
+    public Window(String title, Page root) {
+        this(title, root, true);
+    }
+
+    public Window(String title, Page root, boolean resizable) {
         if (counter == 0) {
             GLFWErrorCallback.createPrint().set();
             if (!GLFW.glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
             GLFW.glfwDefaultWindowHints();
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
+            GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
             display = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
         }
+
         counter++;
         this.root = root;
         if (display == null) throw new IllegalStateException("No display found");
-        id = GLFW.glfwCreateWindow(width, height, title, NULL, NULL);
+        id = GLFW.glfwCreateWindow(640, 360, title, NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
         GLFW.glfwMakeContextCurrent(id);
-        GLFW.glfwSetWindowPos(id, (display.width() - width) / 2, (display.height() - height) / 2);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) ->
                 this.root.onMouse(mouse(), button, action == GLFW.GLFW_PRESS));
+        GLFW.glfwSetWindowSizeCallback(id, (window, width, height) ->
+                this.root.onResize(width, height));
+        GLFW.glfwSetFramebufferSizeCallback(id, (window, width, height) -> {
+            GLFW.glfwMakeContextCurrent(id);
+            GL30C.glViewport(0, 0, width, height);
+            painter.onResize(width, height);
+        });
 
         GL30C.glEnable(GL30C.GL_STENCIL_TEST);
         GL30C.glEnable(GL30C.GL_MULTISAMPLE);
@@ -73,7 +84,12 @@ public class Window extends Closeable implements Tickable {
     }
 
     public void display() {
+        Vector2i size = getSize();
         GLFW.glfwShowWindow(id);
+        GLFW.glfwSetWindowPos(id, (display.width() - size.x) / 2, (display.height() - size.y) / 2);
+        GLFW.glfwMakeContextCurrent(id);
+        root.onResize(size.x, size.y);
+        painter.onResize(size.x, size.y);
     }
 
     public Vector2i getSize() {
@@ -97,7 +113,6 @@ public class Window extends Closeable implements Tickable {
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
         root.onDraw(painter, mouse());
         GLFW.glfwSwapBuffers(id);
-
     }
 
     Vector2i mouse() {

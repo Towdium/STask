@@ -1,8 +1,8 @@
 package me.towdium.stask;
 
+import me.towdium.stask.client.Page;
+import me.towdium.stask.client.Page.Simple;
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Widget;
-import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
@@ -24,8 +24,8 @@ public class Windows {
     public static void main(String[] args) {
         Log.client.setLevel(Log.Priority.DEBUG);
         Set<Window> windows = new HashSet<>();
-        windows.add(new Window("Window A", 230, 90, create()));
-        windows.add(new Window("Window B", 230, 90, create()));
+        windows.add(new Window("Window A", create()));
+        windows.add(new Window("Window B", create()));
 
         for (Window w : windows) w.display();
         while (!windows.isEmpty()) {
@@ -40,12 +40,13 @@ public class Windows {
         }
     }
 
-    public static Widget create() {
-        return new WContainer()
-                .add(20, 20, new Drag(false))
-                .add(90, 20, new Drag(true))
-                .add(160, 20, new Drag(false))
-                .add(0, 0, new Paint());
+    public static Page create() {
+        Simple i = new Simple();
+        i.add(20, 20, new Drag(false));
+        i.add(90, 20, new Drag(true));
+        i.add(160, 20, new Drag(false));
+        i.add(0, 0, new Paint());
+        return i;
     }
 
     static class Drag extends WDrag {

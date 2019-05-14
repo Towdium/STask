@@ -1,5 +1,6 @@
 package me.towdium.stask;
 
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Widgets.WDrag;
@@ -16,7 +17,7 @@ import java.util.IdentityHashMap;
  */
 public class Render {
     public static void main(String[] args) {
-        WContainer root = new WContainer();
+        Page.Simple root = new Page.Simple();
         root.add(0, 0, (p, m) -> {
             try (Painter.SMatrix mat = p.matrix();
                  Painter.State col = p.color(0xFFAA00)) {
@@ -41,7 +42,7 @@ public class Render {
         root.add(280, 200, new WDTestB());
 
         Ticker ticker = new Ticker(1 / 200f);
-        try (Window w = new Window("Render", 800, 600, root)) {
+        try (Window w = new Window("Render", root)) {
             w.display();
             while (!w.isFinished()) {
                 w.tick();
