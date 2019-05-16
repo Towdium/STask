@@ -6,7 +6,6 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
-import me.towdium.stask.utils.time.Ticker;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -19,7 +18,6 @@ import java.util.Set;
  * Date: 11/04/19
  */
 public class Windows {
-    static Ticker ticker = new Ticker(1 / 200f);
 
     public static void main(String[] args) {
         Log.client.setLevel(Log.Priority.DEBUG);
@@ -36,7 +34,6 @@ public class Windows {
                     i.remove();
                 } else window.tick();
             }
-            ticker.sync();
         }
     }
 

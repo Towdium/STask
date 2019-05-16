@@ -2,7 +2,6 @@ package me.towdium.stask;
 
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Window;
-import me.towdium.stask.utils.time.Ticker;
 
 /**
  * Author: Towdium
@@ -12,13 +11,9 @@ public class Resize {
     public static void main(String[] args) {
         Impl impl = new Impl();
 
-        Ticker ticker = new Ticker(1 / 200f);
         try (Window w = new Window("Render", impl)) {
             w.display();
-            while (!w.isFinished()) {
-                w.tick();
-                ticker.sync();
-            }
+            while (!w.isFinished()) w.tick();
         }
     }
 

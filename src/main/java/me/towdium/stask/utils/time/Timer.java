@@ -1,12 +1,15 @@
 package me.towdium.stask.utils.time;
 
 import me.towdium.stask.utils.Tickable;
+import me.towdium.stask.utils.Utilities;
 
 import java.util.function.IntConsumer;
 
 /**
  * Author: Towdium
  * Date: 13/04/19
+ *
+ * Call callback with given period
  */
 public class Timer implements Tickable {
     long step;
@@ -22,16 +25,38 @@ public class Timer implements Tickable {
         this.callback = callback;
     }
 
+    public Timer(double seconds) {
+        this(seconds, null);
+    }
+
+    public Timer(long nanos) {
+        this(nanos, null);
+    }
+
     @Override
     public void tick() {
+        invoke();
+    }
+
+    public void sync() {
+        if (!invoke()) {
+            long time = System.nanoTime();
+            Utilities.sleep((next - time) / 1000000, (int) ((next - time) % 100000));
+            if (callback != null) callback.accept(0);
+            next += step;
+        }
+    }
+
+    private boolean invoke() {
         if (next == Long.MIN_VALUE) next = System.nanoTime() + step;
 
         long now = System.nanoTime();
         if (now > next) {
             long skipped = (now - next) / step;
             next += skipped * step + step;
-            callback.accept((int) skipped);
-        }
+            if (callback != null) callback.accept((int) skipped);
+            return true;
+        } else return false;
     }
 }
 

@@ -6,7 +6,7 @@ import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
-import me.towdium.stask.utils.time.Ticker;
+import me.towdium.stask.utils.time.Timer;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -20,7 +20,7 @@ public class STask {
         Packet.Registry.register(PString.IDENTIFIER, PString::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
-        Ticker ticker = new Ticker(1 / 200f);
+        Timer ticker = new Timer(1 / 200f);
         try (Window w = new Window("STask", new Page.Simple());
              Network n = new Network()) {
             n.getClient().send(new PString("Hello"));

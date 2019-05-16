@@ -260,7 +260,7 @@ public class Painter {
     }
 
     public State mask(int xp, int yp, int xs, int ys) {
-        Quad quad = new Quad(xp - 1, yp - 1, xs - 1, ys - 1).transformed(matrices.peek());
+        Quad quad = new Quad(xp, yp, xs, ys).transformed(matrices.peek());
         masks.push(masks.isEmpty() ? quad : new Quad(masks.peek()).intersect(quad));
         maskUpdate();
         return () -> {

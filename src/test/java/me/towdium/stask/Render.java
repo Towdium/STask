@@ -5,7 +5,6 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
-import me.towdium.stask.utils.time.Ticker;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -24,10 +23,10 @@ public class Render {
                 mat.translate(50, 50);
                 p.drawTextWrapped("Here is some test text. 这是一段测试文本。", 440, 0, 250);
                 p.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
-                p.drawTexture("pic.png", 110, 0, 100, 100, 305, 0, 10, 10, 2);
+                p.drawTexture("pic.png", 110, 0, 100, 100, 306, 1, 8, 8, 1);
                 try (Painter.State mask1 = p.mask(330, 0, 99, 100);
                      Painter.State mask2 = p.mask(330, 0, 100, 99)) {
-                    p.drawTexture("pic.png", 330, 0, 100, 100, 305, 0, 10, 10, 2);
+                    p.drawTexture("pic.png", 330, 0, 100, 100, 306, 1, 8, 8, 1);
                 }
                 p.drawRect(220, 0, 100, 100);
                 try (Painter.State color2 = p.color(0xAAFF0000)) {
@@ -41,13 +40,10 @@ public class Render {
         root.add(170, 200, new WDTestA(false));
         root.add(280, 200, new WDTestB());
 
-        Ticker ticker = new Ticker(1 / 200f);
+
         try (Window w = new Window("Render", root)) {
             w.display();
-            while (!w.isFinished()) {
-                w.tick();
-                ticker.sync();
-            }
+            while (!w.isFinished()) w.tick();
         }
 
     }
@@ -69,9 +65,18 @@ public class Render {
             }
 
             if (hold) {
-                try (Painter.State prior = p.priority(true);
-                     Painter.SMatrix mat = p.matrix()) {
-                    if (isSending()) mat.translate(mouse.x - 25, mouse.y - 25);
+                if (isSending()) {
+                    try (Painter.State prior = p.priority(true);
+                         Painter.SMatrix mat = p.matrix()) {
+                        mat.translate(mouse.x - 25, mouse.y - 25);
+                        try (Painter.State color = p.color(0x888888)) {
+                            p.drawRect(0, 0, 50, 50);
+                        }
+                        try (Painter.State color = p.color(0x777777)) {
+                            p.drawRect(10, 10, 30, 30);
+                        }
+                    }
+                } else {
                     try (Painter.State color = p.color(0x888888)) {
                         p.drawRect(0, 0, 50, 50);
                     }

@@ -11,7 +11,6 @@ import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.utils.Log;
-import me.towdium.stask.utils.time.Ticker;
 import org.joml.Vector2i;
 
 import java.net.InetSocketAddress;
@@ -63,11 +62,9 @@ public class Sync {
                     n.getClient().send(new PConnect());
                 });
             }
-            Ticker ticker = new Ticker(1 / 200f);
             while (!w.isFinished()) {
                 n.getClient().tick();
                 w.tick();
-                ticker.sync();
             }
         }
     }

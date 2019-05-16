@@ -1,7 +1,10 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Closeable;
+import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Tickable;
+import me.towdium.stask.utils.time.Counter;
+import me.towdium.stask.utils.time.Timer;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
@@ -26,6 +29,9 @@ public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
     long id;
+    boolean debug = false;
+    Timer timer;
+    Counter fps;
     Page root;
     Painter painter;
 
@@ -49,12 +55,22 @@ public class Window extends Closeable implements Tickable {
         if (display == null) throw new IllegalStateException("No display found");
         id = GLFW.glfwCreateWindow(640, 360, title, NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
+        timer = new Timer(1f / display.refreshRate(), i -> {
+            if (i != 0 && debug) Log.client.trace("Dropping " + i + " frames");
+            fps.tick();
+            refresh();
+        });
+        fps = new Counter(1f, i -> {
+            if (debug) Log.client.trace("FPS: " + i);
+        });
         GLFW.glfwMakeContextCurrent(id);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) ->
                 this.root.onMouse(mouse(), button, action == GLFW.GLFW_PRESS));
-        GLFW.glfwSetWindowSizeCallback(id, (window, width, height) ->
-                this.root.onResize(width, height));
+        GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
+            this.root.onResize(width, height);
+            refresh();
+        });
         GLFW.glfwSetFramebufferSizeCallback(id, (window, width, height) -> {
             GLFW.glfwMakeContextCurrent(id);
             GL30C.glViewport(0, 0, width, height);
@@ -79,14 +95,22 @@ public class Window extends Closeable implements Tickable {
         painter = new Painter(this);
     }
 
+    public void setDebug(boolean b) {
+        debug = b;
+    }
+
+    public int getFps() {
+        return fps.stored();
+    }
+
     void bind() {
         GLFW.glfwMakeContextCurrent(id);
     }
 
     public void display() {
         Vector2i size = getSize();
-        GLFW.glfwShowWindow(id);
         GLFW.glfwSetWindowPos(id, (display.width() - size.x) / 2, (display.height() - size.y) / 2);
+        GLFW.glfwShowWindow(id);
         GLFW.glfwMakeContextCurrent(id);
         root.onResize(size.x, size.y);
         painter.onResize(size.x, size.y);
@@ -101,6 +125,13 @@ public class Window extends Closeable implements Tickable {
         }
     }
 
+    private void refresh() {
+        GLFW.glfwMakeContextCurrent(id);
+        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
+        root.onDraw(painter, mouse());
+        GLFW.glfwSwapBuffers(id);
+    }
+
     public boolean isFinished() {
         return GLFW.glfwWindowShouldClose(id);
     }
@@ -108,11 +139,8 @@ public class Window extends Closeable implements Tickable {
     @Override
     public void tick() {
         if (closed) return;
-        GLFW.glfwMakeContextCurrent(id);
-        GLFW.glfwPollEvents();
-        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
-        root.onDraw(painter, mouse());
-        GLFW.glfwSwapBuffers(id);
+        GLFW.glfwWaitEventsTimeout(1 / 1000f);
+        timer.tick();
     }
 
     Vector2i mouse() {
