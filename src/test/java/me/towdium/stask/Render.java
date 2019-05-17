@@ -17,7 +17,7 @@ import java.util.IdentityHashMap;
 public class Render {
     public static void main(String[] args) {
         Page.Simple root = new Page.Simple();
-        root.add(0, 0, (p, m) -> {
+        root.put((p, m) -> {
             try (Painter.SMatrix mat = p.matrix();
                  Painter.State col = p.color(0xFFAA00)) {
                 mat.translate(50, 50);
@@ -33,12 +33,12 @@ public class Render {
                     p.drawRect(220, 0, 50, 100);
                 }
             }
-        });
+        }, 0, 0);
 
-        root.add(50, 200, new WDTestA(true));
-        root.add(110, 200, new WDTestA(false));
-        root.add(170, 200, new WDTestA(false));
-        root.add(280, 200, new WDTestB());
+        root.put(new WDTestA(true), 50, 200);
+        root.put(new WDTestA(false), 110, 200);
+        root.put(new WDTestA(false), 170, 200);
+        root.put(new WDTestB(), 280, 200);
 
 
         try (Window w = new Window("Render", root)) {
@@ -125,7 +125,7 @@ public class Render {
 
         public void add(int x, int y, boolean hold) {
             Drag d = new Drag(hold);
-            add(x, y, d);
+            put(d, x, y);
             pos.put(d, new Vector2i(x, y));
         }
 

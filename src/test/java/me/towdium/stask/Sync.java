@@ -41,7 +41,7 @@ public class Sync {
 
     public void run() {
         Page.Simple s = new Page.Simple();
-        s.add(0, 0, test);
+        s.put(test, 0, 0);
         try (Window w = new Window("Sync", s);
              Network n = new Network()) {
             network = n;
@@ -70,37 +70,38 @@ public class Sync {
     }
 
     class WTest extends WContainer {
-        boolean dirty = false;
+        Node node = new Node();
+        Vector2i last = new Vector2i(0, 0);
 
         public WTest() {
-            add(20, 20, new Node());
+            put(node, 20, 20);
         }
 
-        @Override
-        public boolean onMouse(Vector2i mouse, int button, boolean state) {
-            if (super.onMouse(mouse, button, state) && widgets.isEmpty()) {
-                add(mouse.x - 20, mouse.y - 20, new Node());
-                return true;
-            } else return false;
+        public void move(int x, int y) {
+            put(node, x - 20, y - 20);
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
+            if (node.picked && !mouse.equals(last)) update(mouse);
             super.onDraw(p, mouse);
-            if (dirty) {
-                network.getClient().send(new PMouse(mouse.x, mouse.y));
-                dirty = false;
-            }
         }
 
-        public void move(int x, int y) {
-            clear();
-            add(x - 20, y - 20, new Node());
+        @Override
+        public boolean onMouse(Vector2i mouse, int button, boolean state) {
+            boolean ret = super.onMouse(mouse, button, state);
+            if (ret) update(mouse);
+            return ret;
+        }
+
+        private void update(Vector2i v) {
+            last = v;
+            move(v.x, v.y);
+            network.getClient().send(new PMouse(v.x, v.y));
         }
 
         class Node extends WArea {
             boolean picked = false;
-            Vector2i last = null;
 
             public Node() {
                 super(40, 40);
@@ -108,29 +109,15 @@ public class Sync {
 
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
-                if (picked) {
-                    p.drawRect(mouse.x - 20, mouse.y - 20, 40, 40);
-                    if (!mouse.equals(last)) {
-                        dirty = true;
-                        last = mouse;
-                    }
-                } else p.drawRect(0, 0, 40, 40);
+                p.drawRect(0, 0, 40, 40);
             }
 
             @Override
             public boolean onMouse(Vector2i mouse, int button, boolean state) {
-                if (picked) {
-                    if (!state) {
-                        WTest.this.clear();
-                        return true;
-                    }
-                } else {
-                    if (state && button == 0 && inside(mouse)) {
-                        picked = true;
-                        return true;
-                    }
-                }
-                return false;
+                if (picked || inside(mouse)) {
+                    picked = state;
+                    return true;
+                } else return false;
             }
         }
     }

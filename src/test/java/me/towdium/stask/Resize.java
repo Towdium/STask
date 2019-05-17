@@ -21,7 +21,7 @@ public class Resize {
         @Override
         protected void onLayout(int x, int y) {
             clear();
-            add(0, y - 10, (p, mouse) -> p.drawRect(0, 0, x, 10));
+            put((p, mouse) -> p.drawRect(0, 0, x, 10), 0, y - 10);
         }
     }
 }

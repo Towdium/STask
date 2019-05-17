@@ -39,10 +39,10 @@ public class Windows {
 
     public static Page create() {
         Simple i = new Simple();
-        i.add(20, 20, new Drag(false));
-        i.add(90, 20, new Drag(true));
-        i.add(160, 20, new Drag(false));
-        i.add(0, 0, new Paint());
+        i.put(new Drag(false), 20, 20);
+        i.put(new Drag(true), 90, 20);
+        i.put(new Drag(false), 160, 20);
+        i.put(new Paint(), 0, 0);
         return i;
     }
 
