@@ -17,7 +17,7 @@ public interface Page extends Widget {
 
         @Override
         public void onResize(int x, int y) {
-            multiplier = Math.max((y + 179) / 360, 1);
+            multiplier = Math.max(Math.min((y + 179) / 360, (x + 319) / 640), 1);
             onLayout((x + multiplier - 1) / multiplier, (y + multiplier - 1) / multiplier);
         }
 

@@ -1,8 +1,6 @@
 package me.towdium.stask.logic;
 
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Author: Towdium
@@ -11,6 +9,8 @@ import java.util.Map;
 public class Graph {
     Map<String, Task> tasks = new HashMap<>();
     Task root;
+    public static final Task EMPTY = new Task();
+    List<List<Task>> layout = new ArrayList<>();
 
     public Graph(Pojo.Graph pojo) {
         pojo.tasks.forEach((s, t) -> {
@@ -19,6 +19,7 @@ public class Graph {
             tmp.out = t.out;
             tmp.time = t.time;
             tmp.type = t.type;
+            tasks.put(s, tmp);
         });
         pojo.tasks.forEach((s, t) -> {
             Task crr = tasks.get(s);
@@ -28,6 +29,12 @@ public class Graph {
                 pre.before.put(crr, j);
             });
         });
+        pojo.layout.forEach(i -> {
+            List<Task> tmp = new ArrayList<>();
+            i.forEach(j -> tmp.add(j == null ? EMPTY : tasks.get(j)));
+            layout.add(Collections.unmodifiableList(tmp));
+        });
+
         int countA = 0;
         int countB = 0;
         for (Task t : tasks.values()) {
@@ -41,10 +48,46 @@ public class Graph {
         }
     }
 
+    public List<List<Task>> getLayout() {
+        return Collections.unmodifiableList(layout);
+    }
+
+    public Task getRoot() {
+        return root;
+    }
+
+    public Task getTask(String id) {
+        return tasks.get(id);
+    }
+
     public static class Task {
         Map<Task, Integer> after = new IdentityHashMap<>();
         Map<Task, Integer> before = new IdentityHashMap<>();
         int in, out, time;
         String type;
+
+        public int getIn() {
+            return in;
+        }
+
+        public int getOut() {
+            return out;
+        }
+
+        public int getTime() {
+            return time;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public Map<Task, Integer> getAfter() {
+            return Collections.unmodifiableMap(after);
+        }
+
+        public Map<Task, Integer> getBefore() {
+            return Collections.unmodifiableMap(before);
+        }
     }
 }

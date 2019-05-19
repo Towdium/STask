@@ -1,5 +1,6 @@
 package me.towdium.stask.logic;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,6 +10,7 @@ import java.util.Map;
 public class Pojo {
     public static class Graph {
         Map<String, Task> tasks;
+        List<List<String>> layout;
     }
 
     public static class Task {
@@ -19,10 +21,12 @@ public class Pojo {
 
     public static class Cluster {
         Map<String, Processor> processors;
+        int comm;
     }
 
     public static class Processor {
         int color;
+        float speed;
         Map<String, Float> speedup;
     }
 }

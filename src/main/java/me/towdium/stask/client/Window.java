@@ -46,7 +46,7 @@ public class Window extends Closeable implements Tickable {
             GLFW.glfwDefaultWindowHints();
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
-            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
+            GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 8);
             display = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
         }
 

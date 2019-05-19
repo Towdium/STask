@@ -5,6 +5,7 @@ import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
@@ -353,6 +354,16 @@ public class Painter {
 
         public void scale(float x, float y, float z) {
             matrices.peek().scale(x, y, z);
+            updateMatrix();
+        }
+
+        public void rotate(float rad) {
+            matrices.peek().rotate(rad, new Vector3f(0, 0, 1));
+            updateMatrix();
+        }
+
+        public void rotate(float rad, Vector3f axis) {
+            matrices.peek().rotate(rad, axis);
             updateMatrix();
         }
 
