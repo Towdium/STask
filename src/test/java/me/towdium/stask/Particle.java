@@ -2,6 +2,7 @@ package me.towdium.stask;
 
 import me.towdium.stask.client.*;
 import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Window.Mouse;
 import org.joml.Vector2i;
 
 /**
@@ -23,7 +24,7 @@ public class Particle {
         Animator animator = new Animator();
 
         @Override
-        public boolean onMouse(Vector2i mouse, int button, boolean state) {
+        public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
             if (state) {
                 Animator.FBezier f = new Animator.FBezier(0, 0);
                 WContainer c = new WContainer();

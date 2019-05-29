@@ -1,6 +1,7 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Window.Mouse;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
@@ -18,24 +19,25 @@ public abstract class WDrag extends WArea {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         if (sender == this) {
-            if (canSend() == null) sender = receiver = null;
+            if (onSending() == null) sender = receiver = null;
         } else if (receiver == this) {
-            if (!inside(mouse)) receiver = null;
+            if (!onTest(mouse)) receiver = null;
         } else {
-            if (sender != null && inside(mouse) && canReceive(sender.canSend())) receiver = this;
+            if (sender != null && onTest(mouse) && onReceiving(sender.onSending())) receiver = this;
         }
     }
 
     @Override
-    public boolean onMouse(Vector2i mouse, int button, boolean state) {
+    public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
+        if (button != Mouse.LEFT) return false;
         if (state) {
-            if (inside(mouse) && canSend() != null)
+            if (onTest(mouse) && onSending() != null)
                 sender = this;
         } else if (sender == this) {
-            Object o = sender.canSend();
+            Object o = sender.onSending();
             if (receiver != null) {
                 if (o != null) {
-                    receiver.onReceived();
+                    receiver.onReceived(o);
                     onSent();
                 }
                 receiver = null;
@@ -45,20 +47,12 @@ public abstract class WDrag extends WArea {
         return false;
     }
 
-    public abstract void onReceived();
+    public abstract void onReceived(Object o);
 
-    public abstract boolean canReceive(Object o);
+    public abstract boolean onReceiving(Object o);
 
     public abstract void onSent();
 
     @Nullable
-    public abstract Object canSend();
-
-    protected boolean isSending() {
-        return sender == this;
-    }
-
-    protected boolean isReceiving() {
-        return receiver == this;
-    }
+    public abstract Object onSending();
 }

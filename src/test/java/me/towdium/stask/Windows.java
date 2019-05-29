@@ -65,7 +65,7 @@ public class Windows {
             if (hold) {
                 try (Painter.State prior = p.priority(true);
                      Painter.SMatrix mat = p.matrix()) {
-                    if (!isSending()) {
+                    if (sender != this) {
                         try (Painter.State color = p.color(0x888888)) {
                             p.drawRect(0, 0, 50, 50);
                         }
@@ -75,7 +75,7 @@ public class Windows {
                     }
                 }
             } else {
-                if (isReceiving()) {
+                if (receiver == this) {
                     try (Painter.State color = p.color(0x444444)) {
                         p.drawRect(0, 0, 50, 50);
                     }
@@ -84,17 +84,17 @@ public class Windows {
         }
 
         @Override
-        public boolean canReceive(Object o) {
+        public boolean onReceiving(Object o) {
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
 
         @Override
-        public @Nullable Object canSend() {
+        public @Nullable Object onSending() {
             return hold ? 1 : null;
         }
 
         @Override
-        public void onReceived() {
+        public void onReceived(Object o) {
             hold = true;
         }
 
@@ -126,11 +126,11 @@ public class Windows {
         }
 
         @Override
-        public void onReceived() {
+        public void onReceived(Object o) {
         }
 
         @Override
-        public boolean canReceive(Object o) {
+        public boolean onReceiving(Object o) {
             return false;
         }
 
@@ -139,7 +139,7 @@ public class Windows {
         }
 
         @Override
-        public @Nullable Object canSend() {
+        public @Nullable Object onSending() {
             return null;
         }
     }

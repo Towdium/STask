@@ -1,6 +1,7 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.Window.Mouse;
 import org.joml.Vector2i;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 public interface Page extends Widget {
     void onResize(int x, int y);
 
-    class Simple extends WContainer<Widget> implements Page {
+    class Simple extends WContainer implements Page {
         int multiplier = 1;
 
         @Override
@@ -30,7 +31,7 @@ public interface Page extends Widget {
         }
 
         @Override
-        public boolean onMouse(Vector2i mouse, int button, boolean state) {
+        public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
             return super.onMouse(convert(mouse), button, state);
         }
 

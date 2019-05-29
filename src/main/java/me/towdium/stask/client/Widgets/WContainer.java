@@ -2,6 +2,7 @@ package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
+import me.towdium.stask.client.Window.Mouse;
 import org.joml.Vector2i;
 
 import java.util.IdentityHashMap;
@@ -12,8 +13,8 @@ import java.util.function.BiPredicate;
  * Author: Towdium
  * Date: 09/03/19
  */
-public class WContainer<T extends Widget> implements Widget {
-    protected WidgetMap<T> widgets = new WidgetMap<>();
+public class WContainer implements Widget {
+    protected WidgetMap widgets = new WidgetMap();
     float transparency = 0;
 
     @Override
@@ -44,7 +45,7 @@ public class WContainer<T extends Widget> implements Widget {
     }
 
     @Override
-    public boolean onMouse(Vector2i mouse, int button, boolean state) {
+    public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
         return widgets.backward((w, v) -> w.onMouse(mouse.sub(v, new Vector2i()), button, state));
     }
 
@@ -58,22 +59,22 @@ public class WContainer<T extends Widget> implements Widget {
         return widgets.backward((w, v) -> w.onScroll(mouse, diff));
     }
 
-    public WContainer put(T widget, int x, int y) {
+    public WContainer put(Widget widget, int x, int y) {
         widgets.put(widget, new Vector2i(x, y));
         return this;
     }
 
-    public WContainer setX(T widget, int x) {
+    public WContainer setX(Widget widget, int x) {
         widgets.get(widget).x = x;
         return this;
     }
 
-    public WContainer setY(T widget, int y) {
+    public WContainer setY(Widget widget, int y) {
         widgets.get(widget).y = y;
         return this;
     }
 
-    public WContainer remove(T widget) {
+    public WContainer remove(Widget widget) {
         widgets.remove(widget);
         return this;
     }
@@ -83,35 +84,35 @@ public class WContainer<T extends Widget> implements Widget {
         return this;
     }
 
-    public Vector2i find(T widget) {
+    public Vector2i find(Widget widget) {
         return widgets.get(widget);
     }
 
-    static class WidgetMap<T> {
-        Entry<T> head, tail;
-        IdentityHashMap<T, Entry<T>> map = new IdentityHashMap<>();
+    static class WidgetMap {
+        Entry head, tail;
+        IdentityHashMap<Widget, Entry> map = new IdentityHashMap<>();
 
         {
-            head = new Entry<>(null, null);
-            tail = new Entry<>(null, null);
+            head = new Entry(null, null);
+            tail = new Entry(null, null);
             head.next = tail;
             tail.last = head;
         }
 
-        public void put(T w, Vector2i v) {
-            Entry<T> e = map.get(w);
+        public void put(Widget w, Vector2i v) {
+            Entry e = map.get(w);
             if (e != null) e.vec = v;
             else {
-                map.put(w, e = new Entry<>(w, v));
+                map.put(w, e = new Entry(w, v));
                 e.link(tail);
             }
         }
 
-        public Vector2i get(T w) {
+        public Vector2i get(Widget w) {
             return map.get(w).vec;
         }
 
-        public void remove(T w) {
+        public void remove(Widget w) {
             Entry e = map.get(w);
             if (e != null) {
                 map.remove(w);
@@ -125,8 +126,8 @@ public class WContainer<T extends Widget> implements Widget {
             tail.last = head;
         }
 
-        public boolean forward(BiPredicate<T, Vector2i> p) {
-            Entry<T> e = head.next;
+        public boolean forward(BiPredicate<Widget, Vector2i> p) {
+            Entry e = head.next;
             while (e.next != null) {
                 if (p.test(e.wgt, e.vec)) return true;
                 e = e.next;
@@ -134,8 +135,8 @@ public class WContainer<T extends Widget> implements Widget {
             return false;
         }
 
-        public boolean backward(BiPredicate<T, Vector2i> p) {
-            Entry<T> e = tail.last;
+        public boolean backward(BiPredicate<Widget, Vector2i> p) {
+            Entry e = tail.last;
             while (e.last != null) {
                 if (p.test(e.wgt, e.vec)) return true;
                 e = e.last;
@@ -143,12 +144,12 @@ public class WContainer<T extends Widget> implements Widget {
             return false;
         }
 
-        static class Entry<T> {
-            Entry<T> last, next;
+        static class Entry {
+            Entry last, next;
             Vector2i vec;
-            T wgt;
+            Widget wgt;
 
-            public Entry(T wgt, Vector2i vec) {
+            public Entry(Widget wgt, Vector2i vec) {
                 this.vec = vec;
                 this.wgt = wgt;
             }
@@ -158,7 +159,7 @@ public class WContainer<T extends Widget> implements Widget {
                 next.last = last;
             }
 
-            public void link(Entry<T> next) {
+            public void link(Entry next) {
                 this.next = next;
                 last = next.last;
                 last.next = this;

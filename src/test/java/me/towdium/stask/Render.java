@@ -65,7 +65,7 @@ public class Render {
             }
 
             if (hold) {
-                if (isSending()) {
+                if (sender == this) {
                     try (Painter.State prior = p.priority(true);
                          Painter.SMatrix mat = p.matrix()) {
                         mat.translate(mouse.x - 25, mouse.y - 25);
@@ -85,7 +85,7 @@ public class Render {
                     }
                 }
             } else {
-                if (isReceiving()) {
+                if (receiver == this) {
                     try (Painter.State color = p.color(0x444444)) {
                         p.drawRect(0, 0, 50, 50);
                     }
@@ -94,17 +94,17 @@ public class Render {
         }
 
         @Override
-        public boolean canReceive(Object o) {
+        public boolean onReceiving(Object o) {
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
 
         @Override
-        public @Nullable Object canSend() {
+        public @Nullable Object onSending() {
             return hold ? 1 : null;
         }
 
         @Override
-        public void onReceived() {
+        public void onReceived(Object o) {
             hold = true;
         }
 
@@ -147,12 +147,12 @@ public class Render {
             }
 
             @Override
-            public boolean canReceive(Object o) {
+            public boolean onReceiving(Object o) {
                 return !hold && o instanceof Integer && (Integer) o == 2;
             }
 
             @Override
-            public @Nullable Object canSend() {
+            public @Nullable Object onSending() {
                 return hold ? 2 : null;
             }
         }

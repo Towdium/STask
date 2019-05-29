@@ -35,6 +35,7 @@ public class Painter {
     public static final int fontHeight = 16;
     public static final int fontAscent, fontDescent, fontGap;
     static STBTTFontinfo fontInfo;
+    static ByteBuffer fontData;
     static final Vector4f TEST_A = new Vector4f(0, 0, 0, 1);
 
     Cache<String, Texture> textures = new Cache<>(Texture::new);
@@ -95,10 +96,10 @@ public class Painter {
 
     static {
         // initialize font
-        ByteBuffer data = Utilities.readBytes("/wqymono.ttf");
-        Objects.requireNonNull(data, "Failed to load font");
+        fontData = Utilities.readBytes("/wqymono.ttf");
+        Objects.requireNonNull(fontData, "Failed to load font");
         fontInfo = STBTTFontinfo.create();
-        if (!STBTruetype.stbtt_InitFont(fontInfo, data))
+        if (!STBTruetype.stbtt_InitFont(fontInfo, fontData))
             throw new IllegalStateException("Failed to initialize font information.");
         float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontHeight);
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -198,10 +199,21 @@ public class Painter {
         int mul = getScale();
         int len = 0;
         for (int i = 0; i < s.length(); i++) len += glyphs.get(mul).get(s.charAt(i)).advance;
-        drawText(s, xp - len, yp);
+        drawText(s, xp - getLength(s), yp);
     }
 
-    private int getScale() {
+    public void drawTextCenter(String s, int xp, int yp) {
+        drawText(s, xp - getLength(s) / 2, yp);
+    }
+
+    public int getLength(String s) {
+        int mul = getScale();
+        int len = 0;
+        for (int i = 0; i < s.length(); i++) len += glyphs.get(mul).get(s.charAt(i)).advance;
+        return len;
+    }
+
+    public int getScale() {
         Matrix4f mat = matrices.get(matrices.size() - 1);
         float mul = TEST_A.mul(mat, new Vector4f()).negate().add(TEST_B.mul(mat, new Vector4f())).y;
         return (int) mul;
@@ -517,6 +529,7 @@ public class Painter {
                 vertex = new float[]{x0f, y0f, x1f, y0f, x1f, y1f, x0f, y1f};
                 STBTruetype.stbtt_GetCodepointHMetrics(fontInfo, ch, a, b);
                 advance = (int) Math.ceil(a.get(0) * scale / size);
+                int i = 2;
             }
         }
 

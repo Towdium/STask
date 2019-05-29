@@ -7,6 +7,7 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WArea;
 import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Window;
+import me.towdium.stask.client.Window.Mouse;
 import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
@@ -88,7 +89,7 @@ public class Sync {
         }
 
         @Override
-        public boolean onMouse(Vector2i mouse, int button, boolean state) {
+        public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
             boolean ret = super.onMouse(mouse, button, state);
             if (ret) update(mouse);
             return ret;
@@ -113,8 +114,8 @@ public class Sync {
             }
 
             @Override
-            public boolean onMouse(Vector2i mouse, int button, boolean state) {
-                if (picked || inside(mouse)) {
+            public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
+                if (picked || onTest(mouse)) {
                     picked = state;
                     return true;
                 } else return false;

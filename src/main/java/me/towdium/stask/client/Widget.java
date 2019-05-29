@@ -1,5 +1,6 @@
 package me.towdium.stask.client;
 
+import me.towdium.stask.client.Window.Mouse;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
 
@@ -21,7 +22,7 @@ public interface Widget {
         return false;
     }
 
-    default boolean onMouse(Vector2i mouse, int button, boolean state) {
+    default boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
         return false;
     }
 
@@ -38,4 +39,6 @@ public interface Widget {
     interface ListenerAction<W extends Widget> {
         void invoke(W widget);
     }
+
+
 }
