@@ -6,6 +6,7 @@ import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.stb.STBImage;
@@ -31,36 +32,17 @@ public class Painter {
     static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
     static final float TEXTURE_SIZE = 1024;
     static final float[] FULL_QUAD = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    public static final int fontHeight = 32;
+    public static final int fontHeight = 16;
     public static final int fontAscent, fontDescent, fontGap;
-    static final float fontScale;
     static STBTTFontinfo fontInfo;
-
-    static {
-        // initialize font
-        ByteBuffer data = Utilities.readBytes("/wqymono.ttf");
-        Objects.requireNonNull(data, "Failed to load font");
-        fontInfo = STBTTFontinfo.create();
-        if (!STBTruetype.stbtt_InitFont(fontInfo, data))
-            throw new IllegalStateException("Failed to initialize font information.");
-        fontScale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, 32);
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer des = stack.mallocInt(1);
-            IntBuffer asc = stack.mallocInt(1);
-            IntBuffer gap = stack.mallocInt(1);
-            STBTruetype.stbtt_GetFontVMetrics(fontInfo, asc, des, gap);
-            fontAscent = (int) (asc.get(0) * fontScale);
-            fontDescent = (int) (des.get(0) * fontScale);
-            fontGap = (int) (gap.get(0) * fontScale);
-        }
-    }
+    static final Vector4f TEST_A = new Vector4f(0, 0, 0, 1);
 
     Cache<String, Texture> textures = new Cache<>(Texture::new);
     Stack<Matrix4f> matrices = new Stack<>();
     Stack<Quad> masks = new Stack<>();
     Stack<Integer> colors = new Stack<>();
     Stack<Boolean> priority = new Stack<>();
-    Cache<Character, Glyph> glyphs = new Cache<>(Glyph::new);
+    static final Vector4f TEST_B = new Vector4f(0, 1, 0, 1);
     Texture empty = new Texture(-1);
     int shaderMModel;
     int shaderIMode;
@@ -72,7 +54,6 @@ public class Painter {
 
     Painter(Window window) {
         this.window = window;
-        window.bind();
         IntBuffer ib = BufferUtils.createIntBuffer(1);
         int vert = GL30C.glCreateShader(GL30C.GL_VERTEX_SHADER);
         GL30C.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
@@ -112,19 +93,42 @@ public class Painter {
                 .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
     }
 
+    static {
+        // initialize font
+        ByteBuffer data = Utilities.readBytes("/wqymono.ttf");
+        Objects.requireNonNull(data, "Failed to load font");
+        fontInfo = STBTTFontinfo.create();
+        if (!STBTruetype.stbtt_InitFont(fontInfo, data))
+            throw new IllegalStateException("Failed to initialize font information.");
+        float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontHeight);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer des = stack.mallocInt(1);
+            IntBuffer asc = stack.mallocInt(1);
+            IntBuffer gap = stack.mallocInt(1);
+            STBTruetype.stbtt_GetFontVMetrics(fontInfo, asc, des, gap);
+            fontAscent = (int) Math.ceil(asc.get(0) * scale);
+            fontDescent = -(int) Math.ceil(des.get(0) * scale);
+            fontGap = (int) Math.ceil(gap.get(0) * scale);
+        }
+    }
+
+    Cache<Integer, Cache<Character, Glyph>> glyphs = new Cache<>(i -> new Cache<>(j -> new Glyph(j, i)));
+
     public void drawTextWrapped(String s, int xp, int yp, int xs) {
-        window.bind();
+        int sc = getScale();
         try (SMatrix mat = matrix()) {
             mat.translate(xp, yp);
             BreakIterator it = BreakIterator.getLineInstance();
             it.setText(s);
-            int old = 0, x = 0, y = 0;
+            int old = 0;
+            int x = 0;
+            int y = 0;
             for (int i = it.next(); i != BreakIterator.DONE; i = it.next()) {
                 int pos = x;
                 for (int j = old; j < i; j++) {
                     char ch = s.charAt(j);
                     if (ch != ' ' && ch != '　' && ch != '\n')
-                        pos += glyphs.get(s.charAt(j)).advance;
+                        pos += glyphs.get(sc).get(s.charAt(j)).advance;
                     if (pos > xs) break;
                 }
                 if (pos > xs) {
@@ -135,17 +139,17 @@ public class Painter {
                         if (ch == '\n') {
                             x = 0;
                             y += fontHeight;
-                        } else if (x + glyphs.get(ch).advance < xs) {
-                            x += drawChar(ch, x, y);
+                        } else if (x + glyphs.get(sc).get(ch).advance < xs) {
+                            x += drawChar(ch, x, y, sc);
                         } else if (ch != ' ' && ch != '　') {
                             y += fontHeight;
-                            x = drawChar(ch, 0, y);
+                            x = drawChar(ch, 0, y, sc);
                         }
                     }
                 } else {
                     for (int j = old; j < i; j++) {
                         char ch = s.charAt(j);
-                        if (ch != '\n') x += drawChar(ch, x, y);
+                        if (ch != '\n') x += drawChar(ch, x, y, sc);
                         else {
                             x = 0;
                             y += fontHeight;
@@ -158,17 +162,17 @@ public class Painter {
     }
 
     public void drawTextCut(String s, int xp, int yp, int xs) {
-        window.bind();
-        int dots = glyphs.get('.').advance * 3;
+        int sc = getScale();
+        int dots = glyphs.get(sc).get('.').advance * 3;
         int cut = 0;
         boolean full = true;
         int index = 0;
         for (; index < s.length() && cut < xs - dots; index++) {
-            cut += glyphs.get(s.charAt(index)).advance;
+            cut += glyphs.get(sc).get(s.charAt(index)).advance;
         }
         int len = cut;
         for (int i = index; i < s.length(); i++) {
-            len += glyphs.get(s.charAt(i)).advance;
+            len += glyphs.get(sc).get(s.charAt(i)).advance;
             if (len > xs) {
                 full = false;
                 break;
@@ -179,35 +183,46 @@ public class Painter {
     }
 
     public void drawText(String s, int xp, int yp) {
-        window.bind();
+        int sc = getScale();
         int p = xp;
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if (ch == '\n') {
                 yp += fontGap + fontHeight;
                 p = xp;
-            } else p += drawChar(s.charAt(i), p, yp);
+            } else p += drawChar(s.charAt(i), p, yp, sc);
         }
     }
 
-    public int drawChar(char c, int x, int y) {
-        window.bind();
-        y += fontAscent;
-        Painter.Glyph g = glyphs.get(c);
+    public void drawTextRight(String s, int xp, int yp) {
+        int mul = getScale();
+        int len = 0;
+        for (int i = 0; i < s.length(); i++) len += glyphs.get(mul).get(s.charAt(i)).advance;
+        drawText(s, xp - len, yp);
+    }
+
+    private int getScale() {
+        Matrix4f mat = matrices.get(matrices.size() - 1);
+        float mul = TEST_A.mul(mat, new Vector4f()).negate().add(TEST_B.mul(mat, new Vector4f())).y;
+        return (int) mul;
+    }
+
+    private int drawChar(char c, int x, int y, int s) {
+        Painter.Glyph g = glyphs.get(s).get(c);
         g.bind();
 
         BUF_TEXTURE.put(FULL_QUAD);
         BUF_VERTEX.put(g.vertex);
 
-        try (SMatrix mat = matrix()) {
-            mat.translate(x, y);
+        try (SMatrix m = matrix()) {
+            m.translate(x, y);
+            m.scale(1f / s, 1f / s);
             flush();
         }
         return g.advance;
     }
 
     public void drawTexture(String texture, int xdp, int ydp, int xds, int yds, int xsp, int ysp) {
-        window.bind();
         textures.get(texture).bind();
         put(xdp, ydp, xdp + xds, ydp + yds, xsp, ysp, xsp + xds, ysp + yds);
         flush();
@@ -220,7 +235,6 @@ public class Painter {
 
     public void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
                             int xsp, int ysp, int xss, int yss, int xl, int yt, int xr, int yb) {
-        window.bind();
         textures.get(texture).bind();
 
         int xdl = xdp + xl, xdr = xdp + xds - xr;
@@ -244,7 +258,6 @@ public class Painter {
     }
 
     public void drawRect(int xp, int yp, int xs, int ys) {
-        window.bind();
         empty.bind();
         put(xp, yp, xp + xs, yp + ys, 0, 0, 0, 0);
         flush();
@@ -476,30 +489,34 @@ public class Painter {
         public float[] vertex;
         public int advance;
 
-        public Glyph(char ch) {
+        public Glyph(char ch, int size) {
             super(GL30C.glGenTextures());
+
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 IntBuffer a = stack.mallocInt(1);
                 IntBuffer b = stack.mallocInt(1);
                 IntBuffer c = stack.mallocInt(1);
                 IntBuffer d = stack.mallocInt(1);
-                ByteBuffer bitmap = STBTruetype.stbtt_GetCodepointBitmap(
-                        fontInfo, fontScale, fontScale, ch, a, b, c, d);
                 GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
                 GL30C.glPixelStorei(GL30C.GL_UNPACK_ALIGNMENT, 1);
+                float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontHeight * size);
+                ByteBuffer bitmap = STBTruetype.stbtt_GetCodepointBitmap(
+                        fontInfo, scale, scale, ch, a, b, c, d);
                 GL30C.glTexImage2D(GL30C.GL_TEXTURE_2D, 0, GL30C.GL_ALPHA, a.get(0), b.get(0),
                         0, GL30C.GL_ALPHA, GL30C.GL_UNSIGNED_BYTE, bitmap);
-                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
-                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
                 if (bitmap != null) STBTruetype.stbtt_FreeBitmap(bitmap);
-                STBTruetype.stbtt_GetCodepointBitmapBox(fontInfo, ch, fontScale, fontScale, a, b, c, d);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_LINEAR);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_LINEAR);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_S, GL30C.GL_CLAMP_TO_EDGE);
+                GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
+                STBTruetype.stbtt_GetCodepointBitmapBox(fontInfo, ch, scale, scale, a, b, c, d);
                 float x0f = a.get(0);
                 float x1f = c.get(0);
                 float y0f = b.get(0);
                 float y1f = d.get(0);
                 vertex = new float[]{x0f, y0f, x1f, y0f, x1f, y1f, x0f, y1f};
                 STBTruetype.stbtt_GetCodepointHMetrics(fontInfo, ch, a, b);
-                advance = (int) Math.ceil(a.get(0) * fontScale);
+                advance = (int) Math.ceil(a.get(0) * scale / size);
             }
         }
 

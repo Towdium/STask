@@ -12,7 +12,7 @@ import java.util.List;
 public interface Page extends Widget {
     void onResize(int x, int y);
 
-    class Simple extends WContainer implements Page {
+    class Simple extends WContainer<Widget> implements Page {
         int multiplier = 1;
 
         @Override

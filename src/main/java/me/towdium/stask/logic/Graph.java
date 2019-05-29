@@ -9,14 +9,11 @@ import java.util.*;
 public class Graph {
     Map<String, Task> tasks = new HashMap<>();
     Task root;
-    public static final Task EMPTY = new Task();
     List<List<Task>> layout = new ArrayList<>();
 
     public Graph(Pojo.Graph pojo) {
         pojo.tasks.forEach((s, t) -> {
             Task tmp = new Task();
-            tmp.in = t.in;
-            tmp.out = t.out;
             tmp.time = t.time;
             tmp.type = t.type;
             tasks.put(s, tmp);
@@ -31,7 +28,7 @@ public class Graph {
         });
         pojo.layout.forEach(i -> {
             List<Task> tmp = new ArrayList<>();
-            i.forEach(j -> tmp.add(j == null ? EMPTY : tasks.get(j)));
+            i.forEach(j -> tmp.add(j == null ? null : tasks.get(j)));
             layout.add(Collections.unmodifiableList(tmp));
         });
 
@@ -63,16 +60,8 @@ public class Graph {
     public static class Task {
         Map<Task, Integer> after = new IdentityHashMap<>();
         Map<Task, Integer> before = new IdentityHashMap<>();
-        int in, out, time;
+        int time;
         String type;
-
-        public int getIn() {
-            return in;
-        }
-
-        public int getOut() {
-            return out;
-        }
 
         public int getTime() {
             return time;

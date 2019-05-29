@@ -14,7 +14,7 @@ public class Pojo {
     }
 
     public static class Task {
-        int in, out, time;
+        int time;
         String type;
         Map<String, Integer> after;
     }

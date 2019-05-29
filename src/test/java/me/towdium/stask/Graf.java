@@ -17,41 +17,49 @@ public class Graf {
     static final String JSON = "{\n" +
             "  \"tasks\": {\n" +
             "    \"a\": {\n" +
-            "      \"in\": 5,\n" +
-            "      \"out\": 10,\n" +
             "      \"time\": 1,\n" +
             "      \"type\": \"\\u03b1\",\n" +
             "      \"after\": {}\n" +
             "    },\n" +
             "    \"b\": {\n" +
-            "      \"in\": 2,\n" +
-            "      \"out\": 2,\n" +
             "      \"time\": 4,\n" +
             "      \"type\": \"\\u03b1\",\n" +
             "      \"after\": {\"a\": 2}\n" +
             "    },\n" +
             "    \"c\": {\n" +
-            "      \"in\": 8,\n" +
-            "      \"out\": 4,\n" +
             "      \"time\": 1,\n" +
             "      \"type\": \"\\u03b1\",\n" +
             "      \"after\": {\"a\": 8}\n" +
             "    },\n" +
             "    \"d\": {\n" +
-            "      \"in\": 6,\n" +
-            "      \"out\": 2,\n" +
             "      \"time\": 2,\n" +
             "      \"type\": \"\\u03b1\",\n" +
             "      \"after\": {\n" +
             "        \"b\": 2,\n" +
             "        \"c\": 8\n" +
             "      }\n" +
+            "    },\n" +
+            "    \"e\": {\n" +
+            "      \"time\": 2,\n" +
+            "      \"type\": \"\\u03b1\",\n" +
+            "      \"after\": {\n" +
+            "        \"b\": 3\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"f\": {\n" +
+            "      \"time\": 2,\n" +
+            "      \"type\": \"\\u03b1\",\n" +
+            "      \"after\": {\n" +
+            "        \"d\": 3,\n" +
+            "        \"e\": 1\n" +
+            "      }\n" +
             "    }\n" +
             "  },\n" +
             "  \"layout\": [\n" +
-            "    [\"a\"], [\"b\", \"c\"], [\"d\"]\n" +
+            "    [\"a\"], [\"b\", \"c\"], [\"d\", \"e\"], [\"f\"]\n" +
             "  ]\n" +
             "}";
+
 
     public static void main(String[] args) {
         Page.Simple root = new Page.Simple();
