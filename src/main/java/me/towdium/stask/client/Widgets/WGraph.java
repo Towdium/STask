@@ -3,6 +3,7 @@ package me.towdium.stask.client.Widgets;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.wrap.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2f;
@@ -18,25 +19,41 @@ import java.util.Map;
  * Date: 19/05/19
  */
 public class WGraph extends WContainer {
-    Map<Task, WTask> tasks = new IdentityHashMap<>();
+    Schedule schedule;
+    Map<Task, Node> tasks = new IdentityHashMap<>();
 
-    public WGraph(int x, int y, Graph graph) {
-        List<List<Task>> layout = graph.getLayout();
+    public WGraph(int x, int y, Graph g, Schedule s) {
+        schedule = s;
+        List<List<Task>> layout = g.getLayout();
         int ys = layout.size();
         int yd = 28;
-        int yo = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
+        int yo = (y - ys * (Node.HEIGHT + yd) + yd) / 2;
         for (int i = 0; i < ys; i++) {
             List<Task> row = layout.get(i);
             int xs = row.size();
             int xd = 18;
-            int xo = (x - xs * (WTask.WIDTH + xd) + xd) / 2;
+            int xo = (x - xs * (Node.WIDTH + xd) + xd) / 2;
             for (int j = 0; j < xs; j++) {
                 Task t = row.get(j);
                 if (t == null) continue;
-                WTask w = new WTask(t);
+                Node w = new Node(t);
                 tasks.put(t, w);
-                put(w, xo + j * (xd + WTask.WIDTH), yo + i * (yd + WTask.HEIGHT));
+                put(w, xo + j * (xd + Node.WIDTH), yo + i * (yd + Node.HEIGHT));
             }
+        }
+    }
+
+    public static void drawTask(Painter p, int x, int y, Task t) {
+        try (Painter.SMatrix m = p.matrix()) {
+            m.translate(x, y);
+            try (Painter.State s = p.color(0x666666)) {
+                p.drawRect(0, 0, Node.WIDTH, Node.HEIGHT);
+            }
+            try (Painter.State s = p.color(0x888888)) {
+                p.drawRect(0, 0, Node.WIDTH, 19);
+            }
+            p.drawTextRight(Integer.toString(t.getTime()), 26, Painter.fontAscent + 2);
+            p.drawTextRight(t.getType(), 26, Painter.fontAscent + 19);
         }
     }
 
@@ -46,7 +63,7 @@ public class WGraph extends WContainer {
 
         for (Task i : tasks.keySet()) {
             for (Task j : i.getBefore().keySet()) {
-                Task focus = WHighlight.focus == null ? null : WHighlight.focus.getTask();
+                Task focus = WHighlight.focus;
                 if (focus == i || focus == j)
                     late.add(new Pair<>(i, j));
                 else drawConnection(p, i, j, false);
@@ -57,8 +74,8 @@ public class WGraph extends WContainer {
     }
 
     private void drawConnection(Painter p, Task a, Task b, boolean highlight) {
-        Vector2f start = new Vector2f(find(tasks.get(a))).add(WTask.WIDTH / 2f, WTask.HEIGHT).add(0, -1);
-        Vector2f end = new Vector2f(find(tasks.get(b))).add(WTask.WIDTH / 2f, 0).add(0, 1);
+        Vector2f start = new Vector2f(find(tasks.get(a))).add(Node.WIDTH / 2f, Node.HEIGHT).add(0, -1);
+        Vector2f end = new Vector2f(find(tasks.get(b))).add(Node.WIDTH / 2f, 0).add(0, 1);
         Vector2f diff = end.sub(start, new Vector2f());
         try (Painter.SMatrix s = p.matrix()) {
             s.translate(start.x, start.y);
@@ -79,14 +96,14 @@ public class WGraph extends WContainer {
         }
     }
 
-    static class WTask extends WContainer {
+    class Node extends WContainer {
         public static final int WIDTH = 30;
         public static final int HEIGHT = 38;
         Task task;
         Drag drag = new Drag();
         Highlight highlight = new Highlight();
 
-        public WTask(Task task) {
+        public Node(Task task) {
             this.task = task;
             put(drag, 0, 0);
             put(highlight, 0, 0);
@@ -95,25 +112,13 @@ public class WGraph extends WContainer {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
-            try (Painter.State s = p.color(0x666666)) {
-                p.drawRect(0, 0, WIDTH, HEIGHT);
-            }
-            try (Painter.State s = p.color(0x888888)) {
-                p.drawRect(0, 0, WIDTH, 19);
-            }
-            p.drawTextRight(Integer.toString(task.getTime()), 26, Painter.fontAscent + 2);
-            p.drawTextRight(task.getType(), 26, Painter.fontAscent + 19);
+            drawTask(p, 0, 0, task);
         }
 
         class Highlight extends WHighlight {
             @Override
             public Task onHighlight(Vector2i mouse) {
                 return drag.onTest(mouse) ? task : null;
-            }
-
-            @Override
-            public Task getTask() {
-                return task;
             }
 
             @Override
@@ -127,23 +132,33 @@ public class WGraph extends WContainer {
             }
 
             @Override
-            public void onReceived(Object o) {
-
+            public void onDraw(Painter p, Vector2i mouse) {
+                if (sender == this && receiver == null) {
+                    try (Painter.State s = p.priority(true)) {
+                        drawTask(p, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2, task);
+                    }
+                }
             }
 
             @Override
-            public boolean onReceiving(Object o) {
+            public void onReceived(Object o) {
+            }
+
+            @Override
+            public boolean onEntering(Object o, Vector2i mouse) {
                 return false;
             }
 
             @Override
-            public void onSent() {
-
+            public void onSucceeded() {
             }
 
             @Override
-            public @Nullable Object onSending() {
-                return null;
+            public @Nullable Object onStarting() {
+                for (Task t : task.getAfter().keySet())
+                    if (schedule.getAssignment(t) == null) return null;
+                if (schedule.getAssignment(task) != null) return null;
+                return task;
             }
         }
     }

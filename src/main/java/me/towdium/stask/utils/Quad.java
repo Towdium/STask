@@ -1,6 +1,7 @@
 package me.towdium.stask.utils;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2i;
 import org.joml.Vector4f;
 
 /**
@@ -25,6 +26,11 @@ public class Quad {
         a = new Vector4f(Math.max(a.x, q.a.x), Math.max(a.y, q.a.y), Math.max(a.z, q.a.z), 1);
         b = new Vector4f(Math.min(b.x, q.b.x), Math.min(b.y, q.b.y), Math.min(b.z, q.b.z), 1);
         return this;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean inside(Vector2i v) {
+        return v.x > a.x && v.x < b.x && v.y > a.y && v.y < b.y;
     }
 
     public Quad transformed(Matrix4f m) {

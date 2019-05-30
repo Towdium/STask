@@ -21,11 +21,11 @@ public class Pojo {
 
     public static class Cluster {
         Map<String, Processor> processors;
+        List<String> layout;
         int comm;
     }
 
     public static class Processor {
-        int color;
         float speed;
         Map<String, Float> speedup;
     }

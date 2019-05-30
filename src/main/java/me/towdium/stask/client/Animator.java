@@ -1,5 +1,6 @@
 package me.towdium.stask.client;
 
+import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Tickable;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,8 +89,12 @@ public class Animator implements Tickable {
     }
 
     public static class FLinear implements Function<Float, Float> {
+        float v = 0;
+
         @Override
         public Float apply(Float f) {
+            if (f < v) Log.client.info("!");
+            v = f;
             return f;
         }
     }

@@ -59,7 +59,6 @@ public class Render {
         @Override
         @SuppressWarnings("unused")
         public void onDraw(Painter p, Vector2i mouse) {
-            super.onDraw(p, mouse);
             try (Painter.State color = p.color(0x111111)) {
                 p.drawRect(0, 0, 50, 50);
             }
@@ -94,12 +93,12 @@ public class Render {
         }
 
         @Override
-        public boolean onReceiving(Object o) {
+        public boolean onEntering(Object o, Vector2i mouse) {
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
 
         @Override
-        public @Nullable Object onSending() {
+        public @Nullable Object onStarting() {
             return hold ? 1 : null;
         }
 
@@ -109,7 +108,7 @@ public class Render {
         }
 
         @Override
-        public void onSent() {
+        public void onSucceeded() {
             hold = false;
         }
     }
@@ -147,12 +146,12 @@ public class Render {
             }
 
             @Override
-            public boolean onReceiving(Object o) {
+            public boolean onEntering(Object o, Vector2i mouse) {
                 return !hold && o instanceof Integer && (Integer) o == 2;
             }
 
             @Override
-            public @Nullable Object onSending() {
+            public @Nullable Object onStarting() {
                 return hold ? 2 : null;
             }
         }

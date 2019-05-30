@@ -84,12 +84,13 @@ public class Windows {
         }
 
         @Override
-        public boolean onReceiving(Object o) {
+        public boolean onEntering(Object o, Vector2i mouse) {
+            Log.client.info("=");
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
 
         @Override
-        public @Nullable Object onSending() {
+        public @Nullable Object onStarting() {
             return hold ? 1 : null;
         }
 
@@ -99,7 +100,7 @@ public class Windows {
         }
 
         @Override
-        public void onSent() {
+        public void onSucceeded() {
             hold = false;
         }
     }
@@ -130,16 +131,16 @@ public class Windows {
         }
 
         @Override
-        public boolean onReceiving(Object o) {
+        public boolean onEntering(Object o, Vector2i mouse) {
             return false;
         }
 
         @Override
-        public void onSent() {
+        public void onSucceeded() {
         }
 
         @Override
-        public @Nullable Object onSending() {
+        public @Nullable Object onStarting() {
             return null;
         }
     }

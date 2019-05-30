@@ -34,6 +34,7 @@ public class Window extends Closeable implements Tickable {
     Counter fps;
     Page root;
     Painter painter;
+    public static boolean pause = false;
 
     public Window(String title, Page root) {
         this(title, root, true);
@@ -72,6 +73,9 @@ public class Window extends Closeable implements Tickable {
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
             this.root.onResize(width, height);
             refresh();
+        });
+        GLFW.glfwSetKeyCallback(id, (window, key, code, action, mods) -> {
+            if (key == GLFW.GLFW_KEY_GRAVE_ACCENT) pause = action != GLFW.GLFW_RELEASE;
         });
         GLFW.glfwSetFramebufferSizeCallback(id, (window, width, height) -> {
             GLFW.glfwMakeContextCurrent(id);

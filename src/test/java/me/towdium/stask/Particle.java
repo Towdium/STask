@@ -27,7 +27,7 @@ public class Particle {
         public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
             if (state) {
                 Animator.FBezier f = new Animator.FBezier(0, 0);
-                WContainer c = new WContainer();
+                Batch c = new Batch();
                 put(c, 0, 0);
                 for (int i = 0; i < 10; i++) {
                     @SuppressWarnings("Convert2Lambda") Widget w = new Widget() {
@@ -43,7 +43,7 @@ public class Particle {
                             j -> c.put(w, (int) (x * j) + mouse.x, (int) (y * j) + mouse.y),
                             () -> remove(w));
                 }
-                animator.add(0, 1, 2000, new Animator.FLinear(), c::setTransparency, () -> remove(c));
+                animator.add(0, 1, 2000, new Animator.FLinear(), i -> c.transparency = i, () -> remove(c));
             }
             return false;
         }
@@ -52,6 +52,17 @@ public class Particle {
         public void onDraw(Painter p, Vector2i mouse) {
             animator.tick();
             super.onDraw(p, mouse);
+        }
+
+        static class Batch extends WContainer {
+            float transparency = 0;
+
+            @Override
+            public void onDraw(Painter p, Vector2i mouse) {
+                try (Painter.State s = p.color(transparency)) {
+                    super.onDraw(p, mouse);
+                }
+            }
         }
     }
 }

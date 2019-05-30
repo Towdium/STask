@@ -1,7 +1,6 @@
 package me.towdium.stask.logic;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Author: Towdium
@@ -9,21 +8,32 @@ import java.util.Map;
  */
 public class Cluster {
     Map<String, Processor> processors = new HashMap<>();
+    List<Processor> layout = new ArrayList<>();
+
     int comm;
 
     public Cluster(Pojo.Cluster pojo) {
         comm = pojo.comm;
         pojo.processors.forEach((s, p) -> {
             Processor tmp = new Processor();
-            tmp.color = p.color;
             tmp.speed = p.speed;
             tmp.speedup = p.speedup;
+            tmp.name = s;
             processors.put(s, tmp);
         });
+        pojo.layout.forEach(s -> layout.add(processors.get(s)));
+    }
+
+    public Map<String, Processor> getProcessors() {
+        return Collections.unmodifiableMap(processors);
+    }
+
+    public List<Processor> getLayout() {
+        return Collections.unmodifiableList(layout);
     }
 
     public class Processor {
-        int color;
+        String name;
         float speed;
         Map<String, Float> speedup;
 
@@ -34,8 +44,8 @@ public class Cluster {
             return (int) Math.ceil(ret);
         }
 
-        public int getColor() {
-            return color;
+        public String getName() {
+            return name;
         }
 
         public float getSpeed() {

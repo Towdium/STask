@@ -2,11 +2,10 @@ package me.towdium.stask.logic;
 
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.utils.Log;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Author: Towdium
@@ -15,20 +14,28 @@ import java.util.TreeMap;
 public class Schedule {
     Map<Task, Assignment> tasks = new IdentityHashMap<>();
     Map<Processor, SortedMap<Integer, Assignment>> processors = new IdentityHashMap<>();
+    static final Assignment CONFLICT = new Assignment.Con();
+    static final Assignment DEPENDENCY = new Assignment.Dep();
 
-    public Result assign(Task task, Processor processor) {
+    public Assignment assign(Task task, Processor processor) {
         return assign(task, processor, -1);
     }
 
-    public Result assign(Task task, Processor processor, int time) {
+    public Assignment assign(Task task, Processor processor, int time) {
+        Log.client.info("add");
         int total = processor.cost(task);
         int start = attempt(task, processor, time == -1 ? 0 : time);
-        if (start == -1) return Result.DEPENDENCY;
-        else if (time != -1 && start > time) return Result.CONFLICT;
-        Assignment a = new Assignment(task, processor, start, start, start + total);
+        if (start == -1) return DEPENDENCY;
+        else if (time != -1 && start > time) return CONFLICT;
+        Assignment a = new Assignment(task, processor, start, start + total);
         processors.computeIfAbsent(processor, i -> new TreeMap<>()).put(start, a);
         tasks.put(task, a);
-        return Result.SUCCESS;
+        return a;
+    }
+
+    @Nullable
+    public Assignment getAssignment(Task t) {
+        return tasks.get(t);
     }
 
     public int attempt(Task task, Processor processor) {
@@ -53,19 +60,65 @@ public class Schedule {
         return Math.max(start, earliest);
     }
 
+    public void cancel(Assignment a) {
+        Log.client.info("remove");
+        tasks.remove(a.task);
+        processors.get(a.processor).remove(a.start);
+    }
+
+    public Map<Processor, SortedMap<Integer, Assignment>> getProcessors() {
+        return Collections.unmodifiableMap(processors);
+    }
+
     public enum Result {SUCCESS, DEPENDENCY, CONFLICT}
 
     public static class Assignment {
         Task task;
         Processor processor;
-        int start, process, end;
+        int start, end;
 
-        public Assignment(Task task, Processor processor, int start, int process, int end) {
+        private Assignment() {
+        }
+
+        public Assignment(Task task, Processor processor, int start, int end) {
             this.task = task;
             this.processor = processor;
             this.start = start;
-            this.process = process;
             this.end = end;
+        }
+
+        public Task getTask() {
+            return task;
+        }
+
+        public Processor getProcessor() {
+            return processor;
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public int getEnd() {
+            return end;
+        }
+
+        public Result getResult() {
+            return Result.SUCCESS;
+        }
+
+        static class Dep extends Assignment {
+            @Override
+            public Result getResult() {
+                return Result.DEPENDENCY;
+            }
+        }
+
+        static class Con extends Assignment {
+            @Override
+            public Result getResult() {
+                return Result.CONFLICT;
+            }
         }
     }
 }

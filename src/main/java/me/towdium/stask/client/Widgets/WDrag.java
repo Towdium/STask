@@ -11,6 +11,7 @@ import org.joml.Vector2i;
  */
 public abstract class WDrag extends WArea {
     public static WDrag sender, receiver;
+    static Object parcel;
 
     public WDrag(int x, int y) {
         super(x, y);
@@ -18,41 +19,71 @@ public abstract class WDrag extends WArea {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        if (sender == this) {
-            if (onSending() == null) sender = receiver = null;
-        } else if (receiver == this) {
-            if (!onTest(mouse)) receiver = null;
-        } else {
-            if (sender != null && onTest(mouse) && onReceiving(sender.onSending())) receiver = this;
-        }
+        update(mouse);
     }
 
     @Override
     public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
-        if (button != Mouse.LEFT) return false;
-        if (state) {
-            if (onTest(mouse) && onSending() != null)
-                sender = this;
-        } else if (sender == this) {
-            Object o = sender.onSending();
-            if (receiver != null) {
-                if (o != null) {
-                    receiver.onReceived(o);
-                    onSent();
+        if (button == Mouse.LEFT) {
+            if (state) {
+                if (onTest(mouse)) {
+                    Object o = onStarting();
+                    if (o != null) {
+                        sender = this;
+                        parcel = o;
+                    }
                 }
-                receiver = null;
+            } else if (sender == this) {
+                if (receiver != null) {
+                    onSucceeded();
+                    receiver.onReceived(parcel);
+                    receiver = null;
+                } else onRejected();
+                sender = null;
+                parcel = null;
             }
-            sender = null;
-        }
+        } else if (button == Mouse.MOVE) update(mouse);
         return false;
     }
 
-    public abstract void onReceived(Object o);
+    private void update(Vector2i mouse) {
+        if (receiver == this) {
+            if (!onTest(mouse)) {
+                onLeaving();
+                receiver = null;
+            }
+        } else if (sender != null && onTest(mouse) && onEntering(parcel, mouse)) {
+            if (receiver != null) receiver.onLeaving();
+            receiver = this;
+        }
+    }
 
-    public abstract boolean onReceiving(Object o);
+    // receiver side
+    public void onReceived(Object o) {
+    }
 
-    public abstract void onSent();
 
+    // receiver side
+    public boolean onEntering(Object o, Vector2i mouse) {
+        return false;
+    }
+
+    // receiver side
+    public void onLeaving() {
+
+    }
+
+    // sender side
     @Nullable
-    public abstract Object onSending();
+    public Object onStarting() {
+        return null;
+    }
+
+    // sender side
+    public void onSucceeded() {
+    }
+
+    // sender side
+    public void onRejected() {
+    }
 }

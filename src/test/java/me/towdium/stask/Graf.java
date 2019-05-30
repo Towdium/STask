@@ -3,9 +3,12 @@ package me.towdium.stask;
 import com.google.gson.Gson;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Widgets.WGraph;
+import me.towdium.stask.client.Widgets.WSchedule;
 import me.towdium.stask.client.Window;
+import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Pojo;
+import me.towdium.stask.logic.Schedule;
 import org.intellij.lang.annotations.Language;
 
 /**
@@ -14,7 +17,7 @@ import org.intellij.lang.annotations.Language;
  */
 public class Graf {
     @Language("JSON")
-    static final String JSON = "{\n" +
+    static final String GRAPH = "{\n" +
             "  \"tasks\": {\n" +
             "    \"a\": {\n" +
             "      \"time\": 1,\n" +
@@ -60,12 +63,33 @@ public class Graf {
             "  ]\n" +
             "}";
 
+    @Language("JSON")
+    static final String CLUSTER = "{\n" +
+            "  \"comm\": 1,\n" +
+            "  \"processors\": {\n" +
+            "    \"a\": {\n" +
+            "      \"speed\": 1,\n" +
+            "      \"speedup\": {}\n" +
+            "    },\n" +
+            "    \"b\": {\n" +
+            "      \"speed\": 1,\n" +
+            "      \"speedup\": {}\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"layout\": [\"a\", \"b\"]\n" +
+            "}";
+
 
     public static void main(String[] args) {
         Page.Simple root = new Page.Simple();
-        Pojo.Graph pojo = new Gson().fromJson(JSON, Pojo.Graph.class);
-        Graph graph = new Graph(pojo);
-        root.put(new WGraph(300, 300, graph), 0, 0);
+        Gson gson = new Gson();
+        Graph graph = new Graph(gson.fromJson(GRAPH, Pojo.Graph.class));
+        Cluster cluster = new Cluster(gson.fromJson(CLUSTER, Pojo.Cluster.class));
+        Schedule schedule = new Schedule();
+
+
+        root.put(new WGraph(300, 300, graph, schedule), 0, 0);
+        root.put(new WSchedule(300, 100, schedule, cluster), 0, 300);
 
         try (Window w = new Window("Test Graph", root)) {
             w.display();

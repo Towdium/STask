@@ -1,6 +1,7 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Cache;
+import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,8 @@ import java.util.Stack;
 public class Painter {
     static final FloatBuffer BUF_TEXTURE = BufferUtils.createFloatBuffer(65536);
     static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
+    static final FloatBuffer BUF_16 = BufferUtils.createFloatBuffer(16);
+    static final FloatBuffer BUF_24 = BufferUtils.createFloatBuffer(24);
     static final float TEXTURE_SIZE = 1024;
     static final float[] FULL_QUAD = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
     public static final int fontHeight = 16;
@@ -295,13 +298,42 @@ public class Painter {
         };
     }
 
+    public State mask(Quad q) {
+        return mask((int) q.a.x, (int) q.a.y, (int) (q.b.x - q.a.x), (int) (q.b.y - q.a.y));
+    }
+
     public State color(int color) {
-        colors.push(color);
+        int old = colors.peek();
+        // o -> old, c -> input color, n -> new, u -> to update
+        float oa = (old >> 24) / 255f;
+        float or = (old >> 16 & 0xFF) / 255f;
+        float og = (old >> 8 & 0xFF) / 255f;
+        float ob = (old & 0xFF) / 255f;
+        float ca = (color >> 24) / 255f;
+        float cr = (color >> 16 & 0xFF) / 255f;
+        float cg = (color >> 8 & 0xFF) / 255f;
+        float cb = (color & 0xFF) / 255f;
+        float na = 1 - (1 - oa) * (1 - ca);
+        float nr = or * cr;
+        float ng = og * cg;
+        float nb = ob * cb;
+        int ua = (int) (na * 255);
+        int ur = (int) (nr * 255);
+        int ug = (int) (ng * 255);
+        int ub = (int) (nb * 255);
+        int compose = (ua << 24) + (ur << 16) + (ug << 8) + ub;
+        colors.push(compose);
         updateColor();
         return () -> {
             colors.pop();
             updateColor();
         };
+    }
+
+    public State color(float transparency) {
+        Log.client.info("" + transparency);
+        int alpha = (int) (transparency * 255);
+        return color((alpha << 24) + 0xFFFFFF);
     }
 
     public State priority(boolean prioritized) {
@@ -323,20 +355,20 @@ public class Painter {
     }
 
     private void maskUpdate() {
-        FloatBuffer fb = BufferUtils.createFloatBuffer(24);
         if (masks.isEmpty()) {
-            for (int i = 0; i < 24; i++) fb.put(24);
+            for (int i = 0; i < 24; i++) BUF_24.put(24);
         } else {
             Quad q = masks.peek();
-            fb.put(1).put(0).put(0).put(-q.a.x);
-            fb.put(-1).put(0).put(0).put(q.b.x);
-            fb.put(0).put(1).put(0).put(-q.a.y);
-            fb.put(0).put(-1).put(0).put(q.b.y);
-            fb.put(0).put(0).put(1).put(-q.a.z);
-            fb.put(0).put(0).put(-1).put(q.b.z);
+            BUF_24.put(1).put(0).put(0).put(-q.a.x);
+            BUF_24.put(-1).put(0).put(0).put(q.b.x);
+            BUF_24.put(0).put(1).put(0).put(-q.a.y);
+            BUF_24.put(0).put(-1).put(0).put(q.b.y);
+            BUF_24.put(0).put(0).put(1).put(-q.a.z);
+            BUF_24.put(0).put(0).put(-1).put(q.b.z);
         }
-        fb.flip();
-        GL30C.glUniform4fv(shaderVClip, fb);
+        BUF_24.flip();
+        GL30C.glUniform4fv(shaderVClip, BUF_24);
+        BUF_24.clear();
     }
 
     private void updatePriority() {
@@ -350,8 +382,8 @@ public class Painter {
     }
 
     private void updateMatrix() {
-        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-        GL30C.glUniformMatrix4fv(shaderMModel, false, matrices.peek().get(fb));
+        GL30C.glUniformMatrix4fv(shaderMModel, false, matrices.peek().get(BUF_16));
+        BUF_16.clear();
     }
 
     @FunctionalInterface
