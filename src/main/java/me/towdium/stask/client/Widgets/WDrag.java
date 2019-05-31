@@ -10,7 +10,9 @@ import org.joml.Vector2i;
  * Date: 10/03/19
  */
 public abstract class WDrag extends WArea {
+    @Nullable
     public static WDrag sender, receiver;
+    @Nullable
     static Object parcel;
 
     public WDrag(int x, int y) {
@@ -34,7 +36,7 @@ public abstract class WDrag extends WArea {
                     }
                 }
             } else if (sender == this) {
-                if (receiver != null) {
+                if (receiver != null && parcel != null) {
                     onSucceeded();
                     receiver.onReceived(parcel);
                     receiver = null;
@@ -52,7 +54,8 @@ public abstract class WDrag extends WArea {
                 onLeaving();
                 receiver = null;
             }
-        } else if (sender != null && onTest(mouse) && onEntering(parcel, mouse)) {
+        } else if (sender != null && parcel != null
+                && onTest(mouse) && onEntering(parcel, mouse)) {
             if (receiver != null) receiver.onLeaving();
             receiver = this;
         }

@@ -1,12 +1,9 @@
 package me.towdium.stask.utils.wrap;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Author: Towdium
  * Date: 06/03/19
  */
-@NotNull
 public class Pair<K, V> {
     public K a;
     public V b;

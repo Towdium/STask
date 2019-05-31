@@ -1,5 +1,6 @@
 package me.towdium.stask.utils;
 
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
@@ -29,8 +30,8 @@ public class Quad {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean inside(Vector2i v) {
-        return v.x > a.x && v.x < b.x && v.y > a.y && v.y < b.y;
+    public boolean inside(@Nullable Vector2i v) {
+        return v != null && v.x > a.x && v.x < b.x && v.y > a.y && v.y < b.y;
     }
 
     public Quad transformed(Matrix4f m) {

@@ -3,6 +3,7 @@ package me.towdium.stask.client.Widgets;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.logic.Graph;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
 /**
@@ -10,7 +11,9 @@ import org.joml.Vector2i;
  * Date: 28/05/19
  */
 public abstract class WHighlight implements Widget {
+    @Nullable
     static Graph.Task focus;
+    @Nullable
     static WHighlight owner;
 
     @Override
@@ -28,5 +31,6 @@ public abstract class WHighlight implements Widget {
         return false;
     }
 
+    @Nullable
     public abstract Graph.Task onHighlight(Vector2i mouse);
 }

@@ -16,6 +16,6 @@ public abstract class WArea implements Widget {
     }
 
     protected boolean onTest(Vector2i mouse) {
-        return mouse.x >= 0 && mouse.y >= 0 && mouse.x < x && mouse.y < y;
+        return mouse != null && mouse.x >= 0 && mouse.y >= 0 && mouse.x < x && mouse.y < y;
     }
 }

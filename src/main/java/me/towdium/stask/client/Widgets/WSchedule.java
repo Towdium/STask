@@ -9,10 +9,7 @@ import me.towdium.stask.utils.Log;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
+import java.util.*;
 
 /**
  * Author: Towdium
@@ -38,12 +35,12 @@ public class WSchedule extends WContainer {
             Rail r = new Rail(p, x - MARGIN);
             put(r, MARGIN, i * HEIGHT);
             processors.put(p, r);
-            SortedMap<Integer, Schedule.Assignment> as = schedule.getProcessors().get(p);
+            SortedMap<Float, Schedule.Assignment> as = schedule.getProcessors().get(p);
             if (as == null) continue;
-            for (Map.Entry<Integer, Schedule.Assignment> j : as.entrySet()) {
+            for (Map.Entry<Float, Schedule.Assignment> j : as.entrySet()) {
                 Node n = new Node(j.getValue());
                 assignments.put(j.getValue(), n);
-                r.put(n, j.getKey() * MULTIPLIER, 0);
+                r.put(n, (int) (j.getKey() * MULTIPLIER), 0);
             }
         }
     }
@@ -69,7 +66,9 @@ public class WSchedule extends WContainer {
 
         public Node(Schedule.Assignment a) {
             assignment = a;
-            drag = new Drag();
+            int left = (int) (MULTIPLIER * a.getStart());
+            int right = (int) (MULTIPLIER * a.getEnd());
+            drag = new Drag(right - left);
             highlight = new Highlight();
             put(drag, 0, 0);
             put(highlight, 0, 0);
@@ -82,14 +81,14 @@ public class WSchedule extends WContainer {
                  Painter.State b = p.color(0x888888)) {
                 p.drawRect(0, 0, drag.x - 2, 2);
                 p.drawRect(0, 2, 2, drag.y - 2);
-                p.drawRect(drag.x - 2, 2, 2, drag.y - 2);
+                p.drawRect(drag.x - 2, 0, 2, drag.y - 2);
                 p.drawRect(2, drag.y - 2, drag.x - 2, 2);
             }
         }
 
         class Drag extends WDrag {
-            public Drag() {
-                super(MULTIPLIER * (assignment.getEnd() - assignment.getStart()), HEIGHT);
+            public Drag(int x) {
+                super(x, HEIGHT);
             }
 
             @Override
@@ -131,7 +130,7 @@ public class WSchedule extends WContainer {
     }
 
     class Rail extends WContainer {
-        Node ghost = null;
+        @Nullable Node ghost = null;
         Drag drag;
         Cluster.Processor processor;
 
@@ -157,8 +156,9 @@ public class WSchedule extends WContainer {
             @Override
             public void onReceived(Object o) {
                 super.onReceived(o);
+                Objects.requireNonNull(ghost, "Internal error");
                 assignments.put(ghost.assignment, ghost);
-                ghost.ghost = true;
+                ghost.ghost = false;
                 ghost = null;
             }
 
@@ -178,6 +178,7 @@ public class WSchedule extends WContainer {
             }
 
             private Graph.Task cancel() {
+                Objects.requireNonNull(ghost, "Internal error");
                 Graph.Task ret = ghost.assignment.getTask();
                 schedule.cancel(ghost.assignment);
                 remove(ghost);
@@ -186,10 +187,11 @@ public class WSchedule extends WContainer {
             }
 
             private void assign(Vector2i mouse, Graph.Task t) {
-                int time = Math.max(schedule.attempt(t, processor), mouse.x / MULTIPLIER);
+                float time = Math.max(schedule.attempt(t, processor), mouse.x / MULTIPLIER);
                 Schedule.Assignment a = schedule.assign(t, processor, time);
                 ghost = new Node(a);
-                put(ghost, time * MULTIPLIER, 0);
+                ghost.ghost = true;
+                put(ghost, (int) (time * MULTIPLIER), 0);
             }
         }
     }

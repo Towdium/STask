@@ -1,10 +1,8 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Cache;
-import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -27,7 +25,6 @@ import java.util.Stack;
  * Author: Towdium
  * Date: 04/03/19
  */
-@NotNull
 public class Painter {
     static final FloatBuffer BUF_TEXTURE = BufferUtils.createFloatBuffer(65536);
     static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
@@ -99,8 +96,7 @@ public class Painter {
 
     static {
         // initialize font
-        fontData = Utilities.readBytes("/wqymono.ttf");
-        Objects.requireNonNull(fontData, "Failed to load font");
+        fontData = Objects.requireNonNull(Utilities.readBytes("/wqymono.ttf"), "Failed to load font");
         fontInfo = STBTTFontinfo.create();
         if (!STBTruetype.stbtt_InitFont(fontInfo, fontData))
             throw new IllegalStateException("Failed to initialize font information.");
@@ -331,7 +327,6 @@ public class Painter {
     }
 
     public State color(float transparency) {
-        Log.client.info("" + transparency);
         int alpha = (int) (transparency * 255);
         return color((alpha << 24) + 0xFFFFFF);
     }
@@ -561,7 +556,6 @@ public class Painter {
                 vertex = new float[]{x0f, y0f, x1f, y0f, x1f, y1f, x0f, y1f};
                 STBTruetype.stbtt_GetCodepointHMetrics(fontInfo, ch, a, b);
                 advance = (int) Math.ceil(a.get(0) * scale / size);
-                int i = 2;
             }
         }
 

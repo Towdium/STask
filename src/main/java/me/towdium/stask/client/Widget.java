@@ -1,7 +1,7 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.client.Window.Mouse;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
 import java.util.List;
@@ -10,11 +10,10 @@ import java.util.List;
  * Author: Towdium
  * Date: 05/03/19
  */
-@NotNull
 public interface Widget {
-    void onDraw(Painter p, Vector2i mouse);
+    void onDraw(Painter p, @Nullable Vector2i mouse);
 
-    default boolean onTooltip(Vector2i mouse, List<String> tooltip) {
+    default boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
         return false;
     }
 
@@ -22,11 +21,11 @@ public interface Widget {
         return false;
     }
 
-    default boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
+    default boolean onMouse(@Nullable Vector2i mouse, Mouse button, boolean state) {
         return false;
     }
 
-    default boolean onScroll(Vector2i mouse, int diff) {
+    default boolean onScroll(@Nullable Vector2i mouse, int diff) {
         return false;
     }
 

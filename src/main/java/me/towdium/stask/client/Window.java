@@ -5,7 +5,6 @@ import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.time.Counter;
 import me.towdium.stask.utils.time.Timer;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -17,6 +16,7 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.Objects;
 
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -24,7 +24,6 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * Author: Towdium
  * Date: 04/03/19
  */
-@NotNull
 public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
@@ -48,7 +47,7 @@ public class Window extends Closeable implements Tickable {
             GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, resizable ? GLFW.GLFW_TRUE : GLFW.GLFW_FALSE);
             GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 8);
-            display = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+            display = Objects.requireNonNull(GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor()), "No display");
         }
 
         counter++;

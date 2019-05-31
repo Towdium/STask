@@ -20,30 +20,30 @@ public class WContainer implements Widget {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        Painter.State c = null;
-        Painter.State m = null;
+        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
+        Painter.State s = null;
         if (mask != null)
-            m = p.mask(mask);
+            s = p.mask(mask);
         widgets.forward((w, v) -> {
             try (Painter.SMatrix mat = p.matrix()) {
                 mat.translate(v.x, v.y);
-                w.onDraw(p, mouse.sub(v, new Vector2i()));
+                w.onDraw(p, m == null ? null : m.sub(v, new Vector2i()));
             }
             return false;
         });
-        if (m != null) m.close();
+        if (s != null) s.close();
     }
 
     @Override
     public boolean onTooltip(Vector2i mouse, List<String> tooltip) {
-        if (mask != null && !mask.inside(mouse)) return false;
-        return widgets.backward((w, v) -> w.onTooltip(mouse.sub(v, new Vector2i()), tooltip));
+        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
+        return widgets.backward((w, v) -> w.onTooltip(m == null ? null : m.sub(v, new Vector2i()), tooltip));
     }
 
     @Override
     public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
-        if (mask != null && !mask.inside(mouse)) return false;
-        return widgets.backward((w, v) -> w.onMouse(mouse.sub(v, new Vector2i()), button, state));
+        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
+        return widgets.backward((w, v) -> w.onMouse(m == null ? null : m.sub(v, new Vector2i()), button, state));
     }
 
     @Override
@@ -95,7 +95,9 @@ public class WContainer implements Widget {
         IdentityHashMap<Widget, Entry> map = new IdentityHashMap<>();
 
         {
+            //noinspection ConstantConditions
             head = new Entry(null, null);
+            //noinspection ConstantConditions
             tail = new Entry(null, null);
             head.next = tail;
             tail.last = head;

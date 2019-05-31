@@ -7,13 +7,11 @@ import me.towdium.stask.network.Packet;
 import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
 import me.towdium.stask.utils.time.Timer;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Author: Towdium
  * Date: 04/03/19
  */
-@NotNull
 public class STask {
 
     public static void main(String[] args) {
