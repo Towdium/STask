@@ -2,8 +2,9 @@ package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Tickable;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.function.Function;
  * Author: Towdium
  * Date: 16/05/19
  */
+@ParametersAreNonnullByDefault
 public class Animator implements Tickable {
     private List<Entry> entries = new LinkedList<>();
 
@@ -36,6 +38,7 @@ public class Animator implements Tickable {
 
     public Entry add(float x1, float x2, long mills,
                      Function<Float, Float> func, Consumer<Float> clbk) {
+        //noinspection ConstantConditions
         return add(x1, x2, mills, func, clbk, null);
     }
 

@@ -17,6 +17,8 @@ import io.netty.util.CharsetUtil;
 import me.towdium.stask.utils.Closeable;
 import me.towdium.stask.utils.Tickable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
  * Author: Towdium
  * Date: 13/04/19
  */
+@ParametersAreNonnullByDefault
 public class Network extends Closeable {
     NioEventLoopGroup group = new NioEventLoopGroup(1);
     Server server = new Server();
@@ -244,7 +247,7 @@ public class Network extends Closeable {
                     .syncUninterruptibly().channel();
         }
 
-        public void search(Consumer<InetAddress> consumer) {
+        public void search(@Nullable Consumer<InetAddress> consumer) {
             search = consumer;
             if (consumer != null) {
                 discovered.clear();

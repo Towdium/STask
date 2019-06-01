@@ -2,10 +2,11 @@ package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
-import me.towdium.stask.client.Window.Mouse;
 import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -14,20 +15,20 @@ import java.util.function.BiPredicate;
  * Author: Towdium
  * Date: 09/03/19
  */
+@ParametersAreNonnullByDefault
 public class WContainer implements Widget {
     WidgetMap widgets = new WidgetMap();
     Quad mask = null;
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         Painter.State s = null;
         if (mask != null)
             s = p.mask(mask);
         widgets.forward((w, v) -> {
             try (Painter.SMatrix mat = p.matrix()) {
                 mat.translate(v.x, v.y);
-                w.onDraw(p, m == null ? null : m.sub(v, new Vector2i()));
+                w.onDraw(p, mouse.sub(v, new Vector2i()));
             }
             return false;
         });
@@ -35,15 +36,23 @@ public class WContainer implements Widget {
     }
 
     @Override
-    public boolean onTooltip(Vector2i mouse, List<String> tooltip) {
+    public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         return widgets.backward((w, v) -> w.onTooltip(m == null ? null : m.sub(v, new Vector2i()), tooltip));
     }
 
     @Override
-    public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
+    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
-        return widgets.backward((w, v) -> w.onMouse(m == null ? null : m.sub(v, new Vector2i()), button, state));
+        return widgets.backward((w, v) -> w.onClick(m == null ? null : m.sub(v, new Vector2i()), left, state));
+    }
+
+    @Override
+    public void onMove(Vector2i mouse) {
+        widgets.forward((w, v) -> {
+            w.onMove(mouse.sub(v, new Vector2i()));
+            return false;
+        });
     }
 
     @Override
@@ -52,7 +61,7 @@ public class WContainer implements Widget {
     }
 
     @Override
-    public boolean onScroll(Vector2i mouse, int diff) {
+    public boolean onScroll(@Nullable Vector2i mouse, int diff) {
         if (mask != null && !mask.inside(mouse)) return false;
         return widgets.backward((w, v) -> w.onScroll(mouse, diff));
     }
@@ -64,16 +73,6 @@ public class WContainer implements Widget {
 
     public void setMask(int xp, int yp, int xs, int ys) {
         mask = new Quad(xp, yp, xs, ys);
-    }
-
-    public WContainer setX(Widget widget, int x) {
-        widgets.get(widget).x = x;
-        return this;
-    }
-
-    public WContainer setY(Widget widget, int y) {
-        widgets.get(widget).y = y;
-        return this;
     }
 
     public WContainer remove(Widget widget) {

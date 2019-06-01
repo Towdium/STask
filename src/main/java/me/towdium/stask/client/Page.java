@@ -1,15 +1,17 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.client.Widgets.WContainer;
-import me.towdium.stask.client.Window.Mouse;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 /**
  * Author: Towdium
  * Date: 14/05/19
  */
+@ParametersAreNonnullByDefault
 public interface Page extends Widget {
     void onResize(int x, int y);
 
@@ -31,22 +33,22 @@ public interface Page extends Widget {
         }
 
         @Override
-        public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
-            return super.onMouse(convert(mouse), button, state);
+        public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+            return super.onClick(convert(mouse), left, state);
         }
 
         @Override
-        public boolean onTooltip(Vector2i mouse, List<String> tooltip) {
+        public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
             return super.onTooltip(convert(mouse), tooltip);
         }
 
         @Override
-        public boolean onScroll(Vector2i mouse, int diff) {
+        public boolean onScroll(@Nullable Vector2i mouse, int diff) {
             return super.onScroll(convert(mouse), diff);
         }
 
-        private Vector2i convert(Vector2i in) {
-            return new Vector2i(in.x / multiplier, in.y / multiplier);
+        private Vector2i convert(@Nullable Vector2i in) {
+            return in == null ? null : new Vector2i(in.x / multiplier, in.y / multiplier);
         }
 
         protected void onLayout(int x, int y) {

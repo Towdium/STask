@@ -1,11 +1,13 @@
 package me.towdium.stask.logic;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * Author: Towdium
  * Date: 19/05/19
  */
+@ParametersAreNonnullByDefault
 public class Cluster {
     Map<String, Processor> processors = new HashMap<>();
     List<Processor> layout = new ArrayList<>();

@@ -9,6 +9,7 @@ import org.lwjgl.stb.STBVorbis;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.libc.LibCStdlib;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -23,6 +24,7 @@ import java.util.Objects;
  * Author: Towdium
  * Date: 13/04/19
  */
+@ParametersAreNonnullByDefault
 public class Speaker extends Closeable implements Tickable {
     static int count = 0;
     static long device;

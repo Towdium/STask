@@ -6,6 +6,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.util.CharsetUtil;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.function.Function;
  * Author: Towdium
  * Date: 07/04/19
  */
+@ParametersAreNonnullByDefault
 public abstract class Packet {
 
     public static void writeString(String str, ByteBuf buf) {

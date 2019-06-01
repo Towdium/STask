@@ -6,10 +6,13 @@ import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Utilities;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 09/04/19
  */
+@ParametersAreNonnullByDefault
 public class Frames {
     @SuppressWarnings("unused")
     public static void main(String[] args) {

@@ -3,14 +3,16 @@ package me.towdium.stask.logic;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Log;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * Author: Towdium
  * Date: 19/05/19
  */
+@ParametersAreNonnullByDefault
 public class Schedule {
     Map<Task, Assignment> tasks = new IdentityHashMap<>();
     Map<Processor, SortedMap<Float, Assignment>> processors = new IdentityHashMap<>();

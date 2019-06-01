@@ -5,10 +5,13 @@ import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 import me.towdium.stask.utils.Log;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 09/04/19
  */
+@ParametersAreNonnullByDefault
 public class PConnect extends Packet {
     public static final String IDENTIFIER = "connect";
     int index;

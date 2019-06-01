@@ -3,6 +3,7 @@ package me.towdium.stask.utils.time;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.Utilities;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.IntConsumer;
 
 /**
@@ -11,6 +12,7 @@ import java.util.function.IntConsumer;
  *
  * Call callback with given period
  */
+@ParametersAreNonnullByDefault
 public class Timer implements Tickable {
     long step;
     long next = Long.MIN_VALUE;
@@ -26,10 +28,12 @@ public class Timer implements Tickable {
     }
 
     public Timer(double seconds) {
+        //noinspection ConstantConditions
         this(seconds, null);
     }
 
     public Timer(long nanos) {
+        //noinspection ConstantConditions
         this(nanos, null);
     }
 

@@ -1,18 +1,18 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Window.Mouse;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Author: Towdium
  * Date: 10/03/19
  */
+@ParametersAreNonnullByDefault
 public abstract class WDrag extends WArea {
-    @Nullable
     public static WDrag sender, receiver;
-    @Nullable
     static Object parcel;
 
     public WDrag(int x, int y) {
@@ -25,8 +25,8 @@ public abstract class WDrag extends WArea {
     }
 
     @Override
-    public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
-        if (button == Mouse.LEFT) {
+    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+        if (left) {
             if (state) {
                 if (onTest(mouse)) {
                     Object o = onStarting();
@@ -44,17 +44,22 @@ public abstract class WDrag extends WArea {
                 sender = null;
                 parcel = null;
             }
-        } else if (button == Mouse.MOVE) update(mouse);
+        }
         return false;
     }
 
-    private void update(Vector2i mouse) {
+    @Override
+    public void onMove(Vector2i mouse) {
+        update(mouse);
+    }
+
+    private void update(@Nullable Vector2i mouse) {
         if (receiver == this) {
             if (!onTest(mouse)) {
                 onLeaving();
                 receiver = null;
             }
-        } else if (sender != null && parcel != null
+        } else if (sender != null && parcel != null && mouse != null
                 && onTest(mouse) && onEntering(parcel, mouse)) {
             if (receiver != null) receiver.onLeaving();
             receiver = this;

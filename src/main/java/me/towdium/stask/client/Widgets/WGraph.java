@@ -5,10 +5,11 @@ import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.wrap.Pair;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Map;
  * Author: Towdium
  * Date: 19/05/19
  */
+@ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
     Schedule schedule;
     Map<Task, Node> tasks = new IdentityHashMap<>();
@@ -46,10 +48,10 @@ public class WGraph extends WContainer {
     public static void drawTask(Painter p, int x, int y, Task t) {
         try (Painter.SMatrix m = p.matrix()) {
             m.translate(x, y);
-            try (Painter.State s = p.color(0x666666)) {
+            try (Painter.State ignore = p.color(0x666666)) {
                 p.drawRect(0, 0, Node.WIDTH, Node.HEIGHT);
             }
-            try (Painter.State s = p.color(0x888888)) {
+            try (Painter.State ignore = p.color(0x888888)) {
                 p.drawRect(0, 0, Node.WIDTH, 19);
             }
             p.drawTextRight(Integer.toString(t.getTime()), 26, Painter.fontAscent + 2);
@@ -80,7 +82,7 @@ public class WGraph extends WContainer {
         try (Painter.SMatrix s = p.matrix()) {
             s.translate(start.x, start.y);
             s.rotate((float) Math.atan2(diff.y, diff.x));
-            try (Painter.State c = p.color(highlight ? 0xAAAAAA : 0x444444)) {
+            try (Painter.State ignore = p.color(highlight ? 0xAAAAAA : 0x444444)) {
                 p.drawRect(0, -1, (int) diff.length(), 2);
             }
         }
@@ -88,7 +90,7 @@ public class WGraph extends WContainer {
             Vector2f center = start.add(end, new Vector2f()).mul(0.5f).add(-9, -9);
             try (Painter.SMatrix s = p.matrix()) {
                 s.translate((int) center.x, (int) center.y);
-                try (Painter.State c = p.color(0x888888)) {
+                try (Painter.State ignore = p.color(0x888888)) {
                     p.drawRect(0, 0, 18, 18);
                 }
                 p.drawTextCenter(a.getBefore().get(b).toString(), 9, 1 + Painter.fontAscent);
@@ -117,7 +119,7 @@ public class WGraph extends WContainer {
 
         class Highlight extends WHighlight {
             @Override
-            public Task onHighlight(Vector2i mouse) {
+            public Task onHighlight(@Nullable Vector2i mouse) {
                 return drag.onTest(mouse) ? task : null;
             }
 
@@ -134,7 +136,7 @@ public class WGraph extends WContainer {
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
                 if (sender == this && receiver == null) {
-                    try (Painter.State s = p.priority(true)) {
+                    try (Painter.State ignore = p.priority(true)) {
                         drawTask(p, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2, task);
                     }
                 }

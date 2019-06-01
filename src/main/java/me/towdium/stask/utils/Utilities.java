@@ -1,7 +1,8 @@
 package me.towdium.stask.utils;
 
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -14,6 +15,7 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
  * Author: Towdium
  * Date: 04/03/19
  */
+@ParametersAreNonnullByDefault
 public class Utilities {
     @Nullable
     @SuppressWarnings("ResultOfMethodCallIgnored")

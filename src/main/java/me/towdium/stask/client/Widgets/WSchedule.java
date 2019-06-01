@@ -1,20 +1,21 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Window;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Log;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * Author: Towdium
  * Date: 29/05/19
  */
+@ParametersAreNonnullByDefault
 public class WSchedule extends WContainer {
     public static final int MARGIN = 30;
     public static final int HEIGHT = 20;
@@ -49,7 +50,7 @@ public class WSchedule extends WContainer {
     public void onDraw(Painter p, Vector2i mouse) {
         List<Cluster.Processor> ps = cluster.getLayout();
         for (int i = 0; i < ps.size(); i++) {
-            try (Painter.State s = p.color((i % 2 + 1) * 0x444444)) {
+            try (Painter.State ignore = p.color((i % 2 + 1) * 0x444444)) {
                 p.drawRect(0, i * HEIGHT, MARGIN, HEIGHT);
             }
             p.drawTextRight(ps.get(i).getName(), MARGIN - 2, i * HEIGHT + 2 + Painter.fontAscent);
@@ -77,8 +78,8 @@ public class WSchedule extends WContainer {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             if (!visible) return;
-            try (Painter.State a = p.color(ghost ? 0.5f : 0f);
-                 Painter.State b = p.color(0x888888)) {
+            try (Painter.State ignore1 = p.color(ghost ? 0.5f : 0f);
+                 Painter.State ignore2 = p.color(0x888888)) {
                 p.drawRect(0, 0, drag.x - 2, 2);
                 p.drawRect(0, 2, 2, drag.y - 2);
                 p.drawRect(drag.x - 2, 0, 2, drag.y - 2);
@@ -119,7 +120,7 @@ public class WSchedule extends WContainer {
 
         class Highlight extends WHighlight {
             @Override
-            public Graph.Task onHighlight(Vector2i mouse) {
+            public Graph.Task onHighlight(@Nullable Vector2i mouse) {
                 return drag.onTest(mouse) ? assignment.getTask() : null;
             }
 
@@ -130,7 +131,7 @@ public class WSchedule extends WContainer {
     }
 
     class Rail extends WContainer {
-        @Nullable Node ghost = null;
+        Node ghost = null;
         Drag drag;
         Cluster.Processor processor;
 
@@ -145,12 +146,11 @@ public class WSchedule extends WContainer {
             }
 
             @Override
-            public boolean onMouse(Vector2i mouse, Window.Mouse button, boolean state) {
-                if (ghost != null && button == Window.Mouse.MOVE) {
+            public void onMove(Vector2i mouse) {
+                if (ghost != null) {
                     Log.client.info("move");
                     assign(mouse, cancel());
-                    return true;
-                } else return super.onMouse(mouse, button, state);
+                }
             }
 
             @Override

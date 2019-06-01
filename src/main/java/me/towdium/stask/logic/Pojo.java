@@ -1,5 +1,6 @@
 package me.towdium.stask.logic;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
 
@@ -7,6 +8,7 @@ import java.util.Map;
  * Author: Towdium
  * Date: 18/05/19
  */
+@ParametersAreNonnullByDefault
 public class Pojo {
     public static class Graph {
         Map<String, Task> tasks;

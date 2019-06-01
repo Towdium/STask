@@ -2,13 +2,16 @@ package me.towdium.stask;
 
 import me.towdium.stask.client.*;
 import me.towdium.stask.client.Widgets.WContainer;
-import me.towdium.stask.client.Window.Mouse;
 import org.joml.Vector2i;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Author: Towdium
  * Date: 17/05/19
  */
+@ParametersAreNonnullByDefault
 public class Particle {
     public static void main(String[] args) {
         Page.Simple root = new Page.Simple();
@@ -24,15 +27,15 @@ public class Particle {
         Animator animator = new Animator();
 
         @Override
-        public boolean onMouse(Vector2i mouse, Mouse button, boolean state) {
-            if (state) {
+        public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+            if (mouse != null) {
                 Animator.FBezier f = new Animator.FBezier(0, 0);
                 Batch c = new Batch();
                 put(c, 0, 0);
                 for (int i = 0; i < 10; i++) {
                     @SuppressWarnings("Convert2Lambda") Widget w = new Widget() {
                         @Override
-                        public void onDraw(Painter p, Vector2i mouse) {
+                        public void onDraw(Painter p, @Nullable Vector2i mouse) {
                             p.drawRect(-5, -5, 10, 10);
                         }
                     };
@@ -59,7 +62,7 @@ public class Particle {
 
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
-                try (Painter.State s = p.color(transparency)) {
+                try (Painter.State ignore = p.color(transparency)) {
                     super.onDraw(p, mouse);
                 }
             }

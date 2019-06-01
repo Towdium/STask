@@ -1,11 +1,13 @@
 package me.towdium.stask.logic;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 /**
  * Author: Towdium
  * Date: 18/05/19
  */
+@ParametersAreNonnullByDefault
 public class Graph {
     Map<String, Task> tasks = new HashMap<>();
     Task root;

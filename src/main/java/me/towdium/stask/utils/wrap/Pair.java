@@ -1,9 +1,12 @@
 package me.towdium.stask.utils.wrap;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 06/03/19
  */
+@ParametersAreNonnullByDefault
 public class Pair<K, V> {
     public K a;
     public V b;

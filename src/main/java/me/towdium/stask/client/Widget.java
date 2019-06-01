@@ -1,17 +1,18 @@
 package me.towdium.stask.client;
 
-import me.towdium.stask.client.Window.Mouse;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 /**
  * Author: Towdium
  * Date: 05/03/19
  */
+@ParametersAreNonnullByDefault
 public interface Widget {
-    void onDraw(Painter p, @Nullable Vector2i mouse);
+    void onDraw(Painter p, Vector2i mouse);
 
     default boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
         return false;
@@ -21,7 +22,10 @@ public interface Widget {
         return false;
     }
 
-    default boolean onMouse(@Nullable Vector2i mouse, Mouse button, boolean state) {
+    default void onMove(Vector2i mouse) {
+    }
+
+    default boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
         return false;
     }
 

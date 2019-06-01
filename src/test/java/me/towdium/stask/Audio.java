@@ -5,11 +5,13 @@ import me.towdium.stask.client.Speaker;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 12/04/19
  */
-
+@ParametersAreNonnullByDefault
 public class Audio {
     public static void main(String[] args) throws InterruptedException {
         try (Window w = new Window("Audio", new Page.Simple());

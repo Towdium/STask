@@ -4,10 +4,13 @@ import io.netty.buffer.ByteBuf;
 import me.towdium.stask.network.Network;
 import me.towdium.stask.network.Packet;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 07/04/19
  */
+@ParametersAreNonnullByDefault
 public class PString extends Packet {
     public static final String IDENTIFIER = "string";
 

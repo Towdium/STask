@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.system.MemoryStack;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
@@ -24,6 +25,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * Author: Towdium
  * Date: 04/03/19
  */
+@ParametersAreNonnullByDefault
 public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
@@ -33,6 +35,7 @@ public class Window extends Closeable implements Tickable {
     Counter fps;
     Page root;
     Painter painter;
+    Vector2i mouse;
     public static boolean pause = false;
 
     public Window(String title, Page root) {
@@ -58,7 +61,7 @@ public class Window extends Closeable implements Tickable {
         timer = new Timer(1f / display.refreshRate(), i -> {
             if (i != 0 && debug) Log.client.trace("Dropping " + i + " frames");
             fps.tick();
-            refresh();
+            loop();
         });
         fps = new Counter(1f, i -> {
             if (debug) Log.client.trace("FPS: " + i);
@@ -66,12 +69,12 @@ public class Window extends Closeable implements Tickable {
         GLFW.glfwMakeContextCurrent(id);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) ->
-                this.root.onMouse(mouse(), Mouse.get(button), action == GLFW.GLFW_PRESS));
+                this.root.onClick(mouse(), button == GLFW.GLFW_MOUSE_BUTTON_1, action == GLFW.GLFW_PRESS));
         GLFW.glfwSetCursorPosCallback(id, (window, x, y) ->
-                this.root.onMouse(new Vector2i((int) x, (int) y), Mouse.MOVE, true));
+                update(new Vector2i((int) x, (int) y)));
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
             this.root.onResize(width, height);
-            refresh();
+            loop();
         });
         GLFW.glfwSetKeyCallback(id, (window, key, code, action, mods) -> {
             if (key == GLFW.GLFW_KEY_GRAVE_ACCENT) pause = action != GLFW.GLFW_RELEASE;
@@ -126,10 +129,19 @@ public class Window extends Closeable implements Tickable {
         }
     }
 
-    private void refresh() {
+    private void update(Vector2i m) {
+        if (!m.equals(mouse)) {
+            mouse = m;
+            root.onMove(m);
+        }
+    }
+
+    private void loop() {
         GLFW.glfwMakeContextCurrent(id);
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
-        root.onDraw(painter, mouse());
+        Vector2i m = mouse();
+        update(m);
+        root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
     }
 

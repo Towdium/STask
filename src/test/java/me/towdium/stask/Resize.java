@@ -3,10 +3,13 @@ package me.towdium.stask;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Window;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 14/05/19
  */
+@ParametersAreNonnullByDefault
 public class Resize {
     public static void main(String[] args) {
         Impl impl = new Impl();

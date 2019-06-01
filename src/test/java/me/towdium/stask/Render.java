@@ -5,31 +5,33 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.IdentityHashMap;
 
 /**
  * Author: Towdium
  * Date: 08/04/19
  */
+@ParametersAreNonnullByDefault
 public class Render {
     public static void main(String[] args) {
         Page.Simple root = new Page.Simple();
         root.put((p, m) -> {
-            try (Painter.SMatrix mat = p.matrix();
-                 Painter.State col = p.color(0xFFAA00)) {
-                mat.translate(50, 50);
+            try (Painter.SMatrix matrix = p.matrix();
+                 Painter.State ignore = p.color(0xFFAA00)) {
+                matrix.translate(50, 50);
                 p.drawTextWrapped("Here is some test text. 这是一段测试文本。", 440, 0, 250);
                 p.drawTexture("pic.png", 0, 0, 100, 100, 0, 0);
                 p.drawTexture("pic.png", 110, 0, 100, 100, 306, 1, 8, 8, 1);
-                try (Painter.State mask1 = p.mask(330, 0, 99, 100);
-                     Painter.State mask2 = p.mask(330, 0, 100, 99)) {
+                try (Painter.State ignore1 = p.mask(330, 0, 99, 100);
+                     Painter.State ignore2 = p.mask(330, 0, 100, 99)) {
                     p.drawTexture("pic.png", 330, 0, 100, 100, 306, 1, 8, 8, 1);
                 }
                 p.drawRect(220, 0, 100, 100);
-                try (Painter.State color2 = p.color(0xAAFF0000)) {
+                try (Painter.State ignore1 = p.color(0xAAFF0000)) {
                     p.drawRect(220, 0, 50, 100);
                 }
             }

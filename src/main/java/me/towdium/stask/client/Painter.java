@@ -13,6 +13,7 @@ import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryStack;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -25,6 +26,7 @@ import java.util.Stack;
  * Author: Towdium
  * Date: 04/03/19
  */
+@ParametersAreNonnullByDefault
 public class Painter {
     static final FloatBuffer BUF_TEXTURE = BufferUtils.createFloatBuffer(65536);
     static final FloatBuffer BUF_VERTEX = BufferUtils.createFloatBuffer(65536);
@@ -57,12 +59,14 @@ public class Painter {
         this.window = window;
         IntBuffer ib = BufferUtils.createIntBuffer(1);
         int vert = GL30C.glCreateShader(GL30C.GL_VERTEX_SHADER);
-        GL30C.glShaderSource(vert, Utilities.readString("/shaders/shader.vert"));
+        GL30C.glShaderSource(vert, Objects.requireNonNull(Utilities.readString(
+                "/shaders/shader.vert"), "Internal error"));
         GL30C.glCompileShader(vert);
         GL30C.glGetShaderiv(vert, GL30C.GL_COMPILE_STATUS, ib);
         if (ib.get(0) == 0) System.out.println(GL30C.glGetShaderInfoLog(vert));
         int frag = GL30C.glCreateShader(GL30C.GL_FRAGMENT_SHADER);
-        GL30C.glShaderSource(frag, Utilities.readString("/shaders/shader.frag"));
+        GL30C.glShaderSource(frag, Objects.requireNonNull(Utilities.readString(
+                "/shaders/shader.frag"), "Internal error"));
         GL30C.glCompileShader(frag);
         GL30C.glGetShaderiv(frag, GL30C.GL_COMPILE_STATUS, ib);
         if (ib.get(0) == 0) System.out.println(GL30C.glGetShaderInfoLog(frag));
@@ -195,9 +199,6 @@ public class Painter {
     }
 
     public void drawTextRight(String s, int xp, int yp) {
-        int mul = getScale();
-        int len = 0;
-        for (int i = 0; i < s.length(); i++) len += glyphs.get(mul).get(s.charAt(i)).advance;
         drawText(s, xp - getLength(s), yp);
     }
 

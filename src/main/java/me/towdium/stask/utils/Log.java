@@ -1,5 +1,6 @@
 package me.towdium.stask.utils;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,6 +9,7 @@ import java.util.Date;
  * Author: Towdium
  * Date: 09/04/19
  */
+@ParametersAreNonnullByDefault
 public class Log {
     static final DateFormat FORMAT = new SimpleDateFormat("HH:mm:ss");
     public static Log client = new Log("CLIENT");

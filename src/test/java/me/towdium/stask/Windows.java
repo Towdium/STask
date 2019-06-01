@@ -6,9 +6,10 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -17,6 +18,7 @@ import java.util.Set;
  * Author: Towdium
  * Date: 11/04/19
  */
+@ParametersAreNonnullByDefault
 public class Windows {
 
     public static void main(String[] args) {
@@ -116,10 +118,10 @@ public class Windows {
             if (sender instanceof Drag) {
                 try (Painter.SMatrix mat = p.matrix()) {
                     mat.translate(mouse.x - 25, mouse.y - 25);
-                    try (Painter.State color = p.color(0x888888)) {
+                    try (Painter.State ignore = p.color(0x888888)) {
                         p.drawRect(0, 0, 50, 50);
                     }
-                    try (Painter.State color = p.color(0x777777)) {
+                    try (Painter.State ignore = p.color(0x777777)) {
                         p.drawRect(10, 10, 30, 30);
                     }
                 }

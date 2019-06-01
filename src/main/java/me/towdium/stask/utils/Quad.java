@@ -1,14 +1,17 @@
 package me.towdium.stask.utils;
 
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Author: Towdium
  * Date: 13/03/19
  */
+@ParametersAreNonnullByDefault
 public class Quad {
     public Vector4f a, b;
 

@@ -9,14 +9,15 @@ import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Pojo;
 import me.towdium.stask.logic.Schedule;
-import org.intellij.lang.annotations.Language;
+
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Author: Towdium
  * Date: 19/05/19
  */
+@ParametersAreNonnullByDefault
 public class Graf {
-    @Language("JSON")
     static final String GRAPH = "{\n" +
             "  \"tasks\": {\n" +
             "    \"a\": {\n" +
@@ -63,7 +64,6 @@ public class Graf {
             "  ]\n" +
             "}";
 
-    @Language("JSON")
     static final String CLUSTER = "{\n" +
             "  \"comm\": 1,\n" +
             "  \"processors\": {\n" +

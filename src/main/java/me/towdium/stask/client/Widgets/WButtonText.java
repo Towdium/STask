@@ -3,10 +3,13 @@ package me.towdium.stask.client.Widgets;
 import me.towdium.stask.client.Painter;
 import org.joml.Vector2i;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 08/04/19
  */
+@ParametersAreNonnullByDefault
 public class WButtonText extends WButton {
     String s;
 

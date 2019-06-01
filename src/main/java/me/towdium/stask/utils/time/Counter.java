@@ -2,12 +2,14 @@ package me.towdium.stask.utils.time;
 
 import me.towdium.stask.utils.Tickable;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.IntConsumer;
 
 /**
  * Author: Towdium
  * Date: 09/04/19
  */
+@ParametersAreNonnullByDefault
 public class Counter implements Tickable {
     Timer timer;
     int stored = 0;

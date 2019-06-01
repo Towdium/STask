@@ -8,12 +8,14 @@ import me.towdium.stask.network.packates.PConnect;
 import me.towdium.stask.network.packates.PString;
 import me.towdium.stask.utils.time.Timer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * Author: Towdium
  * Date: 04/03/19
  */
+@ParametersAreNonnullByDefault
 public class STask {
-
     public static void main(String[] args) {
         Packet.Registry.register(PString.IDENTIFIER, PString::new);
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
