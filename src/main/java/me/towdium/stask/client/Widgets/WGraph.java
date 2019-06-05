@@ -22,7 +22,7 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
     Schedule schedule;
-    Map<Task, Node> tasks = new IdentityHashMap<>();
+    Map<Graph.Task, Node> tasks = new IdentityHashMap<>();
 
     public WGraph(int x, int y, Graph g, Schedule s) {
         schedule = s;
@@ -45,7 +45,7 @@ public class WGraph extends WContainer {
         }
     }
 
-    public static void drawTask(Painter p, int x, int y, Task t) {
+    public static void drawTask(Painter p, int x, int y, Graph.Task t) {
         try (Painter.SMatrix m = p.matrix()) {
             m.translate(x, y);
             try (Painter.State ignore = p.color(0x666666)) {
@@ -61,11 +61,10 @@ public class WGraph extends WContainer {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        List<Pair<Task, Task>> late = new ArrayList<>();
-
-        for (Task i : tasks.keySet()) {
+        List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
+        Task focus = WHighlight.focus instanceof Task ? (Task) WHighlight.focus : null;
+        for (Graph.Task i : tasks.keySet()) {
             for (Task j : i.getBefore().keySet()) {
-                Task focus = WHighlight.focus;
                 if (focus == i || focus == j)
                     late.add(new Pair<>(i, j));
                 else drawConnection(p, i, j, false);
@@ -93,7 +92,7 @@ public class WGraph extends WContainer {
                 try (Painter.State ignore = p.color(0x888888)) {
                     p.drawRect(0, 0, 18, 18);
                 }
-                p.drawTextCenter(a.getBefore().get(b).toString(), 9, 1 + Painter.fontAscent);
+                p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 9, 1 + Painter.fontAscent);
             }
         }
     }
@@ -144,11 +143,6 @@ public class WGraph extends WContainer {
 
             @Override
             public void onReceived(Object o) {
-            }
-
-            @Override
-            public boolean onEntering(Object o, Vector2i mouse) {
-                return false;
             }
 
             @Override

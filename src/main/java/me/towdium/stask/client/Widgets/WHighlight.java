@@ -13,12 +13,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public abstract class WHighlight implements Widget {
-    static Graph.Task focus;
+    static Graph.Work focus;
     static WHighlight owner;
 
     @Override
     public void onMove(Vector2i mouse) {
-        Graph.Task t = onHighlight(mouse);
+        Graph.Work t = onHighlight(mouse);
         if (t != null) {
             owner = this;
             focus = t;
@@ -29,5 +29,5 @@ public abstract class WHighlight implements Widget {
     }
 
     @Nullable
-    public abstract Graph.Task onHighlight(@Nullable Vector2i mouse);
+    public abstract Graph.Work onHighlight(@Nullable Vector2i mouse);
 }

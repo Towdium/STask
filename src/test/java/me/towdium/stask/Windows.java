@@ -86,7 +86,7 @@ public class Windows {
         }
 
         @Override
-        public boolean onEntering(Object o, Vector2i mouse) {
+        public boolean onTest(Object o, Vector2i mouse) {
             Log.client.info("=");
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
@@ -130,11 +130,6 @@ public class Windows {
 
         @Override
         public void onReceived(Object o) {
-        }
-
-        @Override
-        public boolean onEntering(Object o, Vector2i mouse) {
-            return false;
         }
 
         @Override

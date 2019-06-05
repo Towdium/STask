@@ -43,6 +43,11 @@ public interface Page extends Widget {
         }
 
         @Override
+        public void onMove(Vector2i mouse) {
+            super.onMove(convert(mouse));
+        }
+
+        @Override
         public boolean onScroll(@Nullable Vector2i mouse, int diff) {
             return super.onScroll(convert(mouse), diff);
         }

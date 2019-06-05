@@ -70,8 +70,8 @@ public class Window extends Closeable implements Tickable {
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) ->
                 this.root.onClick(mouse(), button == GLFW.GLFW_MOUSE_BUTTON_1, action == GLFW.GLFW_PRESS));
-        GLFW.glfwSetCursorPosCallback(id, (window, x, y) ->
-                update(new Vector2i((int) x, (int) y)));
+//        GLFW.glfwSetCursorPosCallback(id, (window, x, y) ->
+//                update(new Vector2i((int) x, (int) y)));
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
             this.root.onResize(width, height);
             loop();

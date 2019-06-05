@@ -60,8 +60,9 @@ public abstract class WDrag extends WArea {
                 receiver = null;
             }
         } else if (sender != null && parcel != null && mouse != null
-                && onTest(mouse) && onEntering(parcel, mouse)) {
+                && onTest(mouse) && onTest(parcel, mouse)) {
             if (receiver != null) receiver.onLeaving();
+            onEnter(parcel, mouse);
             receiver = this;
         }
     }
@@ -72,8 +73,12 @@ public abstract class WDrag extends WArea {
 
 
     // receiver side
-    public boolean onEntering(Object o, Vector2i mouse) {
+    public boolean onTest(Object o, Vector2i mouse) {
         return false;
+    }
+
+    // receiver side
+    public void onEnter(Object o, Vector2i mouse) {
     }
 
     // receiver side

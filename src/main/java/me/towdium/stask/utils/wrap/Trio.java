@@ -1,25 +1,27 @@
 package me.towdium.stask.utils.wrap;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 /**
  * Author: Towdium
- * Date: 06/03/19
+ * Date: 03/06/19
  */
-@ParametersAreNonnullByDefault
-public class Pair<K, V> {
-    public K a;
-    public V b;
+public class Trio<T, U, V> {
+    public T a;
+    public U b;
+    public V c;
 
-    public Pair(K a, V b) {
+    public Trio(T a, U b, V c) {
         this.a = a;
         this.b = b;
+        this.c = c;
     }
 
     @Override
     public int hashCode() {
-        int hash = a.hashCode();
-        return (hash << 16) ^ (hash >> 16) ^ b.hashCode();
+        int ha = a.hashCode();
+        ha = (ha << 10) ^ (ha >> 10);
+        int hb = b.hashCode();
+        hb = (hb << 20) ^ (hb >> 20);
+        return ha ^ hb ^ c.hashCode();
     }
 
     @Override

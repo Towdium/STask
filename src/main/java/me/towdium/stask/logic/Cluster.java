@@ -30,6 +30,10 @@ public class Cluster {
         return Collections.unmodifiableMap(processors);
     }
 
+    public Processor getProcessor(String id) {
+        return processors.get(id);
+    }
+
     public List<Processor> getLayout() {
         return Collections.unmodifiableList(layout);
     }
@@ -39,11 +43,16 @@ public class Cluster {
         float speed;
         Map<String, Float> speedup;
 
-        public int cost(Graph.Task task) {
+        public float cost(Graph.Task task) {
             float ret = task.time * speed;
             Float k = speedup.get(task.type);
             if (k != null) ret *= k;
-            return (int) Math.ceil(ret);
+            return ret;
+        }
+
+        public float comm(int data, Processor p) {
+            if (comm == 0 || p == this) return 0;
+            else return data / (float) comm;
         }
 
         public String getName() {
@@ -56,6 +65,11 @@ public class Cluster {
 
         public Map<String, Float> getSpeedup() {
             return speedup;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 }

@@ -24,8 +24,9 @@ public class Graph {
             Task crr = tasks.get(s);
             t.after.forEach((i, j) -> {
                 Task pre = tasks.get(i);
-                crr.after.put(pre, j);
-                pre.before.put(crr, j);
+                Comm c = new Comm(pre, crr, j);
+                crr.after.put(pre, c);
+                pre.before.put(crr, c);
             });
         });
         pojo.layout.forEach(i -> {
@@ -59,9 +60,35 @@ public class Graph {
         return tasks.get(id);
     }
 
-    public static class Task {
-        Map<Task, Integer> after = new IdentityHashMap<>();
-        Map<Task, Integer> before = new IdentityHashMap<>();
+    public static class Work {
+    }
+
+    public static class Comm extends Work {
+        Task src, dst;
+        int size;
+
+        public Comm(Task src, Task dst, int size) {
+            this.src = src;
+            this.dst = dst;
+            this.size = size;
+        }
+
+        public Task getSrc() {
+            return src;
+        }
+
+        public Task getDst() {
+            return dst;
+        }
+
+        public int getSize() {
+            return size;
+        }
+    }
+
+    public static class Task extends Work {
+        Map<Task, Comm> after = new IdentityHashMap<>();
+        Map<Task, Comm> before = new IdentityHashMap<>();
         int time;
         String type;
 
@@ -73,11 +100,11 @@ public class Graph {
             return type;
         }
 
-        public Map<Task, Integer> getAfter() {
+        public Map<Task, Comm> getAfter() {
             return Collections.unmodifiableMap(after);
         }
 
-        public Map<Task, Integer> getBefore() {
+        public Map<Task, Comm> getBefore() {
             return Collections.unmodifiableMap(before);
         }
     }

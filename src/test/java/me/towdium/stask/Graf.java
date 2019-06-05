@@ -9,6 +9,7 @@ import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Pojo;
 import me.towdium.stask.logic.Schedule;
+import me.towdium.stask.utils.Log;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -18,7 +19,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class Graf {
-    static final String GRAPH = "{\n" +
+    public static final String GRAPH = "{\n" +
             "  \"tasks\": {\n" +
             "    \"a\": {\n" +
             "      \"time\": 1,\n" +
@@ -64,7 +65,7 @@ public class Graf {
             "  ]\n" +
             "}";
 
-    static final String CLUSTER = "{\n" +
+    public static final String CLUSTER = "{\n" +
             "  \"comm\": 1,\n" +
             "  \"processors\": {\n" +
             "    \"a\": {\n" +
@@ -86,6 +87,7 @@ public class Graf {
         Graph graph = new Graph(gson.fromJson(GRAPH, Pojo.Graph.class));
         Cluster cluster = new Cluster(gson.fromJson(CLUSTER, Pojo.Cluster.class));
         Schedule schedule = new Schedule();
+        Log.client.setLevel(Log.Priority.TRACE);
 
 
         root.put(new WGraph(300, 300, graph, schedule), 0, 0);

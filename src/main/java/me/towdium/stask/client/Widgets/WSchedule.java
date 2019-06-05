@@ -19,7 +19,8 @@ import java.util.*;
 public class WSchedule extends WContainer {
     public static final int MARGIN = 30;
     public static final int HEIGHT = 20;
-    public static final int MULTIPLIER = 10;
+    public static final float MULTIPLIER = 10;
+    boolean debug;
     Schedule schedule;
     Cluster cluster;
     Map<Schedule.Assignment, Node> assignments = new IdentityHashMap<>();
@@ -31,19 +32,24 @@ public class WSchedule extends WContainer {
         setMask(MARGIN, 0, x - MARGIN, y);
         List<Cluster.Processor> ps = cluster.getLayout();
 
+        // TODO load existing
         for (int i = 0; i < ps.size(); i++) {
             Cluster.Processor p = ps.get(i);
             Rail r = new Rail(p, x - MARGIN);
             put(r, MARGIN, i * HEIGHT);
             processors.put(p, r);
-            SortedMap<Float, Schedule.Assignment> as = schedule.getProcessors().get(p);
-            if (as == null) continue;
-            for (Map.Entry<Float, Schedule.Assignment> j : as.entrySet()) {
-                Node n = new Node(j.getValue());
-                assignments.put(j.getValue(), n);
-                r.put(n, (int) (j.getKey() * MULTIPLIER), 0);
-            }
+            //SortedMap<Float, Schedule.Assignment> as = schedule.getProcessors().get(p);
+//            if (as == null) continue;
+//            for (Map.Entry<Float, Schedule.Assignment> j : as.entrySet()) {
+//                Node n = new Node(j.getValue());
+//                assignments.put(j.getValue(), n);
+//                r.put(n, (int) (j.getKey() * MULTIPLIER), 0);
+//            }
         }
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     @Override
@@ -58,15 +64,15 @@ public class WSchedule extends WContainer {
         super.onDraw(p, mouse);
     }
 
-    static class Node extends WContainer {
-        Schedule.Assignment assignment;
+    class Node extends WContainer {
+        Schedule.Assignment asmt;
         Drag drag;
         Highlight highlight;
         boolean visible = true;
         boolean ghost = false;
 
         public Node(Schedule.Assignment a) {
-            assignment = a;
+            asmt = a;
             int left = (int) (MULTIPLIER * a.getStart());
             int right = (int) (MULTIPLIER * a.getEnd());
             drag = new Drag(right - left);
@@ -85,6 +91,7 @@ public class WSchedule extends WContainer {
                 p.drawRect(drag.x - 2, 0, 2, drag.y - 2);
                 p.drawRect(2, drag.y - 2, drag.x - 2, 2);
             }
+            super.onDraw(p, mouse);
         }
 
         class Drag extends WDrag {
@@ -98,30 +105,33 @@ public class WSchedule extends WContainer {
             }
 
             @Override
-            public boolean onEntering(Object o, Vector2i mouse) {
-                return false;
+            public void onRejected() {
+                // TODO
             }
 
             @Override
             public void onSucceeded() {
-
+                remove(this);
             }
 
             @Override
-            public @Nullable Object onStarting() {
-                return assignment.getTask();
+            public @Nullable
+            Object onStarting() {  // TODO change to move
+                return null;
             }
 
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
-
+                if (sender == this && receiver == null && asmt.getWork() instanceof Graph.Task) {
+                    WGraph.drawTask(p, mouse.x, mouse.y, (Graph.Task) asmt.getWork());
+                }
             }
         }
 
         class Highlight extends WHighlight {
             @Override
-            public Graph.Task onHighlight(@Nullable Vector2i mouse) {
-                return drag.onTest(mouse) ? assignment.getTask() : null;
+            public Graph.Work onHighlight(@Nullable Vector2i mouse) {
+                return drag.onTest(mouse) ? asmt.getWork() : null;
             }
 
             @Override
@@ -131,13 +141,14 @@ public class WSchedule extends WContainer {
     }
 
     class Rail extends WContainer {
-        Node ghost = null;
         Drag drag;
         Cluster.Processor processor;
+        Graph.Task active;
+        List<Node> ghost = null;
 
         public Rail(Cluster.Processor p, int x) {
             processor = p;
-            put(drag = new Drag(x), 0, 0);
+            put(drag = new Drag(x + MARGIN), -MARGIN, 0);
         }
 
         class Drag extends WDrag {
@@ -148,8 +159,9 @@ public class WSchedule extends WContainer {
             @Override
             public void onMove(Vector2i mouse) {
                 if (ghost != null) {
-                    Log.client.info("move");
-                    assign(mouse, cancel());
+                    if (debug) Log.client.info("move");
+                    cancel();
+                    assign(mouse);
                 }
             }
 
@@ -157,41 +169,63 @@ public class WSchedule extends WContainer {
             public void onReceived(Object o) {
                 super.onReceived(o);
                 Objects.requireNonNull(ghost, "Internal error");
-                assignments.put(ghost.assignment, ghost);
-                ghost.ghost = false;
+                for (Node i : ghost) {
+                    assignments.put(i.asmt, i);
+                    i.ghost = false;
+                }
                 ghost = null;
             }
 
             @Override
-            public boolean onEntering(Object o, Vector2i mouse) {
-                if (o instanceof Graph.Task) {
-                    Log.client.info("enter");
-                    assign(mouse, (Graph.Task) o);
-                    return true;
-                } else return false;
+            public boolean onTest(Object o, Vector2i mouse) {
+                return o instanceof Graph.Task;
+            }
+
+            @Override
+            public void onEnter(Object o, Vector2i mouse) {
+                if (debug) Log.client.info("enter");
+                active = (Graph.Task) o;
+                assign(mouse);
             }
 
             @Override
             public void onLeaving() {
-                Log.client.info("leave");
+                if (debug) Log.client.info("leave");
+                active = null;
                 cancel();
             }
 
-            private Graph.Task cancel() {
-                Objects.requireNonNull(ghost, "Internal error");
-                Graph.Task ret = ghost.assignment.getTask();
-                schedule.cancel(ghost.assignment);
-                remove(ghost);
+            private void cancel() {
+                if (ghost == null) return;
+                for (Node n : ghost) {
+                    Rail r = processors.get(n.asmt.getProcessor());
+                    r.remove(n);
+                    Log.client.debug("remove " + n.asmt.getProcessor());
+                }
                 ghost = null;
-                return ret;
             }
 
-            private void assign(Vector2i mouse, Graph.Task t) {
-                float time = Math.max(schedule.attempt(t, processor), mouse.x / MULTIPLIER);
-                Schedule.Assignment a = schedule.assign(t, processor, time);
-                ghost = new Node(a);
-                ghost.ghost = true;
-                put(ghost, (int) (time * MULTIPLIER), 0);
+            private void assign(Vector2i mouse) {
+                float point = (mouse.x - MARGIN) / MULTIPLIER - processor.cost(active) / 2;
+                Schedule.TimeAxis ta = schedule.attempt(active, processor);
+                Float f = ta.earliest(point);
+                if (f == null) {
+                    if (debug) Log.client.debug("failed");
+                    return;
+                }
+                ghost = new ArrayList<>();
+                List<Schedule.Assignment> as = schedule.assign(active, processor, f);
+                // TODO handle move
+                if (as == null) throw new RuntimeException("Internal error");
+                for (Schedule.Assignment i : as) {
+                    Node n = new Node(i);
+                    n.ghost = true;
+                    ghost.add(n);
+                    Rail r = processors.get(i.getProcessor());
+                    int pos = (int) (i.getStart() * MULTIPLIER);
+                    r.put(n, pos, 0);
+                    Log.client.debug("add " + i.getProcessor() + " " + pos);
+                }
             }
         }
     }
