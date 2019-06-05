@@ -30,7 +30,7 @@ public class Tests {
 
         schedule.assign(graph.getTask("a"), cluster.getProcessor("a"));
         Schedule.TimeAxis ta = schedule.attempt(graph.getTask("b"), cluster.getProcessor("b"));
-        Float f = ta.earliest(2);
+        Integer f = ta.earliest(2);
         Objects.requireNonNull(f);
         List<Schedule.Assignment> as = schedule.assign(graph.getTask("b"), cluster.getProcessor("b"), f);
         int i = 0;

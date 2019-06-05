@@ -25,11 +25,11 @@ public class Schedule {
             a.work instanceof Graph.Comm && b.work instanceof Graph.Comm;
 
     public List<Assignment> assign(Graph.Task task, Processor processor) {
-        return assign(task, processor, -Float.MAX_VALUE);
+        return assign(task, processor, -Integer.MAX_VALUE);
     }
 
     @Nullable
-    public List<Assignment> assign(Graph.Task task, Processor processor, float time) {
+    public List<Assignment> assign(Graph.Task task, Processor processor, int time) {
         List<Assignment> ret = new ArrayList<>();
 
         // remove existing
@@ -52,8 +52,8 @@ public class Schedule {
 
         // check time
         TimeAxis ta = attempt(task, processor);
-        if (time == -Float.MAX_VALUE) {
-            Float t = ta.earliest();
+        if (time == -Integer.MAX_VALUE) {
+            Integer t = ta.earliest();
             if (t == null) return null;
             else time = t;
         } else if (!ta.contains(time)) return null;
@@ -75,12 +75,12 @@ public class Schedule {
             TimeAxis src = processors.get(as.processor).space(p);
             src.remove(0, as.end);
             TimeAxis merge = center.intercept(src);
-            float com = as.processor.comm(i.size, processor);
+            int com = as.processor.comm(i.size, processor);
             if (com == 0) continue;
             merge.shrink(com);
-            Float start = merge.earliest();
+            Integer start = merge.earliest();
             Objects.requireNonNull(start, "Internal error");
-            float end = start + com;
+            int end = start + com;
             Assignment a1 = new Assignment(i, as.processor, start, end);
             Assignment a2 = new Assignment(i, processor, start, end);
             Pair<Assignment, Assignment> pair = new Pair<>(a1, a2);
@@ -116,46 +116,46 @@ public class Schedule {
         }
         Function<Processor, TimeAxis> f = i -> {
             TimeAxis ret = new TimeAxis();
-            ret.add(0, Float.MAX_VALUE);
+            ret.add(0, Integer.MAX_VALUE);
             return ret;
         };
         TimeAxis center = space.computeIfAbsent(p, f);
-        float after = 0, before = Float.MAX_VALUE;
+        int after = 0, before = Integer.MAX_VALUE;
         for (Graph.Comm t : task.after.values()) {
             Assignment a = tasks.get(t.src);
             TimeAxis src = space.computeIfAbsent(a.processor, f);
             src.remove(0, a.end);
             TimeAxis merge = center.intercept(src);
-            float com = a.processor.comm(t.size, p);
+            int com = a.processor.comm(t.size, p);
             merge.shrink(com);
-            Float start = merge.earliest();
+            Integer start = merge.earliest();
             if (start == null) return new TimeAxis();
-            float finish = start + com;
+            int finish = start + com;
             after = Math.max(after, finish);
         }
         for (Graph.Comm t : task.before.values()) {
             Assignment a = tasks.get(t.dst);
             if (a == null) continue;
             TimeAxis src = space.computeIfAbsent(a.processor, f);
-            src.remove(a.start, Float.MAX_VALUE);
+            src.remove(a.start, Integer.MAX_VALUE);
             TimeAxis merge = center.intercept(src);
-            float com = a.processor.comm(t.size, p);
+            int com = a.processor.comm(t.size, p);
             merge.shrink(com);
-            Float start = merge.latest();
+            Integer start = merge.latest();
             if (start == null) return new TimeAxis();
             before = Math.min(before, start);
         }
         center.remove(0, after);
-        center.remove(before, Float.MAX_VALUE);
+        center.remove(before, Integer.MAX_VALUE);
         return center;
     }
 
     public static class Assignment {
         Work work;
         Processor processor;
-        float start, end;
+        int start, end;
 
-        public Assignment(Work work, Processor processor, float start, float end) {
+        public Assignment(Work work, Processor processor, int start, int end) {
             this.work = work;
             this.processor = processor;
             this.start = start;
@@ -184,18 +184,18 @@ public class Schedule {
     }
 
     static class TimeLine<T> {
-        SortedMap<Float, Section<T>> sections = new TreeMap<>();
-        Map<T, Float> time = new IdentityHashMap<>();
+        SortedMap<Integer, Section<T>> sections = new TreeMap<>();
+        Map<T, Integer> time = new IdentityHashMap<>();
         BiPredicate<T, T> separator;
 
         public TimeLine(BiPredicate<T, T> separator) {
             this.separator = separator;
         }
 
-        public boolean attempt(float start, float end, T item) {
-            SortedMap<Float, Section<T>> head = sections.headMap(start);
-            float f = head.isEmpty() ? 0 : head.lastKey();
-            SortedMap<Float, Section<T>> cut = sections.subMap(f, end);
+        public boolean attempt(int start, int end, T item) {
+            SortedMap<Integer, Section<T>> head = sections.headMap(start);
+            int f = head.isEmpty() ? 0 : head.lastKey();
+            SortedMap<Integer, Section<T>> cut = sections.subMap(f, end);
             for (Section<T> s : cut.values()) {
                 if (s.overlap(start, end)) {
                     for (T t : s.events) {
@@ -206,11 +206,11 @@ public class Schedule {
             return true;
         }
 
-        public boolean put(float start, float end, T item) {
+        public boolean put(int start, int end, T item) {
             if (!attempt(start, end, item)) return false;
-            SortedMap<Float, Section<T>> head = sections.headMap(start);
-            float f = head.isEmpty() ? 0 : head.lastKey();
-            SortedMap<Float, Section<T>> cut = sections.subMap(f, end);
+            SortedMap<Integer, Section<T>> head = sections.headMap(start);
+            int f = head.isEmpty() ? 0 : head.lastKey();
+            SortedMap<Integer, Section<T>> cut = sections.subMap(f, end);
             time.put(item, start);
             Consumer<Section<T>> c = s -> {
                 if (s != null) sections.put(s.start, s);
@@ -218,8 +218,8 @@ public class Schedule {
             Section<T> add = new Section<>(start, end, item);
             for (Section<T> s : cut.values()) {
                 if (!s.overlap(start, end)) continue;
-                float a = Math.max(start, s.start);
-                float b = Math.min(end, s.end);
+                int a = Math.max(start, s.start);
+                int b = Math.min(end, s.end);
                 Section<T> mid = null;
                 if (start > s.start) mid = s.cutRight(a);
                 else c.accept(add.cutLeft(a));
@@ -239,7 +239,7 @@ public class Schedule {
         }
 
         public void remove(T item) {
-            float t = Objects.requireNonNull(time.get(item), "No such element");
+            int t = Objects.requireNonNull(time.get(item), "No such element");
             Iterator<Section<T>> it = sections.tailMap(t).values().iterator();
             Section<T> a, b = null;
             while (it.hasNext()) {
@@ -261,7 +261,7 @@ public class Schedule {
 
         public TimeAxis space(Predicate<T> ignore) {
             TimeAxis ret = new TimeAxis();
-            float start = 0;
+            int start = 0;
             for (Section<T> s : sections.values()) {
                 boolean pass = true;
                 for (T t : s.events)
@@ -270,21 +270,21 @@ public class Schedule {
                 if (s.start > start) ret.sections.put(start, s.start);
                 start = s.end;
             }
-            if (start != Float.MAX_VALUE) ret.sections.put(start, Float.MAX_VALUE);
+            if (start != Integer.MAX_VALUE) ret.sections.put(start, Integer.MAX_VALUE);
             return ret;
         }
 
         static class Section<T> {
-            float start, end;
+            int start, end;
             Set<T> events = Collections.newSetFromMap(new IdentityHashMap<>());
 
-            public Section(float start, float end, T item) {
+            public Section(int start, int end, T item) {
                 this.start = start;
                 this.end = end;
                 events.add(item);
             }
 
-            public Section(float start, float end, Set<T> events) {
+            public Section(int start, int end, Set<T> events) {
                 this.start = start;
                 this.end = end;
                 this.events.addAll(events);
@@ -298,7 +298,7 @@ public class Schedule {
                 return start <= t && end > t;
             }
 
-            public Section<T> cutLeft(float t) {
+            public Section<T> cutLeft(int t) {
                 if (start < t && end > t) {
                     Section<T> ret = new Section<>(start, t, events);
                     start = t;
@@ -306,7 +306,7 @@ public class Schedule {
                 } else return null;
             }
 
-            public Section<T> cutRight(float t) {
+            public Section<T> cutRight(int t) {
                 if (start < t && end > t) {
                     Section<T> ret = new Section<>(t, end, events);
                     end = t;
@@ -317,19 +317,19 @@ public class Schedule {
     }
 
     public static class TimeAxis {
-        SortedMap<Float, Float> sections = new TreeMap<>();
+        SortedMap<Integer, Integer> sections = new TreeMap<>();
 
-        public void add(float start, float end) {
-            SortedMap<Float, Float> head = sections.headMap(start);
+        public void add(int start, int end) {
+            SortedMap<Integer, Integer> head = sections.headMap(start);
             if (!head.isEmpty() && head.get(head.lastKey()) >= start) {
                 start = head.lastKey();
                 sections.remove(head.lastKey());
             }
-            SortedMap<Float, Float> sub = sections.subMap(start, end);
+            SortedMap<Integer, Integer> sub = sections.subMap(start, end);
             if (!sub.isEmpty()) {
                 end = Math.max(end, sub.get(sub.lastKey()));
             }
-            Iterator<Map.Entry<Float, Float>> it = sub.entrySet().iterator();
+            Iterator<Map.Entry<Integer, Integer>> it = sub.entrySet().iterator();
             while (it.hasNext()) {
                 it.next();
                 it.remove();
@@ -337,16 +337,16 @@ public class Schedule {
             sections.put(start, end);
         }
 
-        public void remove(float start, float end) {
-            SortedMap<Float, Float> head = sections.headMap(start);
+        public void remove(int start, int end) {
+            SortedMap<Integer, Integer> head = sections.headMap(start);
             if (!head.isEmpty() && head.get(head.lastKey()) >= start) {
                 sections.put(head.lastKey(), start);
             }
-            SortedMap<Float, Float> sub = sections.subMap(start, end);
+            SortedMap<Integer, Integer> sub = sections.subMap(start, end);
             if (!sub.isEmpty() && sub.get(sub.lastKey()) >= end) {
                 sections.put(end, sub.get(sub.lastKey()));
             }
-            Iterator<Map.Entry<Float, Float>> it = sub.entrySet().iterator();
+            Iterator<Map.Entry<Integer, Integer>> it = sub.entrySet().iterator();
             while (it.hasNext()) {
                 it.next();
                 it.remove();
@@ -354,63 +354,63 @@ public class Schedule {
         }
 
         public TimeAxis intercept(TimeAxis t) {
-            Iterator<Map.Entry<Float, Float>> ita = sections.entrySet().iterator();
-            Iterator<Map.Entry<Float, Float>> itb = t.sections.entrySet().iterator();
+            Iterator<Map.Entry<Integer, Integer>> ita = sections.entrySet().iterator();
+            Iterator<Map.Entry<Integer, Integer>> itb = t.sections.entrySet().iterator();
             TimeAxis ret = new TimeAxis();
-            Map.Entry<Float, Float> ia = null, ib = null;
+            Map.Entry<Integer, Integer> ia = null, ib = null;
             while (true) {
                 int next;
                 if (ia == null) next = 0;
                 else if (ib == null) next = 1;
                 else next = ia.getValue() > ib.getValue() ? 1 : 0;
-                Iterator<Map.Entry<Float, Float>> itn = (next == 0 ? ita : itb);
+                Iterator<Map.Entry<Integer, Integer>> itn = (next == 0 ? ita : itb);
                 if (!itn.hasNext()) return ret;
-                Map.Entry<Float, Float> in = itn.next();
+                Map.Entry<Integer, Integer> in = itn.next();
                 if (next == 0) ia = in;
                 else ib = in;
                 if (ia == null || ib == null) continue;
-                float start = Math.max(ia.getKey(), ib.getKey());
-                float end = Math.min(ia.getValue(), ib.getValue());
+                int start = Math.max(ia.getKey(), ib.getKey());
+                int end = Math.min(ia.getValue(), ib.getValue());
                 if (start < end) ret.sections.put(start, end);
             }
         }
 
-        public void shrink(float f) {
-            Iterator<Map.Entry<Float, Float>> it = sections.entrySet().iterator();
+        public void shrink(int f) {
+            Iterator<Map.Entry<Integer, Integer>> it = sections.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<Float, Float> i = it.next();
+                Map.Entry<Integer, Integer> i = it.next();
                 if (i.getValue() - i.getKey() >= f) i.setValue(i.getValue() - f);
                 else it.remove();
             }
         }
 
-        public boolean contains(float f) {
+        public boolean contains(int f) {
             if (sections.containsKey(f)) return true;
-            SortedMap<Float, Float> head = sections.headMap(f);
+            SortedMap<Integer, Integer> head = sections.headMap(f);
             return !head.isEmpty() && head.get(head.lastKey()) >= f;
         }
 
         @Nullable
-        public Float earliest() {
+        public Integer earliest() {
             return earliest(0);
         }
 
         @Nullable
-        public Float earliest(float f) {
-            SortedMap<Float, Float> head = sections.headMap(f);
+        public Integer earliest(int f) {
+            SortedMap<Integer, Integer> head = sections.headMap(f);
             if (!head.isEmpty() && head.get(head.lastKey()) > f) return f;
-            SortedMap<Float, Float> tail = sections.tailMap(f);
+            SortedMap<Integer, Integer> tail = sections.tailMap(f);
             return tail.isEmpty() ? null : tail.firstKey();
         }
 
         @Nullable
-        public Float latest() {
-            return latest(Float.MAX_VALUE);
+        public Integer latest() {
+            return latest(Integer.MAX_VALUE);
         }
 
         @Nullable
-        public Float latest(float f) {
-            SortedMap<Float, Float> head = sections.headMap(f);
+        public Integer latest(int f) {
+            SortedMap<Integer, Integer> head = sections.headMap(f);
             if (head.isEmpty()) return null;
             else return Math.min(head.get(head.lastKey()), f);
         }

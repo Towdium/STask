@@ -11,6 +11,7 @@ import java.util.*;
 public class Cluster {
     Map<String, Processor> processors = new HashMap<>();
     List<Processor> layout = new ArrayList<>();
+    public static final float MULTIPLIER = 100f;
 
     int comm;
 
@@ -43,16 +44,16 @@ public class Cluster {
         float speed;
         Map<String, Float> speedup;
 
-        public float cost(Graph.Task task) {
+        public int cost(Graph.Task task) {
             float ret = task.time * speed;
             Float k = speedup.get(task.type);
             if (k != null) ret *= k;
-            return ret;
+            return (int) Math.ceil(ret * MULTIPLIER);
         }
 
-        public float comm(int data, Processor p) {
+        public int comm(int data, Processor p) {
             if (comm == 0 || p == this) return 0;
-            else return data / (float) comm;
+            else return (int) Math.ceil(data / (float) comm * MULTIPLIER);
         }
 
         public String getName() {

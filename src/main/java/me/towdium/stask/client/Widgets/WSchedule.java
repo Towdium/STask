@@ -19,7 +19,7 @@ import java.util.*;
 public class WSchedule extends WContainer {
     public static final int MARGIN = 30;
     public static final int HEIGHT = 20;
-    public static final float MULTIPLIER = 10;
+    public static final float MULTIPLIER = 0.05f;
     boolean debug;
     Schedule schedule;
     Cluster cluster;
@@ -206,9 +206,9 @@ public class WSchedule extends WContainer {
             }
 
             private void assign(Vector2i mouse) {
-                float point = (mouse.x - MARGIN) / MULTIPLIER - processor.cost(active) / 2;
+                int point = (int) ((mouse.x - MARGIN) / MULTIPLIER) - processor.cost(active) / 2;
                 Schedule.TimeAxis ta = schedule.attempt(active, processor);
-                Float f = ta.earliest(point);
+                Integer f = ta.earliest(point);
                 if (f == null) {
                     if (debug) Log.client.debug("failed");
                     return;
