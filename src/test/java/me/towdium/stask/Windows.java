@@ -59,7 +59,6 @@ public class Windows {
         @Override
         @SuppressWarnings("unused")
         public void onDraw(Painter p, Vector2i mouse) {
-            super.onDraw(p, mouse);
             try (Painter.State color = p.color(0x111111)) {
                 p.drawRect(0, 0, 50, 50);
             }
@@ -114,7 +113,6 @@ public class Windows {
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            super.onDraw(p, mouse);
             if (sender instanceof Drag) {
                 try (Painter.SMatrix mat = p.matrix()) {
                     mat.translate(mouse.x - 25, mouse.y - 25);

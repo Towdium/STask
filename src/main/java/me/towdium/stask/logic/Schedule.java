@@ -1,6 +1,8 @@
 package me.towdium.stask.logic;
 
 import me.towdium.stask.logic.Cluster.Processor;
+import me.towdium.stask.logic.Graph.Comm;
+import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.logic.Graph.Work;
 import me.towdium.stask.utils.wrap.Pair;
 
@@ -18,18 +20,18 @@ import java.util.function.Predicate;
  */
 @ParametersAreNonnullByDefault
 public class Schedule {
-    Map<Graph.Task, Assignment> tasks = new IdentityHashMap<>();
-    Map<Graph.Comm, Pair<Assignment, Assignment>> comms = new IdentityHashMap<>();
+    Map<Task, Assignment> tasks = new IdentityHashMap<>();
+    Map<Comm, Pair<Assignment, Assignment>> comms = new IdentityHashMap<>();
     Map<Processor, TimeLine<Assignment>> processors = new IdentityHashMap<>();
     BiPredicate<Assignment, Assignment> separator = (a, b) ->
-            a.work instanceof Graph.Comm && b.work instanceof Graph.Comm;
+            a.work instanceof Comm && b.work instanceof Comm;
 
-    public List<Assignment> assign(Graph.Task task, Processor processor) {
+    public List<Assignment> assign(Task task, Processor processor) {
         return assign(task, processor, -Integer.MAX_VALUE);
     }
 
     @Nullable
-    public List<Assignment> assign(Graph.Task task, Processor processor, int time) {
+    public List<Assignment> assign(Task task, Processor processor, int time) {
         List<Assignment> ret = new ArrayList<>();
 
         // remove existing
@@ -37,8 +39,8 @@ public class Schedule {
         if (old != null) {
             tasks.remove(task);
             processors.get(old.processor).remove(old);
-            Consumer<Map<Graph.Task, Graph.Comm>> c = i -> {
-                for (Graph.Comm j : i.values()) {
+            Consumer<Map<Task, Comm>> c = i -> {
+                for (Comm j : i.values()) {
                     Pair<Assignment, Assignment> as = comms.get(j);
                     if (as == null) continue;
                     comms.remove(j);
@@ -62,15 +64,16 @@ public class Schedule {
         Function<Processor, TimeLine<Assignment>> f = j -> new TimeLine<>(separator);
         Assignment a = new Assignment(task, processor, time, time + processor.cost(task));
         boolean b = processors.computeIfAbsent(processor, f).put(a.start, a.end, a);
-        if (!b) throw new RuntimeException("Internal error");
+        if (!b)
+            throw new RuntimeException("Internal error");
         tasks.put(task, a);
         ret.add(a);
 
         // write communications
-        Predicate<Assignment> p = j -> j.work instanceof Graph.Comm;
+        Predicate<Assignment> p = j -> j.work instanceof Comm;
 
         TimeAxis center = processors.get(processor).space(p);
-        for (Graph.Comm i : task.getAfter().values()) {
+        for (Comm i : task.getAfter().values()) {
             Assignment as = tasks.get(i.src);
             TimeAxis src = processors.get(as.processor).space(p);
             src.remove(0, as.end);
@@ -94,19 +97,38 @@ public class Schedule {
         return ret;
     }
 
+    public boolean cancel(Task t) {
+        for (Task i : t.before.keySet())
+            if (tasks.containsKey(i)) return false;
+
+        Consumer<Assignment> remove = i -> processors.get(i.processor).remove(i);
+        Assignment a = tasks.get(t);
+        Objects.requireNonNull(a, "Task not assigned");
+        tasks.remove(t);
+        remove.accept(a);
+        for (Comm i : t.after.values()) {
+            Pair<Assignment, Assignment> p = comms.remove(i);
+            if (p != null) {
+                remove.accept(p.a);
+                remove.accept(p.b);
+            }
+        }
+        return true;
+    }
+
     @Nullable
-    public Assignment getAssignment(Graph.Task t) {
+    public Assignment getAssignment(Task t) {
         return tasks.get(t);
     }
 
     @SuppressWarnings("Duplicates")
-    public TimeAxis attempt(Graph.Task task, Processor p) {
+    public TimeAxis attempt(Task task, Processor p) {
         Map<Processor, TimeAxis> space = new IdentityHashMap<>();
         for (Map.Entry<Processor, TimeLine<Assignment>> i : processors.entrySet()) {
             space.put(i.getKey(), i.getValue().space(j -> {
-                if (j.work instanceof Graph.Task) return task == j.work;
-                else if (j.work instanceof Graph.Comm) {
-                    Graph.Comm c = (Graph.Comm) j.work;
+                if (j.work instanceof Task) return task == j.work;
+                else if (j.work instanceof Comm) {
+                    Comm c = (Comm) j.work;
                     boolean b1 = task.after.containsKey(c.src) && task == c.dst;
                     boolean b2 = task.before.containsKey(c.dst) && task == c.src;
                     return b1 || b2;
@@ -121,7 +143,7 @@ public class Schedule {
         };
         TimeAxis center = space.computeIfAbsent(p, f);
         int after = 0, before = Integer.MAX_VALUE;
-        for (Graph.Comm t : task.after.values()) {
+        for (Comm t : task.after.values()) {
             Assignment a = tasks.get(t.src);
             TimeAxis src = space.computeIfAbsent(a.processor, f);
             src.remove(0, a.end);
@@ -133,7 +155,7 @@ public class Schedule {
             int finish = start + com;
             after = Math.max(after, finish);
         }
-        for (Graph.Comm t : task.before.values()) {
+        for (Comm t : task.before.values()) {
             Assignment a = tasks.get(t.dst);
             if (a == null) continue;
             TimeAxis src = space.computeIfAbsent(a.processor, f);

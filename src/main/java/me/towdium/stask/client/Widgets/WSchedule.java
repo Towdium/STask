@@ -6,6 +6,7 @@ import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,7 +68,7 @@ public class WSchedule extends WContainer {
     class Node extends WContainer {
         Schedule.Assignment asmt;
         Drag drag;
-        Highlight highlight;
+        Focus highlight;
         boolean visible = true;
         boolean ghost = false;
 
@@ -76,7 +77,7 @@ public class WSchedule extends WContainer {
             int left = (int) (MULTIPLIER * a.getStart());
             int right = (int) (MULTIPLIER * a.getEnd());
             drag = new Drag(right - left);
-            highlight = new Highlight();
+            highlight = new Focus();
             put(drag, 0, 0);
             put(highlight, 0, 0);
         }
@@ -84,8 +85,9 @@ public class WSchedule extends WContainer {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             if (!visible) return;
+            int color = asmt.getWork() instanceof Graph.Task ? 0x884444 : 0x444488;
             try (Painter.State ignore1 = p.color(ghost ? 0.5f : 0f);
-                 Painter.State ignore2 = p.color(0x888888)) {
+                 Painter.State ignore2 = p.color(color)) {
                 p.drawRect(0, 0, drag.x - 2, 2);
                 p.drawRect(0, 2, 2, drag.y - 2);
                 p.drawRect(drag.x - 2, 0, 2, drag.y - 2);
@@ -123,12 +125,12 @@ public class WSchedule extends WContainer {
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
                 if (sender == this && receiver == null && asmt.getWork() instanceof Graph.Task) {
-                    WGraph.drawTask(p, mouse.x, mouse.y, (Graph.Task) asmt.getWork());
+                    WGraph.drawTask(p, mouse.x, mouse.y, (Graph.Task) asmt.getWork(), false);
                 }
             }
         }
 
-        class Highlight extends WHighlight {
+        class Focus extends WFocus {
             @Override
             public Graph.Work onHighlight(@Nullable Vector2i mouse) {
                 return drag.onTest(mouse) ? asmt.getWork() : null;
@@ -157,7 +159,13 @@ public class WSchedule extends WContainer {
             }
 
             @Override
+            public void onDraw(Painter p, Vector2i mouse) {
+
+            }
+
+            @Override
             public void onMove(Vector2i mouse) {
+                super.onMove(mouse);
                 if (ghost != null) {
                     if (debug) Log.client.info("move");
                     cancel();
@@ -191,8 +199,11 @@ public class WSchedule extends WContainer {
             @Override
             public void onLeaving() {
                 if (debug) Log.client.info("leave");
-                active = null;
-                cancel();
+
+                if (schedule.cancel(active)) {
+                    active = null;
+                    cancel();
+                } else throw new NotImplementedException();
             }
 
             private void cancel() {

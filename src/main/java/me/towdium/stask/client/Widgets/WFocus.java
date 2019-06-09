@@ -12,9 +12,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 28/05/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WHighlight implements Widget {
+public abstract class WFocus implements Widget {
     static Graph.Work focus;
-    static WHighlight owner;
+    static WFocus owner;
 
     @Override
     public void onMove(Vector2i mouse) {
@@ -26,6 +26,11 @@ public abstract class WHighlight implements Widget {
             owner = null;
             focus = null;
         }
+    }
+
+    public static void reset() {
+        owner = null;
+        focus = null;
     }
 
     @Nullable

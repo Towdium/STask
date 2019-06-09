@@ -45,7 +45,7 @@ public class WGraph extends WContainer {
         }
     }
 
-    public static void drawTask(Painter p, int x, int y, Graph.Task t) {
+    public static void drawTask(Painter p, int x, int y, Graph.Task t, boolean highlight) {
         try (Painter.SMatrix m = p.matrix()) {
             m.translate(x, y);
             try (Painter.State ignore = p.color(0x666666)) {
@@ -53,6 +53,11 @@ public class WGraph extends WContainer {
             }
             try (Painter.State ignore = p.color(0x888888)) {
                 p.drawRect(0, 0, Node.WIDTH, 19);
+            }
+            if (highlight) {
+                try (Painter.State ignore = p.color(0xAAFFFFFF)) {
+                    p.drawRect(0, 0, Node.WIDTH, Node.HEIGHT);
+                }
             }
             p.drawTextRight(Integer.toString(t.getTime()), 26, Painter.fontAscent + 2);
             p.drawTextRight(t.getType(), 26, Painter.fontAscent + 19);
@@ -62,12 +67,12 @@ public class WGraph extends WContainer {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
-        Task focus = WHighlight.focus instanceof Task ? (Task) WHighlight.focus : null;
+        Graph.Work focus = WFocus.focus;
         for (Graph.Task i : tasks.keySet()) {
-            for (Task j : i.getBefore().keySet()) {
-                if (focus == i || focus == j)
-                    late.add(new Pair<>(i, j));
-                else drawConnection(p, i, j, false);
+            for (Map.Entry<Task, Graph.Comm> j : i.getBefore().entrySet()) {
+                if (focus == i || focus == j.getKey())
+                    late.add(new Pair<>(i, j.getKey()));
+                else drawConnection(p, i, j.getKey(), focus == j.getValue());
             }
         }
         for (Pair<Task, Task> i : late) drawConnection(p, i.a, i.b, true);
@@ -102,28 +107,29 @@ public class WGraph extends WContainer {
         public static final int HEIGHT = 38;
         Task task;
         Drag drag = new Drag();
-        Highlight highlight = new Highlight();
+        Focus highlight = new Focus();
+        boolean active = false;
 
         public Node(Task task) {
             this.task = task;
-            put(drag, 0, 0);
             put(highlight, 0, 0);
+            put(drag, 0, 0);
         }
 
-        @Override
-        public void onDraw(Painter p, Vector2i mouse) {
-            super.onDraw(p, mouse);
-            drawTask(p, 0, 0, task);
-        }
-
-        class Highlight extends WHighlight {
+        class Focus extends WFocus {
             @Override
             public Task onHighlight(@Nullable Vector2i mouse) {
-                return drag.onTest(mouse) ? task : null;
+                return WDrag.sender == drag ? task : (drag.onTest(mouse) ? task : null);
             }
 
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
+                boolean b = false;
+                if (focus instanceof Graph.Comm) {
+                    Graph.Comm c = (Graph.Comm) focus;
+                    b = c.getDst() == task || c.getSrc() == task;
+                }
+                drawTask(p, 0, 0, task, focus == task || b);
             }
         }
 
@@ -136,17 +142,14 @@ public class WGraph extends WContainer {
             public void onDraw(Painter p, Vector2i mouse) {
                 if (sender == this && receiver == null) {
                     try (Painter.State ignore = p.priority(true)) {
-                        drawTask(p, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2, task);
+                        drawTask(p, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2, task, false);
                     }
                 }
             }
 
             @Override
-            public void onReceived(Object o) {
-            }
-
-            @Override
-            public void onSucceeded() {
+            public void onRejected() {
+                WFocus.reset();
             }
 
             @Override
@@ -154,6 +157,7 @@ public class WGraph extends WContainer {
                 for (Task t : task.getAfter().keySet())
                     if (schedule.getAssignment(t) == null) return null;
                 if (schedule.getAssignment(task) != null) return null;
+                active = true;
                 return task;
             }
         }
