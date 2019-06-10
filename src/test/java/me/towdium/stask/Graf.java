@@ -2,13 +2,13 @@ package me.towdium.stask;
 
 import com.google.gson.Gson;
 import me.towdium.stask.client.Page;
+import me.towdium.stask.client.Widgets.WAllocation;
 import me.towdium.stask.client.Widgets.WGraph;
-import me.towdium.stask.client.Widgets.WSchedule;
 import me.towdium.stask.client.Window;
+import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Pojo;
-import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Log;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -86,12 +86,12 @@ public class Graf {
         Gson gson = new Gson();
         Graph graph = new Graph(gson.fromJson(GRAPH, Pojo.Graph.class));
         Cluster cluster = new Cluster(gson.fromJson(CLUSTER, Pojo.Cluster.class));
-        Schedule schedule = new Schedule();
+        Allocation allocation = new Allocation();
         Log.client.setLevel(Log.Priority.TRACE);
 
 
-        root.put(new WGraph(300, 300, graph, schedule), 0, 0);
-        root.put(new WSchedule(300, 100, schedule, cluster), 0, 300);
+        root.put(new WGraph(300, 300, graph, allocation), 0, 0);
+        root.put(new WAllocation(300, 100, allocation, cluster), 0, 300);
 
         try (Window w = new Window("Test Graph", root)) {
             w.display();

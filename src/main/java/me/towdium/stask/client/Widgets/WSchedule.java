@@ -39,7 +39,7 @@ public class WSchedule extends WContainer {
             Rail r = new Rail(p, x - MARGIN);
             put(r, MARGIN, i * HEIGHT);
             processors.put(p, r);
-            //SortedMap<Float, Schedule.Assignment> as = schedule.getProcessors().get(p);
+            //SortedMap<Float, Schedule.Assignment> as = allocation.getProcessors().get(p);
 //            if (as == null) continue;
 //            for (Map.Entry<Float, Schedule.Assignment> j : as.entrySet()) {
 //                Node n = new Node(j.getValue());
@@ -77,7 +77,7 @@ public class WSchedule extends WContainer {
             int left = (int) (MULTIPLIER * a.getStart());
             int right = (int) (MULTIPLIER * a.getEnd());
             drag = new Drag(right - left);
-            highlight = new Focus();
+            highlight = new Focus(right - left);
             put(drag, 0, 0);
             put(highlight, 0, 0);
         }
@@ -131,9 +131,13 @@ public class WSchedule extends WContainer {
         }
 
         class Focus extends WFocus {
+            public Focus(int x) {
+                super(x, HEIGHT);
+            }
+
             @Override
-            public Graph.Work onHighlight(@Nullable Vector2i mouse) {
-                return drag.onTest(mouse) ? asmt.getWork() : null;
+            public Graph.Work onFocus() {
+                return asmt.getWork();
             }
 
             @Override

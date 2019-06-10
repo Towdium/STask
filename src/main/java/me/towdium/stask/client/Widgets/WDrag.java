@@ -1,5 +1,6 @@
 package me.towdium.stask.client.Widgets;
 
+import me.towdium.stask.client.Painter;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -16,6 +17,10 @@ public abstract class WDrag extends WArea {
 
     public WDrag(int x, int y) {
         super(x, y);
+    }
+
+    @Override
+    public void onDraw(Painter p, Vector2i mouse) {
     }
 
     @Override

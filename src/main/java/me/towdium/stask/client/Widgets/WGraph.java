@@ -1,9 +1,9 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
-import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.wrap.Pair;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -21,11 +21,11 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
-    Schedule schedule;
+    Allocation allocation;
     Map<Graph.Task, Node> tasks = new IdentityHashMap<>();
 
-    public WGraph(int x, int y, Graph g, Schedule s) {
-        schedule = s;
+    public WGraph(int x, int y, Graph g, Allocation a) {
+        allocation = a;
         List<List<Task>> layout = g.getLayout();
         int ys = layout.size();
         int yd = 28;
@@ -117,9 +117,13 @@ public class WGraph extends WContainer {
         }
 
         class Focus extends WFocus {
+            public Focus() {
+                super(WIDTH, HEIGHT);
+            }
+
             @Override
-            public Task onHighlight(@Nullable Vector2i mouse) {
-                return WDrag.sender == drag ? task : (drag.onTest(mouse) ? task : null);
+            public Task onFocus() {
+                return WDrag.sender == drag ? task : task;
             }
 
             @Override
@@ -155,8 +159,8 @@ public class WGraph extends WContainer {
             @Override
             public @Nullable Object onStarting() {
                 for (Task t : task.getAfter().keySet())
-                    if (schedule.getAssignment(t) == null) return null;
-                if (schedule.getAssignment(task) != null) return null;
+                    if (allocation.allocated(t)) return null;
+                if (allocation.allocated(task)) return null;
                 active = true;
                 return task;
             }

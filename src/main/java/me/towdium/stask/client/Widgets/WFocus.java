@@ -1,6 +1,5 @@
 package me.towdium.stask.client.Widgets;
 
-import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Graph;
 import org.joml.Vector2i;
 
@@ -12,13 +11,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 28/05/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WFocus implements Widget {
+public abstract class WFocus extends WArea {
     static Graph.Work focus;
     static WFocus owner;
 
+    public WFocus(int x, int y) {
+        super(x, y);
+    }
+
     @Override
     public void onMove(Vector2i mouse) {
-        Graph.Work t = onHighlight(mouse);
+        Graph.Work t = onTest(mouse) ? onFocus() : null;
         if (t != null) {
             owner = this;
             focus = t;
@@ -34,5 +37,5 @@ public abstract class WFocus implements Widget {
     }
 
     @Nullable
-    public abstract Graph.Work onHighlight(@Nullable Vector2i mouse);
+    public abstract Graph.Work onFocus();
 }
