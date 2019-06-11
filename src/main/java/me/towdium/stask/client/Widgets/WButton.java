@@ -1,6 +1,7 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.utils.Utilities.ListenerAction;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -25,7 +26,7 @@ public abstract class WButton extends WArea {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(onTest(mouse) ? 0xCCCCCC : 0xAAAAAA)) {
+        try (Painter.State ignore = p.color(onTest(mouse) ? 0x444444 : 0x666666)) {
             p.drawRect(0, 0, x, y);
         }
     }

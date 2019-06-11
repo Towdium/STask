@@ -19,10 +19,12 @@ public class Allocation {
 
     public void allocate(Task t, Processor p) {
         processors.get(p).add(t);
+        tasks.put(t, p);
     }
 
     public void allocate(Task t, Processor p, int pos) {
         processors.get(p).add(pos, t);
+        tasks.put(t, p);
     }
 
     public boolean allocated(Task t) {
@@ -33,10 +35,12 @@ public class Allocation {
         Processor p = tasks.get(t);
         if (p == null) return;
         processors.get(p).remove(t);
+        tasks.remove(t);
     }
 
     public void remove(Processor p, int idx) {
-        processors.get(p).remove(idx);
+        Task t = processors.get(p).remove(idx);
+        tasks.remove(t);
     }
 
     public List<Task> getTasks(Processor p) {

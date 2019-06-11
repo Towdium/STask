@@ -125,7 +125,7 @@ public class WSchedule extends WContainer {
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
                 if (sender == this && receiver == null && asmt.getWork() instanceof Graph.Task) {
-                    WGraph.drawTask(p, mouse.x, mouse.y, (Graph.Task) asmt.getWork(), false);
+                    WTask.drawTask(p, (Graph.Task) asmt.getWork(), mouse.x, mouse.y);
                 }
             }
         }

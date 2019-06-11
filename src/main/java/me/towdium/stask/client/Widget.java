@@ -32,16 +32,4 @@ public interface Widget {
     default boolean onScroll(@Nullable Vector2i mouse, int diff) {
         return false;
     }
-
-    @FunctionalInterface
-    interface ListenerValue<W extends Widget, V> {
-        void invoke(W widget, V value);
-    }
-
-    @FunctionalInterface
-    interface ListenerAction<W extends Widget> {
-        void invoke(W widget);
-    }
-
-
 }

@@ -2,13 +2,13 @@ package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Allocation;
+import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.wrap.Pair;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -22,45 +22,28 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
     Allocation allocation;
-    Map<Graph.Task, Node> tasks = new IdentityHashMap<>();
+    Game game;
+    Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
 
-    public WGraph(int x, int y, Graph g, Allocation a) {
+    public WGraph(int x, int y, Graph g, Allocation a, Game m) {
+        game = m;
         allocation = a;
         List<List<Task>> layout = g.getLayout();
         int ys = layout.size();
         int yd = 28;
-        int yo = (y - ys * (Node.HEIGHT + yd) + yd) / 2;
+        int yo = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
         for (int i = 0; i < ys; i++) {
             List<Task> row = layout.get(i);
             int xs = row.size();
             int xd = 18;
-            int xo = (x - xs * (Node.WIDTH + xd) + xd) / 2;
+            int xo = (x - xs * (WTask.WIDTH + xd) + xd) / 2;
             for (int j = 0; j < xs; j++) {
                 Task t = row.get(j);
                 if (t == null) continue;
-                Node w = new Node(t);
+                WTask w = new WTask(t, allocation, game);
                 tasks.put(t, w);
-                put(w, xo + j * (xd + Node.WIDTH), yo + i * (yd + Node.HEIGHT));
+                put(w, xo + j * (xd + WTask.WIDTH), yo + i * (yd + WTask.HEIGHT));
             }
-        }
-    }
-
-    public static void drawTask(Painter p, int x, int y, Graph.Task t, boolean highlight) {
-        try (Painter.SMatrix m = p.matrix()) {
-            m.translate(x, y);
-            try (Painter.State ignore = p.color(0x666666)) {
-                p.drawRect(0, 0, Node.WIDTH, Node.HEIGHT);
-            }
-            try (Painter.State ignore = p.color(0x888888)) {
-                p.drawRect(0, 0, Node.WIDTH, 19);
-            }
-            if (highlight) {
-                try (Painter.State ignore = p.color(0xAAFFFFFF)) {
-                    p.drawRect(0, 0, Node.WIDTH, Node.HEIGHT);
-                }
-            }
-            p.drawTextRight(Integer.toString(t.getTime()), 26, Painter.fontAscent + 2);
-            p.drawTextRight(t.getType(), 26, Painter.fontAscent + 19);
         }
     }
 
@@ -80,8 +63,8 @@ public class WGraph extends WContainer {
     }
 
     private void drawConnection(Painter p, Task a, Task b, boolean highlight) {
-        Vector2f start = new Vector2f(find(tasks.get(a))).add(Node.WIDTH / 2f, Node.HEIGHT).add(0, -1);
-        Vector2f end = new Vector2f(find(tasks.get(b))).add(Node.WIDTH / 2f, 0).add(0, 1);
+        Vector2f start = new Vector2f(find(tasks.get(a))).add(WTask.WIDTH / 2f, WTask.HEIGHT).add(0, -1);
+        Vector2f end = new Vector2f(find(tasks.get(b))).add(WTask.WIDTH / 2f, 0).add(0, 1);
         Vector2f diff = end.sub(start, new Vector2f());
         try (Painter.SMatrix s = p.matrix()) {
             s.translate(start.x, start.y);
@@ -98,71 +81,6 @@ public class WGraph extends WContainer {
                     p.drawRect(0, 0, 18, 18);
                 }
                 p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 9, 1 + Painter.fontAscent);
-            }
-        }
-    }
-
-    class Node extends WContainer {
-        public static final int WIDTH = 30;
-        public static final int HEIGHT = 38;
-        Task task;
-        Drag drag = new Drag();
-        Focus highlight = new Focus();
-        boolean active = false;
-
-        public Node(Task task) {
-            this.task = task;
-            put(highlight, 0, 0);
-            put(drag, 0, 0);
-        }
-
-        class Focus extends WFocus {
-            public Focus() {
-                super(WIDTH, HEIGHT);
-            }
-
-            @Override
-            public Task onFocus() {
-                return WDrag.sender == drag ? task : task;
-            }
-
-            @Override
-            public void onDraw(Painter p, Vector2i mouse) {
-                boolean b = false;
-                if (focus instanceof Graph.Comm) {
-                    Graph.Comm c = (Graph.Comm) focus;
-                    b = c.getDst() == task || c.getSrc() == task;
-                }
-                drawTask(p, 0, 0, task, focus == task || b);
-            }
-        }
-
-        class Drag extends WDrag {
-            public Drag() {
-                super(WIDTH, HEIGHT);
-            }
-
-            @Override
-            public void onDraw(Painter p, Vector2i mouse) {
-                if (sender == this && receiver == null) {
-                    try (Painter.State ignore = p.priority(true)) {
-                        drawTask(p, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2, task, false);
-                    }
-                }
-            }
-
-            @Override
-            public void onRejected() {
-                WFocus.reset();
-            }
-
-            @Override
-            public @Nullable Object onStarting() {
-                for (Task t : task.getAfter().keySet())
-                    if (allocation.allocated(t)) return null;
-                if (allocation.allocated(task)) return null;
-                active = true;
-                return task;
             }
         }
     }

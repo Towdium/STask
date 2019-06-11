@@ -4,13 +4,16 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Cluster.Processor;
+import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Towdium
@@ -24,18 +27,25 @@ public class WAllocation extends WContainer {
     static final int MARGIN = 30;
     Allocation allocation;
     Cluster cluster;
+    Game game;
+    Map<Processor, Rail> processors = new IdentityHashMap<>();
 
-    public WAllocation(int x, int y, Allocation a, Cluster c) {
+    public WAllocation(int x, int y, Allocation a, Cluster c, Game g) {
         allocation = a;
         cluster = c;
+        game = g;
         List<Processor> ps = cluster.getLayout();
         for (int i = 0; i < ps.size(); i++) {
-            put(new Rail(ps.get(i), x), 0, HEIGHT * i);
+            Processor p = ps.get(i);
+            Rail r = new Rail(p, x);
+            put(r, 0, HEIGHT * i);
+            processors.put(p, r);
         }
     }
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
+        if (WDrag.sender == null) sync();
         List<Processor> ps = cluster.getLayout();
         for (int i = 0; i < ps.size(); i++) {
             try (Painter.State ignore = p.color((i % 2 + 1) * 0x444444)) {
@@ -44,6 +54,10 @@ public class WAllocation extends WContainer {
             p.drawTextRight(ps.get(i).getName(), MARGIN - 2, i * HEIGHT + 2 + Painter.fontAscent);
         }
         super.onDraw(p, mouse);
+    }
+
+    private void sync() {
+        for (Rail i : processors.values()) i.sync();
     }
 
     class Rail extends WDragFocus {
@@ -63,6 +77,12 @@ public class WAllocation extends WContainer {
         }
 
         @Override
+        public void onMove(Vector2i mouse) {
+            super.onMove(mouse);
+            index = getIndex(mouse);
+        }
+
+        @Override
         protected Graph.Work onFocus() {
             return null;
         }
@@ -77,10 +97,7 @@ public class WAllocation extends WContainer {
 
         @Override
         public boolean onTest(Object o, Vector2i mouse) {
-            if (o instanceof Task) {
-                index = getIndex(mouse);
-                return true;
-            } else return false;
+            return o instanceof Task;
         }
 
         @Override
@@ -100,8 +117,10 @@ public class WAllocation extends WContainer {
         private void sync() {
             clear();
             List<Task> ts = allocation.getTasks(processor);
+            Task t = game.getProcessor(processor).getWorking();
+            if (t != null) put(new Node(t, -1), MARGIN, 0);
             for (int i = 0; i < ts.size(); i++)
-                put(new Node(ts.get(i), i), MARGIN + i * WIDTH, 0);
+                put(new Node(ts.get(i), i), MARGIN + (t == null ? i : i + 1) * WIDTH, 0);
         }
 
         class Node extends WDragFocus {
@@ -124,6 +143,17 @@ public class WAllocation extends WContainer {
             public void onDraw(Painter p, Vector2i mouse) {
                 super.onDraw(p, mouse);
                 if (visible) {
+
+                    float progress;
+                    Game.Status s = game.getProcessor(processor);
+                    if (task == s.getWorking()) progress = s.getProgress();
+                    else if (allocation.allocated(task)) progress = 0;
+                    else progress = 1;
+
+                    try (Painter.State ignore = p.color(0xAAAAAA)) {
+                        p.drawRect(0, 0, (int) (WIDTH * progress), HEIGHT);
+                    }
+
                     try (Painter.State ignore = p.color(0xAAAAAA)) {
                         p.drawRect(0, 0, WIDTH - 2, 2);
                         p.drawRect(0, 2, 2, HEIGHT - 2);
@@ -133,8 +163,8 @@ public class WAllocation extends WContainer {
                 }
 
                 if (WDrag.sender == drag && WDrag.receiver == null)
-                    WGraph.drawTask(p, mouse.x - WGraph.Node.WIDTH / 2,
-                            mouse.y - WGraph.Node.HEIGHT / 2, task, false);
+                    WTask.drawTask(p, task, mouse.x - WTask.WIDTH / 2,
+                            mouse.y - WTask.HEIGHT / 2);
             }
 
             @Nullable

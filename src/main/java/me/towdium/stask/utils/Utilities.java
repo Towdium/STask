@@ -61,4 +61,31 @@ public class Utilities {
             e.printStackTrace();
         }
     }
+
+    @FunctionalInterface
+    public interface ListenerAction<W> {
+        void invoke(W widget);
+    }
+
+    public static class Identity<T> {
+        public T t;
+
+        public Identity(T t) {
+            this.t = t;
+        }
+
+        public static <T> Identity<T> of(T t) {
+            return new Identity<>(t);
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(t);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Identity && t == ((Identity) obj).t;
+        }
+    }
 }

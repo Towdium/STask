@@ -11,8 +11,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Objects;
 
-import static me.towdium.stask.Graf.CLUSTER;
-import static me.towdium.stask.Graf.GRAPH;
+import static me.towdium.stask.Demo.CLUSTER;
+import static me.towdium.stask.Demo.GRAPH;
 
 /**
  * Author: Towdium

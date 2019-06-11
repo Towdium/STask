@@ -68,6 +68,11 @@ public class Cluster {
             return speedup;
         }
 
+        public float getSpeedup(String type) {
+            Float ret = speedup.get(type);
+            return ret == null ? 1 : ret;
+        }
+
         @Override
         public String toString() {
             return name;
