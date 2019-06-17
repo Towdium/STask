@@ -1,8 +1,6 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Allocation;
-import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
@@ -25,53 +23,51 @@ public class WAllocation extends WContainer {
     static final int WIDTH = 20;
     static final int HEIGHT = 20;
     static final int MARGIN = 30;
-    Allocation allocation;
-    Cluster cluster;
     Game game;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
 
-    public WAllocation(int x, int y, Allocation a, Cluster c, Game g) {
-        allocation = a;
-        cluster = c;
+    public WAllocation(int x, int y, Game g) {
         game = g;
-        List<Processor> ps = cluster.getLayout();
+        List<Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
             Processor p = ps.get(i);
-            Rail r = new Rail(p, x);
+            Rail r = new Rail(p, x, i % 2 + 1);
             put(r, 0, HEIGHT * i);
             processors.put(p, r);
         }
     }
 
-    @Override
-    public void onDraw(Painter p, Vector2i mouse) {
-        if (WDrag.sender == null) sync();
-        List<Processor> ps = cluster.getLayout();
-        for (int i = 0; i < ps.size(); i++) {
-            try (Painter.State ignore = p.color((i % 2 + 1) * 0x444444)) {
-                p.drawRect(0, i * HEIGHT, MARGIN, HEIGHT);
-            }
-            p.drawTextRight(ps.get(i).getName(), MARGIN - 2, i * HEIGHT + 2 + Painter.fontAscent);
-        }
-        super.onDraw(p, mouse);
-    }
-
-    private void sync() {
-        for (Rail i : processors.values()) i.sync();
-    }
-
     class Rail extends WDragFocus {
         Processor processor;
         int index = -1;
+        int multiplier;
 
-        public Rail(Processor p, int x) {
+        public Rail(Processor p, int x, int m) {
             super(x, HEIGHT);
             processor = p;
+            multiplier = m;
+        }
+
+        @Override
+        public void onRefresh() {
+            super.onRefresh();
+            clear();
+            List<Task> ts = game.getAllocation().getTasks(processor);
+            Task t = game.getProcessor(processor).getWorking();
+            if (t != null) put(new Node(t, -1), MARGIN, 0);
+            for (int i = 0; i < ts.size(); i++)
+                put(new Node(ts.get(i), i), MARGIN + (t == null ? i : i + 1) * WIDTH, 0);
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
+
+            try (Painter.State ignore = p.color(multiplier * 0x444444)) {
+                p.drawRect(0, 0, MARGIN, HEIGHT);
+            }
+            p.drawTextRight(processor.getName(), MARGIN - 2, 2 + Painter.fontAscent);
+
             if (WDrag.receiver != drag) return;
             p.drawRect(MARGIN + getIndex(mouse) * WIDTH - 1, 0, 2, HEIGHT);
         }
@@ -83,15 +79,10 @@ public class WAllocation extends WContainer {
         }
 
         @Override
-        protected Graph.Work onFocus() {
-            return null;
-        }
-
-        @Override
         public void onReceived(Object o) {
             if (o instanceof Task) {
-                allocation.allocate((Task) o, processor, index);
-                sync();
+                game.getAllocation().allocate((Task) o, processor, index);
+                onRefresh();
             }
         }
 
@@ -109,18 +100,9 @@ public class WAllocation extends WContainer {
         }
 
         private int getIndex(Vector2i mouse) {
-            int total = allocation.getTasks(processor).size();
+            int total = game.getAllocation().getTasks(processor).size();
             int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
             return Math.min(total, pos);
-        }
-
-        private void sync() {
-            clear();
-            List<Task> ts = allocation.getTasks(processor);
-            Task t = game.getProcessor(processor).getWorking();
-            if (t != null) put(new Node(t, -1), MARGIN, 0);
-            for (int i = 0; i < ts.size(); i++)
-                put(new Node(ts.get(i), i), MARGIN + (t == null ? i : i + 1) * WIDTH, 0);
         }
 
         class Node extends WDragFocus {
@@ -147,18 +129,16 @@ public class WAllocation extends WContainer {
                     float progress;
                     Game.Status s = game.getProcessor(processor);
                     if (task == s.getWorking()) progress = s.getProgress();
-                    else if (allocation.allocated(task)) progress = 0;
+                    else if (game.getAllocation().allocated(task)) progress = 0;
                     else progress = 1;
 
-                    try (Painter.State ignore = p.color(0xAAAAAA)) {
+                    try (Painter.State ignore = p.color(0x888888)) {
                         p.drawRect(0, 0, (int) (WIDTH * progress), HEIGHT);
                     }
 
-                    try (Painter.State ignore = p.color(0xAAAAAA)) {
-                        p.drawRect(0, 0, WIDTH - 2, 2);
-                        p.drawRect(0, 2, 2, HEIGHT - 2);
-                        p.drawRect(WIDTH - 2, 0, 2, HEIGHT - 2);
-                        p.drawRect(2, HEIGHT - 2, WIDTH - 2, 2);
+                    int color = WFocus.focus == task ? 0xCCCCCC : 0x888888;
+                    try (Painter.State ignore = p.color(color)) {
+                        p.drawRect(0, 0, WIDTH, HEIGHT, 2);
                     }
                 }
 
@@ -170,8 +150,8 @@ public class WAllocation extends WContainer {
             @Nullable
             @Override
             public Object onStarting() {
-                allocation.remove(processor, idx);
-                sync();
+                game.getAllocation().remove(processor, idx);
+                Rail.this.onRefresh();
                 Rail.this.put(this, 0, 0);
                 visible = false;
                 return task;
@@ -179,8 +159,8 @@ public class WAllocation extends WContainer {
 
             @Override
             public void onRejected() {
-                allocation.allocate(task, processor, idx);
-                sync();
+                game.getAllocation().allocate(task, processor, idx);
+                Rail.this.onRefresh();
             }
 
             @Override

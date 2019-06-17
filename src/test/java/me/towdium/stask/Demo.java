@@ -2,10 +2,7 @@ package me.towdium.stask;
 
 import com.google.gson.Gson;
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.WAllocation;
-import me.towdium.stask.client.Widgets.WButtonText;
-import me.towdium.stask.client.Widgets.WGame;
-import me.towdium.stask.client.Widgets.WGraph;
+import me.towdium.stask.client.Widgets.*;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.logic.*;
 import me.towdium.stask.utils.Log;
@@ -93,8 +90,9 @@ public class Demo {
 
 
         root.put(new WGraph(300, 300, graph, allocation, game), 0, 0);
-        root.put(new WAllocation(300, 100, allocation, cluster, game), 0, 300);
+        root.put(new WAllocation(300, 100, game), 0, 300);
         root.put(new WGame(game), 300, 0);
+        root.put(new WHistory(300, 100, game), 0, 380);
         root.put(new WButtonText(60, 20, "start").setListener(i -> game.start()), 300, 300);
         root.put(new WButtonText(60, 20, "reset").setListener(i -> game.reset()), 300, 330);
         root.put(new WButtonText(60, 20, "pause").setListener(i -> game.pause()), 370, 300);

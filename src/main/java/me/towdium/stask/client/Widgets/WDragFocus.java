@@ -10,6 +10,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /**
  * Author: Towdium
  * Date: 10/06/19
+ *
+ * Container + Drag + Focus
  */
 @ParametersAreNonnullByDefault
 public abstract class WDragFocus extends WContainer {
@@ -23,30 +25,32 @@ public abstract class WDragFocus extends WContainer {
         put(focus, 0, 0);
     }
 
-    protected abstract Graph.Work onFocus();
-
-    public void onReceived(Object o) {
-    }
-
-    public boolean onTest(Object o, Vector2i mouse) {
-        return false;
-    }
-
-    public void onEnter(Object o, Vector2i mouse) {
-    }
-
-    public void onLeaving() {
-    }
-
-    @Nullable
-    public Object onStarting() {
+    protected Graph.Work onFocus() {
         return null;
     }
 
-    public void onSucceeded() {
+    protected void onReceived(Object o) {
     }
 
-    public void onRejected() {
+    protected boolean onTest(Object o, Vector2i mouse) {
+        return false;
+    }
+
+    protected void onEnter(Object o, Vector2i mouse) {
+    }
+
+    protected void onLeaving() {
+    }
+
+    @Nullable
+    protected Object onStarting() {
+        return null;
+    }
+
+    protected void onSucceeded() {
+    }
+
+    protected void onRejected() {
     }
 
     @Override
@@ -120,6 +124,7 @@ public abstract class WDragFocus extends WContainer {
 
         @Override
         protected boolean onTest(@Nullable Vector2i mouse) {
+            // grab focus at drag n drop
             return super.onTest(mouse) || WDrag.sender == drag;
         }
     }

@@ -1,8 +1,11 @@
 package me.towdium.stask.logic;
 
 import me.towdium.stask.logic.Cluster.Processor;
+import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Tickable;
+import org.joml.Vector2i;
 
 import java.util.*;
 
@@ -16,8 +19,9 @@ public class Game implements Tickable {
     Graph graph;
     Allocation allocation;
     Policy policy;
+    History history = new History();
     Map<Processor, Status> processors = new HashMap<>();
-    Map<Graph.Comm, Processor> output = new HashMap<>();
+    Map<Comm, Processor> output = new HashMap<>();
     Set<Task> finished = new HashSet<>();
     Map<Task, Processor> executing = new HashMap<>();
     boolean running = false;
@@ -29,6 +33,18 @@ public class Game implements Tickable {
         this.policy = p;
         for (Processor i : c.processors.values())
             processors.put(i, new Status(i));
+    }
+
+    public Cluster getCluster() {
+        return cluster;
+    }
+
+    public Graph getGraph() {
+        return graph;
+    }
+
+    public Allocation getAllocation() {
+        return allocation;
     }
 
     public Map<Processor, Status> getProcessors() {
@@ -53,11 +69,12 @@ public class Game implements Tickable {
 
     public void reset() {
         running = false;
-        for (Processor i : cluster.processors.values())
-            processors.put(i, new Status(i));
-        output = new HashMap<>();
-        finished = new HashSet<>();
-        executing = new HashMap<>();
+        for (Status i : processors.values()) i.reset();
+        output.clear();
+        finished.clear();
+        executing.clear();
+        history.reset();
+        allocation.reset();
     }
 
     public void pause() {
@@ -69,15 +86,20 @@ public class Game implements Tickable {
         if (!running) return;
         boolean valid = false;
         for (Status i : processors.values()) i.tickPre();
+        history.update();
         for (Status i : processors.values())
             if (i.tickPost()) valid = true;
         if (!valid) running = false;
     }
 
+    public History getHistory() {
+        return history;
+    }
+
     public static class Policy {
         boolean multipleComms = false;
         boolean immediateComms = false;
-        boolean parallelComms = false;
+        boolean parallelComms = true;
 
         public boolean available(Status s) {
             if (immediateComms) return true;
@@ -91,11 +113,18 @@ public class Game implements Tickable {
         Processor processor;
         Task working;
         float progress;
-        Map<Graph.Comm, Float> comms = new LinkedHashMap<>();
-        Set<Graph.Comm> input = new HashSet<>();
+        Map<Comm, Float> comms = new HashMap<>();
+        Set<Comm> input = new HashSet<>();
 
         public Status(Processor processor) {
             this.processor = processor;
+        }
+
+        public void reset() {
+            working = null;
+            progress = 0;
+            comms.clear();
+            input.clear();
         }
 
         public void tickPre() {
@@ -104,7 +133,7 @@ public class Game implements Tickable {
                 if (!ts.isEmpty()) {
                     Task t = ts.get(0);
                     boolean ready = true;
-                    for (Graph.Comm c : t.getAfter().values()) {
+                    for (Comm c : t.getAfter().values()) {
                         if (!input.contains(c)) {
                             if (!comms.containsKey(c)) {
                                 Processor src = output.get(c);
@@ -122,7 +151,7 @@ public class Game implements Tickable {
                         }
                     }
                     if (ready) {
-                        for (Graph.Comm i : t.getAfter().values()) input.remove(i);
+                        for (Comm i : t.getAfter().values()) input.remove(i);
                         working = t;
                         executing.put(working, processor);
                         allocation.remove(working);
@@ -137,17 +166,17 @@ public class Game implements Tickable {
                 ret = true;
                 progress += SPEED / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
                 if (progress > 1) {
-                    for (Graph.Comm i : working.getBefore().values()) output.put(i, processor);
+                    for (Comm i : working.getBefore().values()) output.put(i, processor);
                     finished.add(working);
                     executing.remove(working);
                     working = null;
                     progress = 0;
                 }
             }
-            Iterator<Map.Entry<Graph.Comm, Float>> it = comms.entrySet().iterator();
+            Iterator<Map.Entry<Comm, Float>> it = comms.entrySet().iterator();
             while (it.hasNext()) {
                 ret = true;
-                Map.Entry<Graph.Comm, Float> i = it.next();
+                Map.Entry<Comm, Float> i = it.next();
                 float p = i.getValue() + SPEED / i.getKey().size * cluster.comm;
                 if (p > 1) {
                     input.add(i.getKey());
@@ -169,8 +198,40 @@ public class Game implements Tickable {
             return progress;
         }
 
-        public Map<Graph.Comm, Float> getComms() {
+        public Map<Comm, Float> getComms() {
             return comms;
+        }
+    }
+
+    public class History {
+        Cache<Processor, Map<Graph.Work, Vector2i>> records = new Cache<>(i -> new HashMap<>());
+        int count = 0;
+
+        public void update() {
+            processors.forEach((p, s) -> {
+                Map<Graph.Work, Vector2i> record = records.get(p);
+                Set<Graph.Work> ws = new HashSet<>();
+                Graph.Task t = s.working;
+                if (t != null) ws.add(t);
+                ws.addAll(s.comms.keySet());
+                for (Graph.Work i : ws) {
+                    Vector2i v = record.get(i);
+                    if (v != null) {
+                        if (v.y != count) throw new RuntimeException("Multiple assignment");
+                        else v.y++;
+                    } else record.put(i, new Vector2i(count, count + 1));
+                }
+            });
+            count++;
+        }
+
+        public Map<Graph.Work, Vector2i> getRecord(Processor p) {
+            return records.get(p);
+        }
+
+        public void reset() {
+            records.clear();
+            count = 0;
         }
     }
 }

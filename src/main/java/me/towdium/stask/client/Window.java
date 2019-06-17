@@ -142,6 +142,7 @@ public class Window extends Closeable implements Tickable {
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
         Vector2i m = mouse();
         update(m);
+        root.onRefresh();
         root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
     }

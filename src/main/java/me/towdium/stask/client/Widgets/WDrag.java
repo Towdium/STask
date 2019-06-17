@@ -70,7 +70,6 @@ public abstract class WDrag extends WArea {
     public void onReceived(Object o) {
     }
 
-
     // receiver side
     public boolean onTest(Object o, Vector2i mouse) {
         return false;
@@ -82,7 +81,6 @@ public abstract class WDrag extends WArea {
 
     // receiver side
     public void onLeaving() {
-
     }
 
     // sender side

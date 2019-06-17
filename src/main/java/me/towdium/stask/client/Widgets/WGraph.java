@@ -53,9 +53,9 @@ public class WGraph extends WContainer {
         Graph.Work focus = WFocus.focus;
         for (Graph.Task i : tasks.keySet()) {
             for (Map.Entry<Task, Graph.Comm> j : i.getBefore().entrySet()) {
-                if (focus == i || focus == j.getKey())
+                if (focus == i || focus == j.getKey() || focus == j.getValue())
                     late.add(new Pair<>(i, j.getKey()));
-                else drawConnection(p, i, j.getKey(), focus == j.getValue());
+                else drawConnection(p, i, j.getKey(), false);
             }
         }
         for (Pair<Task, Task> i : late) drawConnection(p, i.a, i.b, true);

@@ -46,4 +46,9 @@ public class Allocation {
     public List<Task> getTasks(Processor p) {
         return processors.get(p);
     }
+
+    public void reset() {
+        processors.clear();
+        tasks.clear();
+    }
 }

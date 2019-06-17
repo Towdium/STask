@@ -31,7 +31,9 @@ public abstract class WFocus extends WArea {
         }
     }
 
-    public static void reset() {
+    @Override
+    public void onRemove() {
+        if (owner != this) return;
         owner = null;
         focus = null;
     }

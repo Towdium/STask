@@ -19,9 +19,11 @@ import java.util.function.BiPredicate;
 public class WContainer implements Widget {
     WidgetMap widgets = new WidgetMap();
     Quad mask = null;
+    Vector2i mouse;
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
+        this.mouse = mouse;
         Painter.State s = null;
         if (mask != null)
             s = p.mask(mask);
@@ -37,18 +39,21 @@ public class WContainer implements Widget {
 
     @Override
     public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
+        this.mouse = mouse;
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         return widgets.backward((w, v) -> w.onTooltip(m == null ? null : m.sub(v, new Vector2i()), tooltip));
     }
 
     @Override
     public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+        this.mouse = mouse;
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         return widgets.backward((w, v) -> w.onClick(m == null ? null : m.sub(v, new Vector2i()), left, state));
     }
 
     @Override
     public void onMove(Vector2i mouse) {
+        this.mouse = mouse;
         widgets.forward((w, v) -> {
             w.onMove(mouse.sub(v, new Vector2i()));
             return false;
@@ -61,13 +66,23 @@ public class WContainer implements Widget {
     }
 
     @Override
+    public void onRefresh() {
+        widgets.forward((w, v) -> {
+            w.onRefresh();
+            return false;
+        });
+    }
+
+    @Override
     public boolean onScroll(@Nullable Vector2i mouse, int diff) {
+        this.mouse = mouse;
         if (mask != null && !mask.inside(mouse)) return false;
         return widgets.backward((w, v) -> w.onScroll(mouse, diff));
     }
 
     public WContainer put(Widget widget, int x, int y) {
         widgets.put(widget, new Vector2i(x, y));
+        if (mouse != null) widget.onMove(mouse.sub(x, y, new Vector2i()));
         return this;
     }
 
@@ -76,13 +91,23 @@ public class WContainer implements Widget {
     }
 
     public WContainer remove(Widget widget) {
+        widget.onRemove();
         widgets.remove(widget);
         return this;
     }
 
     public WContainer clear() {
+        onRemove();
         widgets.clear();
         return this;
+    }
+
+    @Override
+    public void onRemove() {
+        widgets.forward((w, v) -> {
+            w.onRemove();
+            return false;
+        });
     }
 
     public Vector2i find(Widget widget) {

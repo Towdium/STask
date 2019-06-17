@@ -25,6 +25,12 @@ public interface Widget {
     default void onMove(Vector2i mouse) {
     }
 
+    default void onRemove() {
+    }
+
+    default void onRefresh() {
+    }
+
     default boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
         return false;
     }

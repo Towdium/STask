@@ -32,4 +32,8 @@ public class Cache<K, V> {
     public void foreach(BiConsumer<K, V> c) {
         data.forEach(c);
     }
+
+    public void clear() {
+        data.clear();
+    }
 }

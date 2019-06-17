@@ -165,6 +165,13 @@ public class Painter {
         }
     }
 
+    public void drawRect(int xp, int yp, int xs, int ys, int w) {
+        drawRect(xp, yp, xs - w, w);
+        drawRect(xp, yp + w, w, ys - w);
+        drawRect(xp + xs - w, yp, w, ys - w);
+        drawRect(xp + w, yp + ys - w, xs - w, w);
+    }
+
     public void drawTextCut(String s, int xp, int yp, int xs) {
         int sc = getScale();
         int dots = glyphs.get(sc).get('.').advance * 3;
