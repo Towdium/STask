@@ -18,7 +18,7 @@ public interface Widget {
         return false;
     }
 
-    default boolean onKey(char ch, int code) {
+    default boolean onKey(int code) {
         return false;
     }
 
@@ -28,7 +28,7 @@ public interface Widget {
     default void onRemove() {
     }
 
-    default void onRefresh() {
+    default void onRefresh(Vector2i mouse) {
     }
 
     default boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {

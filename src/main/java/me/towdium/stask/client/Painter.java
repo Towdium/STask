@@ -34,7 +34,7 @@ public class Painter {
     static final FloatBuffer BUF_24 = BufferUtils.createFloatBuffer(24);
     static final float TEXTURE_SIZE = 1024;
     static final float[] FULL_QUAD = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    public static final int fontHeight = 16;
+    public static final int fontHeight = 24;
     public static final int fontAscent, fontDescent, fontGap;
     static STBTTFontinfo fontInfo;
     static ByteBuffer fontData;
@@ -190,7 +190,7 @@ public class Painter {
             }
         }
         if (full) drawText(s, xp + (xs - len) / 2, yp);
-        else drawText(s.substring(0, index), xp + (xs - cut - dots) / 2, yp);
+        else drawText(s.substring(0, index) + "...", xp + (xs - cut - dots) / 2, yp);
     }
 
     public void drawText(String s, int xp, int yp) {

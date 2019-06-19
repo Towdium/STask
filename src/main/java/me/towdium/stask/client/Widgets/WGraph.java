@@ -1,7 +1,6 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
@@ -21,26 +20,24 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
-    Allocation allocation;
     Game game;
     Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
 
-    public WGraph(int x, int y, Graph g, Allocation a, Game m) {
-        game = m;
-        allocation = a;
-        List<List<Task>> layout = g.getLayout();
+    public WGraph(int x, int y, Game g) {
+        game = g;
+        List<List<Task>> layout = g.getGraph().getLayout();
         int ys = layout.size();
-        int yd = 28;
+        int yd = 36;
         int yo = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
         for (int i = 0; i < ys; i++) {
             List<Task> row = layout.get(i);
             int xs = row.size();
-            int xd = 18;
+            int xd = 24;
             int xo = (x - xs * (WTask.WIDTH + xd) + xd) / 2;
             for (int j = 0; j < xs; j++) {
                 Task t = row.get(j);
                 if (t == null) continue;
-                WTask w = new WTask(t, allocation, game);
+                WTask w = new WTask(t, game.getAllocation(), game);
                 tasks.put(t, w);
                 put(w, xo + j * (xd + WTask.WIDTH), yo + i * (yd + WTask.HEIGHT));
             }
@@ -74,13 +71,13 @@ public class WGraph extends WContainer {
             }
         }
         if (highlight) {
-            Vector2f center = start.add(end, new Vector2f()).mul(0.5f).add(-9, -9);
+            Vector2f center = start.add(end, new Vector2f()).mul(0.5f).add(-12, -12);
             try (Painter.SMatrix s = p.matrix()) {
                 s.translate((int) center.x, (int) center.y);
                 try (Painter.State ignore = p.color(0x888888)) {
-                    p.drawRect(0, 0, 18, 18);
+                    p.drawRect(0, 0, 24, 24);
                 }
-                p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 9, 1 + Painter.fontAscent);
+                p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 12, 1 + Painter.fontAscent);
             }
         }
     }

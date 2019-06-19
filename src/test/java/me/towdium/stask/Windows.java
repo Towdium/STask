@@ -85,7 +85,7 @@ public class Windows {
         }
 
         @Override
-        public boolean onTest(Object o, Vector2i mouse) {
+        public boolean onAttempt(Object o, Vector2i mouse) {
             Log.client.info("=");
             return !hold && o instanceof Integer && (Integer) o == 1;
         }

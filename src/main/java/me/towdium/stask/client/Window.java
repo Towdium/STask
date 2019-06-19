@@ -56,7 +56,7 @@ public class Window extends Closeable implements Tickable {
         counter++;
         this.root = root;
         if (display == null) throw new IllegalStateException("No display found");
-        id = GLFW.glfwCreateWindow(640, 360, title, NULL, NULL);
+        id = GLFW.glfwCreateWindow(1280, 720, title, NULL, NULL);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
         timer = new Timer(1f / display.refreshRate(), i -> {
             if (i != 0 && debug) Log.client.trace("Dropping " + i + " frames");
@@ -71,7 +71,6 @@ public class Window extends Closeable implements Tickable {
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) -> {
             Vector2i m = mouse();
             this.root.onClick(m, button == GLFW.GLFW_MOUSE_BUTTON_1, action == GLFW.GLFW_PRESS);
-            this.root.onMove(m);
         });
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
             this.root.onResize(width, height);
@@ -79,6 +78,7 @@ public class Window extends Closeable implements Tickable {
         });
         GLFW.glfwSetKeyCallback(id, (window, key, code, action, mods) -> {
             if (key == GLFW.GLFW_KEY_GRAVE_ACCENT) pause = action != GLFW.GLFW_RELEASE;
+            else this.root.onKey(key);
         });
         GLFW.glfwSetFramebufferSizeCallback(id, (window, width, height) -> {
             GLFW.glfwMakeContextCurrent(id);
@@ -130,19 +130,15 @@ public class Window extends Closeable implements Tickable {
         }
     }
 
-    private void update(Vector2i m) {
-        if (!m.equals(mouse)) {
-            mouse = m;
-            root.onMove(m);
-        }
-    }
-
     private void loop() {
         GLFW.glfwMakeContextCurrent(id);
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
         Vector2i m = mouse();
-        update(m);
-        root.onRefresh();
+        root.onRefresh(m);
+        if (!m.equals(mouse)) {
+            mouse = m;
+            root.onMove(m);
+        }
         root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
     }

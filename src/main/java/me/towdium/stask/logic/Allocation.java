@@ -5,7 +5,9 @@ import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Cache;
 import org.apache.commons.collections4.list.TreeList;
 
-import java.util.IdentityHashMap;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,41 +16,77 @@ import java.util.Map;
  * Date: 09/06/19
  */
 public class Allocation {
-    Cache<Processor, List<Task>> processors = new Cache<>(i -> new TreeList<>());
-    Map<Task, Processor> tasks = new IdentityHashMap<>();
+    Cache<Processor, List<Node>> processors = new Cache<>(i -> new TreeList<>());
+    Map<Task, Processor> task2processor = new HashMap<>();
+    Map<Task, Node> task2node = new HashMap<>();
 
     public void allocate(Task t, Processor p) {
-        processors.get(p).add(t);
-        tasks.put(t, p);
+        Node n = new Node(t);
+        processors.get(p).add(n);
+        task2processor.put(t, p);
+        task2node.put(t, n);
     }
 
     public void allocate(Task t, Processor p, int pos) {
-        processors.get(p).add(pos, t);
-        tasks.put(t, p);
+        Node n = new Node(t);
+        processors.get(p).add(pos, n);
+        task2processor.put(t, p);
+        task2node.put(t, n);
     }
 
     public boolean allocated(Task t) {
-        return tasks.containsKey(t);
+        return task2processor.containsKey(t);
     }
 
     public void remove(Task t) {
-        Processor p = tasks.get(t);
+        Processor p = task2processor.get(t);
         if (p == null) return;
-        processors.get(p).remove(t);
-        tasks.remove(t);
+        Node n = task2node.remove(t);
+        if (n == null) throw new RuntimeException("Internal error");
+        processors.get(p).remove(n);
+        task2processor.remove(t);
     }
 
     public void remove(Processor p, int idx) {
-        Task t = processors.get(p).remove(idx);
-        tasks.remove(t);
+        Node n = processors.get(p).remove(idx);
+        task2processor.remove(n.task);
+        task2node.remove(n.task);
     }
 
-    public List<Task> getTasks(Processor p) {
+    @Nullable
+    public Node getNode(Task t) {
+        return task2node.get(t);
+    }
+
+    @Nullable
+    public Processor getProcessor(Task t) {
+        return task2processor.get(t);
+    }
+
+    public List<Node> getTasks(Processor p) {
         return processors.get(p);
     }
 
     public void reset() {
         processors.clear();
-        tasks.clear();
+        task2processor.clear();
+    }
+
+    public static class Node {
+        Task task;
+        List<Graph.Comm> comms = new ArrayList<>();
+
+        public Node(Task t) {
+            task = t;
+            comms.addAll(task.after.values());
+        }
+
+        public Task getTask() {
+            return task;
+        }
+
+        public List<Graph.Comm> getComms() {
+            return comms;
+        }
     }
 }

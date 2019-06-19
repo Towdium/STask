@@ -18,8 +18,8 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WHistory extends WContainer {
-    static final int HEIGHT = 20;
-    static final int MARGIN = 30;
+    static final int HEIGHT = 30;
+    static final int MARGIN = 48;
     Game game;
     Map<Cluster.Processor, Rail> processors = new HashMap<>();
 
@@ -50,12 +50,12 @@ public class WHistory extends WContainer {
             try (Painter.State ignore = p.color(multiplier * 0x444444)) {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
-            p.drawTextRight(processor.getName(), MARGIN - 2, 2 + Painter.fontAscent);
+            p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
         }
 
         @Override
-        public void onRefresh() {
-            super.onRefresh();
+        public void onRefresh(Vector2i mouse) {
+            super.onRefresh(mouse);
             clear();
             game.getHistory().getRecord(processor).forEach((w, p) ->
                     put(new Node(w, p.y - p.x), p.x + MARGIN, 0));

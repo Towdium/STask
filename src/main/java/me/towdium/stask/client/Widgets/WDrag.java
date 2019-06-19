@@ -1,6 +1,7 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -12,8 +13,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public abstract class WDrag extends WArea {
-    public static WDrag sender, receiver;
+    public static WDrag sender, receiver, ready;
     static Object parcel;
+    Vector2i mouse;
 
     public WDrag(int x, int y) {
         super(x, y);
@@ -28,11 +30,8 @@ public abstract class WDrag extends WArea {
         if (left) {
             if (state) {
                 if (onTest(mouse)) {
-                    Object o = onStarting();
-                    if (o != null) {
-                        sender = this;
-                        parcel = o;
-                    }
+                    Log.client.info("ready: " + this);
+                    ready = this;
                 }
             } else if (sender == this) {
                 if (receiver != null && parcel != null) {
@@ -42,36 +41,50 @@ public abstract class WDrag extends WArea {
                 } else onRejected();
                 sender = null;
                 parcel = null;
-            }
+                Log.client.info("drop");
+                return true;
+            } else if (ready == this) ready = null;
         }
         return false;
     }
 
     @Override
-    public void onMove(Vector2i mouse) {
-        update(mouse);
+    public void onRefresh(Vector2i mouse) {
+        if (!mouse.equals(this.mouse)) {
+            this.mouse = mouse;
+            if (ready == this) {
+                ready = null;
+                Object o = onStarting();
+                if (o != null) {
+                    sender = this;
+                    parcel = o;
+                }
+            }
+        }
     }
 
-    private void update(@Nullable Vector2i mouse) {
+    @Override
+    public void onMove(Vector2i mouse) {
         if (receiver == this) {
             if (!onTest(mouse)) {
                 onLeaving();
                 receiver = null;
             }
-        } else if (sender != null && parcel != null && mouse != null
-                && onTest(mouse) && onTest(parcel, mouse)) {
+        } else if (sender != null && parcel != null
+                && onTest(mouse) && onAttempt(parcel, mouse)) {
             if (receiver != null) receiver.onLeaving();
             onEnter(parcel, mouse);
             receiver = this;
         }
     }
 
+
     // receiver side
     public void onReceived(Object o) {
     }
 
     // receiver side
-    public boolean onTest(Object o, Vector2i mouse) {
+    public boolean onAttempt(Object o, Vector2i mouse) {
         return false;
     }
 

@@ -95,7 +95,7 @@ public class Render {
         }
 
         @Override
-        public boolean onTest(Object o, Vector2i mouse) {
+        public boolean onAttempt(Object o, Vector2i mouse) {
             return !hold && o instanceof Integer && (Integer) o == 1;
         }
 
@@ -148,7 +148,7 @@ public class Render {
             }
 
             @Override
-            public boolean onTest(Object o, Vector2i mouse) {
+            public boolean onAttempt(Object o, Vector2i mouse) {
                 return !hold && o instanceof Integer && (Integer) o == 2;
             }
 

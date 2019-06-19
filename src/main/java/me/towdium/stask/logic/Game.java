@@ -129,11 +129,11 @@ public class Game implements Tickable {
 
         public void tickPre() {
             if (working == null) {
-                List<Task> ts = allocation.getTasks(processor);
+                List<Allocation.Node> ts = allocation.getTasks(processor);
                 if (!ts.isEmpty()) {
-                    Task t = ts.get(0);
+                    Allocation.Node n = ts.get(0);
                     boolean ready = true;
-                    for (Comm c : t.getAfter().values()) {
+                    for (Comm c : n.comms) {
                         if (!input.contains(c)) {
                             if (!comms.containsKey(c)) {
                                 Processor src = output.get(c);
@@ -151,8 +151,8 @@ public class Game implements Tickable {
                         }
                     }
                     if (ready) {
-                        for (Comm i : t.getAfter().values()) input.remove(i);
-                        working = t;
+                        for (Comm i : n.comms) input.remove(i);
+                        working = n.task;
                         executing.put(working, processor);
                         allocation.remove(working);
                     }

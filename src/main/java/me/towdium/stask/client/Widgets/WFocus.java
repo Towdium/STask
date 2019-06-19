@@ -20,7 +20,7 @@ public abstract class WFocus extends WArea {
     }
 
     @Override
-    public void onMove(Vector2i mouse) {
+    public void onRefresh(Vector2i mouse) {
         Graph.Work t = onTest(mouse) ? onFocus() : null;
         if (t != null) {
             owner = this;

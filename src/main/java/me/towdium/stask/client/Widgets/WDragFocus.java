@@ -32,8 +32,12 @@ public abstract class WDragFocus extends WContainer {
     protected void onReceived(Object o) {
     }
 
-    protected boolean onTest(Object o, Vector2i mouse) {
+    protected boolean onAttempt(Object o, Vector2i mouse) {
         return false;
+    }
+
+    protected boolean onTest(@Nullable Vector2i mouse) {
+        return WArea.inside(mouse, drag.x, drag.y);
     }
 
     protected void onEnter(Object o, Vector2i mouse) {
@@ -67,6 +71,11 @@ public abstract class WDragFocus extends WContainer {
         }
 
         @Override
+        protected boolean onTest(@Nullable Vector2i mouse) {
+            return WDragFocus.this.onTest(mouse);
+        }
+
+        @Override
         public void onDraw(Painter p, Vector2i mouse) {
         }
 
@@ -76,8 +85,8 @@ public abstract class WDragFocus extends WContainer {
         }
 
         @Override
-        public boolean onTest(Object o, Vector2i mouse) {
-            return WDragFocus.this.onTest(o, mouse);
+        public boolean onAttempt(Object o, Vector2i mouse) {
+            return WDragFocus.this.onAttempt(o, mouse);
         }
 
         @Override
@@ -125,7 +134,7 @@ public abstract class WDragFocus extends WContainer {
         @Override
         protected boolean onTest(@Nullable Vector2i mouse) {
             // grab focus at drag n drop
-            return super.onTest(mouse) || WDrag.sender == drag;
+            return WDragFocus.this.onTest(mouse) || WDrag.sender == drag;
         }
     }
 }

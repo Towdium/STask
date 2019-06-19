@@ -61,14 +61,14 @@ public class WContainer implements Widget {
     }
 
     @Override
-    public boolean onKey(char ch, int code) {
-        return widgets.backward((w, v) -> w.onKey(ch, code));
+    public boolean onKey(int code) {
+        return widgets.backward((w, v) -> w.onKey(code));
     }
 
     @Override
-    public void onRefresh() {
+    public void onRefresh(Vector2i mouse) {
         widgets.forward((w, v) -> {
-            w.onRefresh();
+            w.onRefresh(mouse.sub(v, new Vector2i()));
             return false;
         });
     }
@@ -82,7 +82,6 @@ public class WContainer implements Widget {
 
     public WContainer put(Widget widget, int x, int y) {
         widgets.put(widget, new Vector2i(x, y));
-        if (mouse != null) widget.onMove(mouse.sub(x, y, new Vector2i()));
         return this;
     }
 

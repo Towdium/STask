@@ -23,13 +23,13 @@ public class WGame extends WContainer {
         int start = 0;
         for (Map.Entry<Cluster.Processor, Game.Status> i : game.getProcessors().entrySet()) {
             put(new Node(i.getValue()), 0, start);
-            start += 80;
+            start += 100;
         }
     }
 
     static class Node implements Widget {
-        public static final int WIDTH = 60;
-        public static final int HEIGHT = 60;
+        public static final int WIDTH = 84;
+        public static final int HEIGHT = 84;
         Game.Status status;
 
         public Node(Game.Status status) {
@@ -41,19 +41,19 @@ public class WGame extends WContainer {
             try (Painter.State ignore = p.color(0x444444)) {
                 p.drawRect(0, 0, WIDTH, HEIGHT);
             }
-            p.drawText(status.getProcessor().getName(), 4, 4 + Painter.fontAscent);
+            p.drawText(status.getProcessor().getName(), 4, Painter.fontAscent + 1);
             try (Painter.State ignore = p.color(0x222222)) {
-                p.drawRect(0, 20, WIDTH, 20);
+                p.drawRect(0, HEIGHT / 3, WIDTH, HEIGHT / 3);
             }
             try (Painter.State ignore = p.color(0xAA2222)) {
-                p.drawRect(0, 20, (int) (WIDTH * status.getProgress()), 20);
+                p.drawRect(0, HEIGHT / 3, (int) (WIDTH * status.getProgress()), HEIGHT / 3);
             }
             Iterator<Float> it = status.getComms().values().iterator();
             for (int i = 0; i < 2; i++) {
                 if (it.hasNext()) {
                     Float e = it.next();
                     try (Painter.State ignore = p.color(0x2222AA)) {
-                        p.drawRect(0, 40 + i * 10, (int) (WIDTH * e), 10);
+                        p.drawRect(0, HEIGHT / 3 * 2 + i * HEIGHT / 6, (int) (WIDTH * e), HEIGHT / 3);
                     }
                 }
             }

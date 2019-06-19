@@ -15,8 +15,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class WTask extends WDragFocus {
-    public static final int WIDTH = 30;
-    public static final int HEIGHT = 38;
+    public static final int WIDTH = 80;
+    public static final int HEIGHT = 56;
     Graph.Task task;
     Allocation allocation;
     Game game;
@@ -30,10 +30,13 @@ public class WTask extends WDragFocus {
 
     public static void drawTask(Painter p, Graph.Task t, State s, boolean highlight) {
         try (Painter.State ignore = p.color(0x666666)) {
-            p.drawRect(0, 0, WTask.WIDTH, WTask.HEIGHT);
+            p.drawRect(0, 0, WTask.WIDTH / 2, WTask.HEIGHT / 2);
         }
-        try (Painter.State ignore = p.color(0x888888)) {
-            p.drawRect(0, 0, WTask.WIDTH, 19);
+        try (Painter.State ignore = p.color(0x777777)) {
+            p.drawRect(WTask.WIDTH / 2, 0, WTask.WIDTH / 2, WTask.HEIGHT / 2);
+        }
+        try (Painter.State ignore = p.color(0x555555)) {
+            p.drawRect(0, WTask.HEIGHT / 2, WTask.WIDTH, WTask.HEIGHT / 2);
         }
         try (Painter.State ignore = p.color(s.color)) {
             p.drawRect(0, 0, WTask.WIDTH, HEIGHT);
@@ -43,8 +46,9 @@ public class WTask extends WDragFocus {
                 p.drawRect(0, 0, WTask.WIDTH, WTask.HEIGHT);
             }
         }
-        p.drawTextRight(Integer.toString(t.getTime()), 26, Painter.fontAscent + 2);
-        p.drawTextRight(t.getType(), 26, Painter.fontAscent + 19);
+        p.drawTextRight(Integer.toString(t.getTime()), WTask.WIDTH / 2 - 6, Painter.fontAscent + 1);
+        p.drawTextRight(t.getType(), WTask.WIDTH - 6, Painter.fontAscent);
+        p.drawTextRight(t.getName(), WTask.WIDTH - 6, Painter.fontAscent + WTask.HEIGHT / 2 + 1);
     }
 
     public static void drawTask(Painter p, Graph.Task t, int x, int y) {

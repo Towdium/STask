@@ -17,10 +17,12 @@ public interface Page extends Widget {
 
     class Simple extends WContainer implements Page {
         int multiplier = 1;
+        static final int WIDTH = 1280;
+        static final int HEIGHT = 720;
 
         @Override
         public void onResize(int x, int y) {
-            multiplier = Math.max(Math.min((y + 179) / 360, (x + 319) / 640), 1);
+            multiplier = Math.max(Math.min((y + HEIGHT / 2 - 1) / HEIGHT, (x + WIDTH / 2 - 1) / WIDTH), 1);
             onLayout((x + multiplier - 1) / multiplier, (y + multiplier - 1) / multiplier);
         }
 

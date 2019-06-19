@@ -19,7 +19,11 @@ public abstract class WArea implements Widget {
         this.y = y;
     }
 
-    protected boolean onTest(@Nullable Vector2i mouse) {
+    public static boolean inside(@Nullable Vector2i mouse, int x, int y) {
         return mouse != null && mouse.x >= 0 && mouse.y >= 0 && mouse.x < x && mouse.y < y;
+    }
+
+    protected boolean onTest(@Nullable Vector2i mouse) {
+        return inside(mouse, x, y);
     }
 }

@@ -1,8 +1,7 @@
 package me.towdium.stask;
 
 import com.google.gson.Gson;
-import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.*;
+import me.towdium.stask.client.Widgets.PGame;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.logic.*;
 import me.towdium.stask.utils.Log;
@@ -65,7 +64,7 @@ public class Demo {
     public static final String CLUSTER = "{\n" +
             "  \"comm\": 1,\n" +
             "  \"processors\": {\n" +
-            "    \"a\": {\n" +
+            "    \"ag\": {\n" +
             "      \"speed\": 1,\n" +
             "      \"speedup\": {}\n" +
             "    },\n" +
@@ -74,12 +73,11 @@ public class Demo {
             "      \"speedup\": {}\n" +
             "    }\n" +
             "  },\n" +
-            "  \"layout\": [\"a\", \"b\"]\n" +
+            "  \"layout\": [\"ag\", \"b\"]\n" +
             "}";
 
 
     public static void main(String[] args) {
-        Page.Simple root = new Page.Simple();
         Gson gson = new Gson();
         Graph graph = new Graph(gson.fromJson(GRAPH, Pojo.Graph.class));
         Cluster cluster = new Cluster(gson.fromJson(CLUSTER, Pojo.Cluster.class));
@@ -89,20 +87,7 @@ public class Demo {
         Timer timer = new Timer(1 / 20f, i -> game.tick());
 
 
-        root.put(new WGraph(300, 300, graph, allocation, game), 0, 0);
-        root.put(new WAllocation(300, 100, game), 0, 300);
-        root.put(new WGame(game), 300, 0);
-        root.put(new WHistory(300, 100, game), 0, 380);
-        root.put(new WButtonText(60, 20, "start").setListener(i -> game.start()), 300, 300);
-        root.put(new WButtonText(60, 20, "reset").setListener(i -> game.reset()), 300, 330);
-        root.put(new WButtonText(60, 20, "pause").setListener(i -> game.pause()), 370, 300);
-        root.put(new WButtonText(60, 20, "step").setListener(i -> {
-            game.start();
-            game.tick();
-            game.pause();
-        }), 370, 330);
-
-        try (Window w = new Window("Test Graph", root)) {
+        try (Window w = new Window("Test Graph", new PGame(game))) {
             w.display();
             while (!w.isFinished()) {
                 w.tick();

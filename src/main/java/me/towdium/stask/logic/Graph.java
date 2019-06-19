@@ -18,6 +18,7 @@ public class Graph {
             Task tmp = new Task();
             tmp.time = t.time;
             tmp.type = t.type;
+            tmp.name = s;
             tasks.put(s, tmp);
         });
         pojo.tasks.forEach((s, t) -> {
@@ -87,10 +88,15 @@ public class Graph {
     }
 
     public static class Task extends Work {
-        Map<Task, Comm> after = new IdentityHashMap<>();
-        Map<Task, Comm> before = new IdentityHashMap<>();
+        Map<Task, Comm> after = new LinkedHashMap<>();
+        Map<Task, Comm> before = new LinkedHashMap<>();
+        String name;
         int time;
         String type;
+
+        public String getName() {
+            return name;
+        }
 
         public int getTime() {
             return time;
