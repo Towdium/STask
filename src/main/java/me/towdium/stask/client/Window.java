@@ -33,6 +33,7 @@ public class Window extends Closeable implements Tickable {
     static GLFWVidMode display;
     long id;
     boolean debug = false;
+    boolean terminate = false;
     Timer timer;
     Counter fps;
     Page root;
@@ -142,6 +143,10 @@ public class Window extends Closeable implements Tickable {
         }
     }
 
+    public void terminate() {
+        terminate = true;
+    }
+
     private void loop() {
         GLFW.glfwMakeContextCurrent(id);
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
@@ -165,7 +170,7 @@ public class Window extends Closeable implements Tickable {
     }
 
     public boolean isFinished() {
-        return GLFW.glfwWindowShouldClose(id);
+        return terminate || GLFW.glfwWindowShouldClose(id);
     }
 
     @Override

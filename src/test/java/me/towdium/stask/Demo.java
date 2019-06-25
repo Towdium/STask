@@ -18,7 +18,7 @@ public class Demo {
 
         try (Window w = new Window("Test Graph", wrapper)) {
             w.display();
-            wrapper.display(() -> new PMain(wrapper));
+            wrapper.display(() -> new PMain(wrapper, w));
             while (!w.isFinished()) w.tick();
         }
     }

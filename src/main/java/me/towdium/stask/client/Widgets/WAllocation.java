@@ -202,7 +202,7 @@ public class WAllocation extends WContainer {
                         p.drawRect(0, 0, (int) (WIDTH * progress), HEIGHT);
                     }
 
-                    int color = WFocus.focus == task ? 0xCCCCCC : 0x888888;
+                    int color = WFocus.isFocused(task) ? 0xCCCCCC : 0x888888;
                     try (Painter.State ignore = p.color(color)) {
                         p.drawRect(0, 0, WIDTH, HEIGHT, 2);
                     }

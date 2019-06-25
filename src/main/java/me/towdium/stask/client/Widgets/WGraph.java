@@ -47,10 +47,9 @@ public class WGraph extends WContainer {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
-        Graph.Work focus = WFocus.focus;
         for (Graph.Task i : tasks.keySet()) {
             for (Map.Entry<Task, Graph.Comm> j : i.getBefore().entrySet()) {
-                if (focus == i || focus == j.getKey() || focus == j.getValue())
+                if (WFocus.isFocused(i) || WFocus.isFocused(j.getKey()) || WFocus.isFocused(j.getValue()))
                     late.add(new Pair<>(i, j.getKey()));
                 else drawConnection(p, i, j.getKey(), false);
             }

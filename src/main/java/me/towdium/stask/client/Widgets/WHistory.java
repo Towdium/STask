@@ -78,7 +78,7 @@ public class WHistory extends WContainer {
                 try (Painter.State ignore = p.color(color)) {
                     p.drawRect(0, 0, width, HEIGHT);
                 }
-                if (WFocus.focus == work) {
+                if (WFocus.isFocused(work)) {
                     try (Painter.State ignore = p.color(0xCCFFFFFF)) {
                         p.drawRect(0, 0, width, HEIGHT);
                     }

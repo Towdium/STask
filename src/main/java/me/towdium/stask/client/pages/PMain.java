@@ -4,6 +4,7 @@ import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Widgets.WButton;
 import me.towdium.stask.client.Widgets.WButtonText;
 import me.towdium.stask.client.Widgets.WPanel;
+import me.towdium.stask.client.Window;
 
 /**
  * Author: Towdium
@@ -11,15 +12,17 @@ import me.towdium.stask.client.Widgets.WPanel;
  */
 public class PMain extends Page.Impl {
     PWrapper root;
+    Window window;
     WButton single = new WButtonText(250, 40, "Singleplayer").setListener(i ->
             root.display(() -> new PSingle(root, this)));
     WButton multi = new WButtonText(250, 40, "Multiplayer");
     WButton sandbox = new WButtonText(250, 40, "Sandbox");
     WButton about = new WButtonText(250, 40, "About");
-    WButton exit = new WButtonText(250, 40, "Exit");
+    WButton exit = new WButtonText(250, 40, "Exit").setListener(i -> window.terminate());
 
-    public PMain(PWrapper r) {
+    public PMain(PWrapper r, Window w) {
         root = r;
+        window = w;
     }
 
     @Override

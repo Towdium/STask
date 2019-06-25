@@ -1,12 +1,15 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Graph;
 import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Author: Towdium
@@ -14,26 +17,37 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public abstract class WFocus implements WArea {
-    static Graph.Work focus;
-    static WFocus active;
+    static Map<WFocus, Object> owners = new HashMap<>();
+    static Map<Object, Set<WFocus>> focuses = new HashMap<>();
+
+    public static boolean isFocused(Object o) {
+        return focuses.containsKey(o);
+    }
+
+    private static void put(WFocus w, Object f) {
+        remove(w);
+        owners.put(w, f);
+        focuses.computeIfAbsent(f, i -> new HashSet<>()).add(w);
+    }
+
+    private static void remove(WFocus w) {
+        Object old = owners.remove(w);
+        if (old == null) return;
+        Set<WFocus> set = focuses.get(old);
+        set.remove(w);
+        if (set.isEmpty()) focuses.remove(old);
+    }
 
     @Override
     public void onRefresh(Vector2i mouse) {
-        Graph.Work t = onTest(mouse) ? onFocus() : null;
-        if (t != null) {
-            active = this;
-            focus = t;
-        } else if (active == this) {
-            active = null;
-            focus = null;
-        }
+        Object f = onTest(mouse) ? onFocus() : null;
+        if (f != null) put(this, f);
+        else remove(this);
     }
 
     @Override
     public void onRemove() {
-        if (active != this) return;
-        active = null;
-        focus = null;
+        remove(this);
     }
 
     @Override
@@ -41,7 +55,7 @@ public abstract class WFocus implements WArea {
     }
 
     @Nullable
-    public abstract Graph.Work onFocus();
+    public abstract Object onFocus();
 
     public abstract static class Impl extends WFocus {
         int x, y;

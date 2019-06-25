@@ -79,11 +79,12 @@ public class WTask extends WCompose {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         boolean b = false;
-        if (WFocus.focus instanceof Graph.Comm) {
-            Graph.Comm c = (Graph.Comm) WFocus.focus;
-            b = c.getDst() == task || c.getSrc() == task;
-        }
-        drawTask(p, task, state(), WFocus.focus == task || b);
+        for (Graph.Comm c : task.getAfter().values())
+            if (WFocus.isFocused(c)) b = true;
+        for (Graph.Comm c : task.getBefore().values())
+            if (WFocus.isFocused(c)) b = true;
+
+        drawTask(p, task, state(), WFocus.isFocused(task) || b);
         if (WDrag.isSending(this) && !WDrag.isReceiving()) {
             try (Painter.State ignore = p.priority(true)) {
                 drawTask(p, task, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2);
