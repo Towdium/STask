@@ -32,8 +32,8 @@ public abstract class WButton extends WArea {
     }
 
     @Override
-    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-        if (onTest(mouse) && left && !state && listener != null) {
+    public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+        if (onTest(mouse) && left && listener != null) {
             listener.invoke(this);
             return true;
         } else return false;

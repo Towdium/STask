@@ -55,10 +55,11 @@ public class WHistory extends WContainer {
 
         @Override
         public void onRefresh(Vector2i mouse) {
-            super.onRefresh(mouse);
+
             clear();
             game.getHistory().getRecord(processor).forEach((w, p) ->
                     put(new Node(w, p.y - p.x), p.x + MARGIN, 0));
+            super.onRefresh(mouse);
         }
 
         class Node extends WFocus {

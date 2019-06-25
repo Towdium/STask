@@ -127,37 +127,39 @@ public class Game implements Tickable {
             input.clear();
         }
 
-        public void tickPre() {
-            if (working == null) {
-                List<Allocation.Node> ts = allocation.getTasks(processor);
-                if (!ts.isEmpty()) {
-                    Allocation.Node n = ts.get(0);
-                    boolean ready = true;
-                    for (Comm c : n.comms) {
-                        if (!input.contains(c)) {
-                            if (!comms.containsKey(c)) {
-                                Processor src = output.get(c);
-                                if (src != null && policy.available(this)) {
-                                    if (src != processor) {
-                                        ready = false;
-                                        Status s = processors.get(src);
-                                        if (policy.available(s)) {
-                                            s.comms.put(c, 0f);
-                                            comms.put(c, 0f);
-                                        }
-                                    }
-                                } else ready = false;
-                            } else ready = false;
-                        }
+        public void tickPre() {  // todo rework for parallel comm
+            List<Allocation.Node> ts = allocation.getTasks(processor);
+            for (int i = 0; i < ts.size(); i++) {
+                Allocation.Node n = ts.get(i);
+                boolean ready = true;
+                for (Comm c : n.comms) {
+                    if (!attempt(c)) {
+                        ready = false;
+                        break;
                     }
-                    if (ready) {
-                        for (Comm i : n.comms) input.remove(i);
-                        working = n.task;
-                        executing.put(working, processor);
-                        allocation.remove(working);
+                }
+                if (working == null && i == 0 && ready) {
+                    working = n.task;
+                    executing.put(working, processor);
+                    allocation.remove(working);
+                }
+            }
+        }
+
+        private boolean attempt(Comm c) {
+            Processor src = output.get(c);
+            if (input.contains(c) || src == processor) return true;
+
+            if (!comms.containsKey(c)) {
+                if (src != null && policy.available(this)) {
+                    Status s = processors.get(src);
+                    if (policy.available(s)) {
+                        s.comms.put(c, 0f);
+                        comms.put(c, 0f);
                     }
                 }
             }
+            return false;
         }
 
         public boolean tickPost() {

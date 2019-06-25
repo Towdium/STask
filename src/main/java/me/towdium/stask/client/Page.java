@@ -35,8 +35,8 @@ public interface Page extends Widget {
         }
 
         @Override
-        public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-            return super.onClick(convert(mouse), left, state);
+        public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+            return super.onClick(convert(mouse), left);
         }
 
         @Override

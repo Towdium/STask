@@ -114,11 +114,9 @@ public class Sync {
             }
 
             @Override
-            public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-                if (picked || onTest(mouse)) {
-                    picked = state;
-                    return true;
-                } else return false;
+            public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+                // TODO picked = state;
+                return picked || onTest(mouse);
             }
         }
     }

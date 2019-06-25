@@ -1,14 +1,11 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
-import me.towdium.stask.utils.Log;
-import org.apache.commons.collections4.list.TreeList;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,7 +15,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiPredicate;
 
 /**
  * Author: Towdium
@@ -44,7 +40,6 @@ public class WAllocation extends WContainer {
     }
 
     private boolean overlay(@Nullable Rail.Node n) {
-        Log.client.info("overlay " + n);
         if (n == null) {
             if (overlay != null) {
                 remove(overlay);
@@ -85,15 +80,8 @@ public class WAllocation extends WContainer {
         }
 
         @Override
-        protected boolean onTest(@Nullable Vector2i mouse) {
-            if (widgets.forward((w, v) -> w instanceof Node && ((Node) w).onTest(mouse == null ? null : mouse.sub(v, new Vector2i()))))
-                return false;
-            else return super.onTest(mouse);
-        }
-
-        @Override
         public void onRefresh(Vector2i mouse) {
-            if (WDrag.ready == null && WDrag.sender == null) sync();
+            if (WDrag.sender == null) sync();
             super.onRefresh(mouse);
         }
 
@@ -170,6 +158,12 @@ public class WAllocation extends WContainer {
             }
 
             @Override
+            public void onMove(Vector2i mouse) {
+                super.onMove(mouse);
+                index = getIndex(mouse);
+            }
+
+            @Override
             public void onDraw(Painter p, Vector2i mouse) {
                 super.onDraw(p, mouse);
                 if (visible) {
@@ -197,14 +191,13 @@ public class WAllocation extends WContainer {
             }
 
             @Override
-            public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-                return super.onClick(mouse, left, state) || (!state && WDrag.sender == null && onTest(mouse) && overlay(this));
+            public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+                return super.onClick(mouse, left) || (WDrag.sender == null && onTest(mouse) && overlay(this));
             }
 
             @Nullable
             @Override
             public Object onStarting() {
-                Log.client.info("start");
                 overlay(null);
                 game.getAllocation().remove(processor, idx);
                 ghost = this;
@@ -215,7 +208,6 @@ public class WAllocation extends WContainer {
 
             @Override
             public void onRejected() {
-                Log.client.info("reject");
                 game.getAllocation().allocate(task, processor, idx);
                 ghost = null;
                 sync();
@@ -223,7 +215,6 @@ public class WAllocation extends WContainer {
 
             @Override
             public void onSucceeded() {
-                Log.client.info("succeed");
                 ghost = null;
                 sync();
             }
@@ -236,7 +227,7 @@ public class WAllocation extends WContainer {
         static final int MARGIN = 10;
         Allocation.Node node;
         WPanel panel;
-        List<Graph.Comm> comms = new TreeList<>();
+        List<Graph.Comm> comms;
         Node ghost;
         int x, y;
         int index = -1;
@@ -244,30 +235,41 @@ public class WAllocation extends WContainer {
         public Overlay(Allocation.Node n) {
             super(0, 0);
             node = n;
-            comms.addAll(node.getComms());
+            comms = node.getComms();
             y = HEIGHT * comms.size() + 2 * MARGIN;
             x = WIDTH + 2 * MARGIN;
             panel = new WPanel(x, y);
         }
 
         @Override
+        public boolean onPress(@Nullable Vector2i mouse, boolean left) {
+            if (!panel.onTest(mouse)) overlay(null);
+            return super.onPress(mouse, left);
+        }
+
+        @Override
         protected boolean onTest(@Nullable Vector2i mouse) {
-            BiPredicate<Widget, Vector2i> bp = (w, v) -> w instanceof Node && ((Node) w)
-                    .onTest(mouse == null ? null : mouse.sub(v, new Vector2i()));
-            return !widgets.forward(bp);
+            return true;
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
             if (WDrag.receiver != drag) return;
-            p.drawRect(MARGIN + getIndex(mouse) * HEIGHT - 1, MARGIN, WIDTH, 2);
+            p.drawRect(MARGIN, MARGIN + getIndex(mouse) * HEIGHT - 1, WIDTH, 2);
         }
 
         private int getIndex(Vector2i mouse) {
             int total = comms.size();
             int pos = (mouse.y - MARGIN + HEIGHT / 2) / HEIGHT;
             return Math.max(Math.min(total, pos), 0);
+        }
+
+        @Override
+        protected void onReceived(Object o) {
+            comms.add(index, (Graph.Comm) o);
+            sync();
+            node.setComms(comms);
         }
 
         @Override
@@ -279,6 +281,11 @@ public class WAllocation extends WContainer {
         }
 
         @Override
+        protected boolean onAttempt(Object o, Vector2i mouse) {
+            return o instanceof Graph.Comm;
+        }
+
+        @Override
         public void onMove(Vector2i mouse) {
             super.onMove(mouse);
             index = getIndex(mouse);
@@ -286,7 +293,7 @@ public class WAllocation extends WContainer {
 
         @Override
         public void onRefresh(Vector2i mouse) {
-            if (WDrag.ready == null && WDrag.sender == null) sync();
+            if (WDrag.sender == null) sync();
             super.onRefresh(mouse);
         }
 
@@ -299,10 +306,9 @@ public class WAllocation extends WContainer {
         }
 
         @Override
-        public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-            boolean b = super.onClick(mouse, left, state);
-            if (!b && !state) return overlay(null);
-            return b;
+        public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+            if (!super.onClick(mouse, left)) overlay(null);
+            return true;
         }
 
         class Node extends WDragFocus {
@@ -327,17 +333,12 @@ public class WAllocation extends WContainer {
                 try (Painter.State ignore = p.color(0x666666)) {
                     p.drawRect(0, 0, WIDTH, HEIGHT);
                 }
-                p.drawTextRight(comm.getDst().getName(), WIDTH - 4, 2 + Painter.fontAscent);
+                p.drawTextRight(comm.getSrc().getName(), WIDTH - 4, 2 + Painter.fontAscent);
             }
 
             @Override
             protected Graph.Work onFocus() {
                 return comm;
-            }
-
-            @Override
-            public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-                return super.onClick(mouse, left, state);
             }
 
             @Nullable
@@ -357,7 +358,7 @@ public class WAllocation extends WContainer {
 
             @Override
             protected void onRejected() {
-                super.onRejected();
+                throw new RuntimeException("Internal error");
             }
         }
     }

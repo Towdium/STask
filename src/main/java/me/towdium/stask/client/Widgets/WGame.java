@@ -8,7 +8,6 @@ import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Author: Towdium
@@ -21,8 +20,8 @@ public class WGame extends WContainer {
     public WGame(Game game) {
         this.game = game;
         int start = 0;
-        for (Map.Entry<Cluster.Processor, Game.Status> i : game.getProcessors().entrySet()) {
-            put(new Node(i.getValue()), 0, start);
+        for (Cluster.Processor i : game.getCluster().getLayout()) {
+            put(new Node(game.getProcessors().get(i)), 0, start);
             start += 100;
         }
     }

@@ -27,7 +27,7 @@ public class Particle {
         Animator animator = new Animator();
 
         @Override
-        public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+        public boolean onClick(@Nullable Vector2i mouse, boolean left) {
             if (mouse != null) {
                 Animator.FBezier f = new Animator.FBezier(0, 0);
                 Batch c = new Batch();

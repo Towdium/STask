@@ -31,11 +31,23 @@ public interface Widget {
     default void onRefresh(Vector2i mouse) {
     }
 
-    default boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+    default boolean onClick(@Nullable Vector2i mouse, boolean left) {
         return false;
     }
 
     default boolean onScroll(@Nullable Vector2i mouse, int diff) {
+        return false;
+    }
+
+    default boolean onDrag(@Nullable Vector2i mouse, boolean left) {
+        return false;
+    }
+
+    default boolean onDrop(boolean left) {
+        return false;
+    }
+
+    default boolean onPress(@Nullable Vector2i mouse, boolean left) {
         return false;
     }
 }

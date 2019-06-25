@@ -19,11 +19,9 @@ import java.util.function.BiPredicate;
 public class WContainer implements Widget {
     WidgetMap widgets = new WidgetMap();
     Quad mask = null;
-    Vector2i mouse;
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        this.mouse = mouse;
         Painter.State s = null;
         if (mask != null)
             s = p.mask(mask);
@@ -39,21 +37,18 @@ public class WContainer implements Widget {
 
     @Override
     public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
-        this.mouse = mouse;
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         return widgets.backward((w, v) -> w.onTooltip(m == null ? null : m.sub(v, new Vector2i()), tooltip));
     }
 
     @Override
-    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-        this.mouse = mouse;
+    public boolean onClick(@Nullable Vector2i mouse, boolean left) {
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
-        return widgets.backward((w, v) -> w.onClick(m == null ? null : m.sub(v, new Vector2i()), left, state));
+        return widgets.backward((w, v) -> w.onClick(m == null ? null : m.sub(v, new Vector2i()), left));
     }
 
     @Override
     public void onMove(Vector2i mouse) {
-        this.mouse = mouse;
         widgets.forward((w, v) -> {
             w.onMove(mouse.sub(v, new Vector2i()));
             return false;
@@ -75,9 +70,25 @@ public class WContainer implements Widget {
 
     @Override
     public boolean onScroll(@Nullable Vector2i mouse, int diff) {
-        this.mouse = mouse;
         if (mask != null && !mask.inside(mouse)) return false;
         return widgets.backward((w, v) -> w.onScroll(mouse, diff));
+    }
+
+    @Override
+    public boolean onDrag(@Nullable Vector2i mouse, boolean left) {
+        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
+        return widgets.backward((w, v) -> w.onDrag(m == null ? null : m.sub(v, new Vector2i()), left));
+    }
+
+    @Override
+    public boolean onPress(@Nullable Vector2i mouse, boolean left) {
+        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
+        return widgets.backward((w, v) -> w.onPress(m == null ? null : m.sub(v, new Vector2i()), left));
+    }
+
+    @Override
+    public boolean onDrop(boolean left) {
+        return widgets.backward((w, v) -> w.onDrop(left));
     }
 
     public WContainer put(Widget widget, int x, int y) {

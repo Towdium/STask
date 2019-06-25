@@ -64,7 +64,7 @@ public class Demo {
     public static final String CLUSTER = "{\n" +
             "  \"comm\": 1,\n" +
             "  \"processors\": {\n" +
-            "    \"ag\": {\n" +
+            "    \"a\": {\n" +
             "      \"speed\": 1,\n" +
             "      \"speedup\": {}\n" +
             "    },\n" +
@@ -73,7 +73,7 @@ public class Demo {
             "      \"speedup\": {}\n" +
             "    }\n" +
             "  },\n" +
-            "  \"layout\": [\"ag\", \"b\"]\n" +
+            "  \"layout\": [\"a\", \"b\"]\n" +
             "}";
 
 

@@ -6,10 +6,7 @@ import me.towdium.stask.utils.Cache;
 import org.apache.commons.collections4.list.TreeList;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Author: Towdium
@@ -86,7 +83,16 @@ public class Allocation {
         }
 
         public List<Graph.Comm> getComms() {
-            return comms;
+            return new ArrayList<>(comms);
+        }
+
+        public void setComms(List<Graph.Comm> l) {
+            Set<Graph.Comm> s = new HashSet<>(comms);
+            for (Graph.Comm i : l)
+                if (!s.remove(i))
+                    throw new RuntimeException("Invalid comm");
+            l.addAll(s);
+            comms = l;
         }
     }
 }

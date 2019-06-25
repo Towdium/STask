@@ -1,10 +1,12 @@
 package me.towdium.stask.client;
 
+import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Closeable;
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.time.Counter;
 import me.towdium.stask.utils.time.Timer;
+import me.towdium.stask.utils.wrap.Pair;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -36,6 +38,7 @@ public class Window extends Closeable implements Tickable {
     Page root;
     Painter painter;
     Vector2i mouse;
+    Cache<Integer, Pair<Boolean, Boolean>> state = new Cache<>(i -> new Pair<>(false, false)); // press, drag
     public static boolean pause = false;
 
     public Window(String title, Page root) {
@@ -69,8 +72,17 @@ public class Window extends Closeable implements Tickable {
         GLFW.glfwMakeContextCurrent(id);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) -> {
+            if (button > GLFW.GLFW_MOUSE_BUTTON_2) return;
             Vector2i m = mouse();
-            this.root.onClick(m, button == GLFW.GLFW_MOUSE_BUTTON_1, action == GLFW.GLFW_PRESS);
+            boolean left = button == GLFW.GLFW_MOUSE_BUTTON_1;
+            if (action == GLFW.GLFW_PRESS) {
+                state.get(button).a = !this.root.onPress(m, left);
+            } else {
+                if (state.get(button).b) this.root.onDrop(left);
+                else if (state.get(button).a) this.root.onClick(m, button == GLFW.GLFW_MOUSE_BUTTON_1);
+                state.get(button).a = false;
+                state.get(button).b = false;
+            }
         });
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
             this.root.onResize(width, height);
@@ -137,10 +149,19 @@ public class Window extends Closeable implements Tickable {
         root.onRefresh(m);
         if (!m.equals(mouse)) {
             mouse = m;
+            for (int i = GLFW.GLFW_MOUSE_BUTTON_1; i <= GLFW.GLFW_MOUSE_BUTTON_2; i++) {
+                if (state.get(i).a && !state.get(i).b)
+                    state.get(i).b = root.onDrag(m, i == GLFW.GLFW_MOUSE_BUTTON_1);
+            }
             root.onMove(m);
         }
         root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
+    }
+
+    public boolean getMouse(boolean left) {
+        int button = left ? GLFW.GLFW_MOUSE_BUTTON_1 : GLFW.GLFW_MOUSE_BUTTON_2;
+        return GLFW.glfwGetMouseButton(id, button) == GLFW.GLFW_PRESS;
     }
 
     public boolean isFinished() {

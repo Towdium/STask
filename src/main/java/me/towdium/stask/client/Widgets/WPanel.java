@@ -30,7 +30,7 @@ public class WPanel extends WArea {
     }
 
     @Override
-    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
+    public boolean onClick(@Nullable Vector2i mouse, boolean left) {
         return onTest(mouse);
     }
 }

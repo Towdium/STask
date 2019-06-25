@@ -1,7 +1,6 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -13,9 +12,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public abstract class WDrag extends WArea {
-    public static WDrag sender, receiver, ready;
+    public static WDrag sender, receiver;
     static Object parcel;
-    Vector2i mouse;
 
     public WDrag(int x, int y) {
         super(x, y);
@@ -26,41 +24,30 @@ public abstract class WDrag extends WArea {
     }
 
     @Override
-    public boolean onClick(@Nullable Vector2i mouse, boolean left, boolean state) {
-        if (left) {
-            if (state) {
-                if (onTest(mouse)) {
-                    Log.client.info("ready: " + this);
-                    ready = this;
-                }
-            } else if (sender == this) {
-                if (receiver != null && parcel != null) {
-                    onSucceeded();
-                    receiver.onReceived(parcel);
-                    receiver = null;
-                } else onRejected();
-                sender = null;
-                parcel = null;
-                Log.client.info("drop");
+    public boolean onDrag(@Nullable Vector2i mouse, boolean left) {
+        if (onTest(mouse)) {
+            Object o = onStarting();
+            if (o != null) {
+                sender = this;
+                parcel = o;
                 return true;
-            } else if (ready == this) ready = null;
+            }
         }
         return false;
     }
 
     @Override
-    public void onRefresh(Vector2i mouse) {
-        if (!mouse.equals(this.mouse)) {
-            this.mouse = mouse;
-            if (ready == this) {
-                ready = null;
-                Object o = onStarting();
-                if (o != null) {
-                    sender = this;
-                    parcel = o;
-                }
-            }
-        }
+    public boolean onDrop(boolean left) {
+        if (sender == this) {
+            if (receiver != null && parcel != null) {
+                onSucceeded();
+                receiver.onReceived(parcel);
+                receiver = null;
+            } else onRejected();
+            sender = null;
+            parcel = null;
+            return true;
+        } else return false;
     }
 
     @Override
