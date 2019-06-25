@@ -12,7 +12,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 08/04/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WButton extends WArea {
+public abstract class WButton extends WArea.Impl {
     protected ListenerAction<? super WButton> listener;
 
     public WButton(int x, int y) {

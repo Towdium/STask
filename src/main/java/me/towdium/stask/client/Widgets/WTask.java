@@ -14,7 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 11/06/19
  */
 @ParametersAreNonnullByDefault
-public class WTask extends WDragFocus {
+public class WTask extends WCompose {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 56;
     Graph.Task task;
@@ -22,7 +22,25 @@ public class WTask extends WDragFocus {
     Game game;
 
     public WTask(Graph.Task t, Allocation a, Game g) {
-        super(WIDTH, HEIGHT);
+        compose(new WFocus.Impl(WIDTH, HEIGHT) {
+            @Nullable
+            @Override
+            public Graph.Work onFocus() {
+                return task;
+            }
+
+            @Override
+            public boolean onTest(@Nullable Vector2i mouse) {
+                return WDrag.isSending(WTask.this) || super.onTest(mouse);
+            }
+        });
+        compose(new WDrag.Impl(WIDTH, HEIGHT) {
+            @Nullable
+            @Override
+            public Object onStarting() {
+                return task;
+            }
+        });
         task = t;
         allocation = a;
         game = g;
@@ -59,11 +77,6 @@ public class WTask extends WDragFocus {
     }
 
     @Override
-    protected Graph.Work onFocus() {
-        return task;
-    }
-
-    @Override
     public void onDraw(Painter p, Vector2i mouse) {
         boolean b = false;
         if (WFocus.focus instanceof Graph.Comm) {
@@ -71,17 +84,11 @@ public class WTask extends WDragFocus {
             b = c.getDst() == task || c.getSrc() == task;
         }
         drawTask(p, task, state(), WFocus.focus == task || b);
-        if (WDrag.sender == drag && WDrag.receiver == null) {
+        if (WDrag.isSending(this) && !WDrag.isReceiving()) {
             try (Painter.State ignore = p.priority(true)) {
                 drawTask(p, task, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2);
             }
         }
-    }
-
-    @Nullable
-    @Override
-    public Object onStarting() {
-        return task;
     }
 
     private State state() {

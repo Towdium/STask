@@ -1,6 +1,7 @@
 package me.towdium.stask.client.Widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -11,12 +12,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 10/03/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WDrag extends WArea {
-    public static WDrag sender, receiver;
-    static Object parcel;
+public abstract class WDrag implements WArea, WOwner {
+    private static WDrag sender, receiver;
+    private static Object parcel;
+    WOwner owner = this;
 
-    public WDrag(int x, int y) {
-        super(x, y);
+    public WDrag() {
     }
 
     @Override
@@ -65,6 +66,38 @@ public abstract class WDrag extends WArea {
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isSending() {
+        return sender != null;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isReceiving() {
+        return receiver != null;
+    }
+
+    @Nullable
+    public static WOwner getSender() {
+        return sender == null ? null : sender.owner;
+    }
+
+    @Nullable
+    public static WOwner getReceiver() {
+        return receiver == null ? null : receiver.owner;
+    }
+
+    public static boolean isSending(WOwner w) {
+        return sender != null && sender.owner == w;
+    }
+
+    public static boolean isReceiving(WOwner w) {
+        return receiver != null && receiver.owner == w;
+    }
+
+    @Override
+    public void onTransfer(WOwner to) {
+        owner = to;
+    }
 
     // receiver side
     public void onReceived(Object o) {
@@ -95,5 +128,19 @@ public abstract class WDrag extends WArea {
 
     // sender side
     public void onRejected() {
+    }
+
+    public static class Impl extends WDrag {
+        int x, y;
+
+        public Impl(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public boolean onTest(@Nullable Vector2i mouse) {
+            return Quad.inside(mouse, x, y);
+        }
     }
 }

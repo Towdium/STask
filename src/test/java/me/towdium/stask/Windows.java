@@ -48,7 +48,7 @@ public class Windows {
         return i;
     }
 
-    static class Drag extends WDrag {
+    static class Drag extends WDrag.Impl {
         boolean hold;
 
         public Drag(boolean hold) {
@@ -66,7 +66,7 @@ public class Windows {
             if (hold) {
                 try (Painter.State prior = p.priority(true);
                      Painter.SMatrix mat = p.matrix()) {
-                    if (sender != this) {
+                    if (!WDrag.isSending(this)) {
                         try (Painter.State color = p.color(0x888888)) {
                             p.drawRect(0, 0, 50, 50);
                         }
@@ -76,7 +76,7 @@ public class Windows {
                     }
                 }
             } else {
-                if (receiver == this) {
+                if (!WDrag.isReceiving(this)) {
                     try (Painter.State color = p.color(0x444444)) {
                         p.drawRect(0, 0, 50, 50);
                     }
@@ -106,14 +106,14 @@ public class Windows {
         }
     }
 
-    static class Paint extends WDrag {
+    static class Paint extends WDrag.Impl {
         public Paint() {
             super(0, 0);
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            if (sender instanceof Drag) {
+            if (WDrag.getReceiver() instanceof Drag) {
                 try (Painter.SMatrix mat = p.matrix()) {
                     mat.translate(mouse.x - 25, mouse.y - 25);
                     try (Painter.State ignore = p.color(0x888888)) {

@@ -32,9 +32,17 @@ public class Quad {
         return this;
     }
 
+    public static boolean inside(@Nullable Vector2i v, float x1, float y1, float x2, float y2) {
+        return v != null && v.x > x1 && v.x < x2 && v.y > y1 && v.y < y2;
+    }
+
+    public static boolean inside(@Nullable Vector2i v, int x2, int y2) {
+        return inside(v, 0, 0, x2, y2);
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean inside(@Nullable Vector2i v) {
-        return v != null && v.x > a.x && v.x < b.x && v.y > a.y && v.y < b.y;
+        return inside(v, a.x, a.y, b.x, b.y);
     }
 
     public Quad transformed(Matrix4f m) {

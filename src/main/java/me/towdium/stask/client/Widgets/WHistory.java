@@ -62,7 +62,7 @@ public class WHistory extends WContainer {
             super.onRefresh(mouse);
         }
 
-        class Node extends WFocus {
+        class Node extends WFocus.Impl {
             Graph.Work work;
             int width;
 

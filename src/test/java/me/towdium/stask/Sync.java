@@ -101,7 +101,7 @@ public class Sync {
             network.getClient().send(new PMouse(v.x, v.y));
         }
 
-        class Node extends WArea {
+        class Node extends WArea.Impl {
             boolean picked = false;
 
             public Node() {

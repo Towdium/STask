@@ -1,6 +1,8 @@
 package me.towdium.stask.client.Widgets;
 
+import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
+import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -11,19 +13,23 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 08/04/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WArea implements Widget {
-    int x, y;
+public interface WArea extends Widget {
+    boolean onTest(@Nullable Vector2i mouse);
 
-    public WArea(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+    class Impl implements WArea {
+        int x, y;
 
-    public static boolean inside(@Nullable Vector2i mouse, int x, int y) {
-        return mouse != null && mouse.x >= 0 && mouse.y >= 0 && mouse.x < x && mouse.y < y;
-    }
+        public Impl(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
 
-    protected boolean onTest(@Nullable Vector2i mouse) {
-        return inside(mouse, x, y);
+        public boolean onTest(@Nullable Vector2i mouse) {
+            return Quad.inside(mouse, x, y);
+        }
+
+        @Override
+        public void onDraw(Painter p, Vector2i mouse) {
+        }
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
  * Date: 18/06/19
  */
 @ParametersAreNonnullByDefault
-public class WPanel extends WArea {
+public class WPanel extends WArea.Impl {
     public WPanel(int xs, int ys) {
         super(xs, ys);
     }

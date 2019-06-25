@@ -4,6 +4,7 @@ import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WContainer;
 import me.towdium.stask.client.Widgets.WDrag;
+import me.towdium.stask.client.Widgets.WOwner;
 import me.towdium.stask.client.Window;
 import org.joml.Vector2i;
 
@@ -50,7 +51,7 @@ public class Render {
 
     }
 
-    static class WDTestA extends WDrag {
+    static class WDTestA extends WDrag.Impl {
         boolean hold;
 
         public WDTestA(boolean hold) {
@@ -66,7 +67,7 @@ public class Render {
             }
 
             if (hold) {
-                if (sender == this) {
+                if (isSending(this)) {
                     try (Painter.State prior = p.priority(true);
                          Painter.SMatrix mat = p.matrix()) {
                         mat.translate(mouse.x - 25, mouse.y - 25);
@@ -86,7 +87,7 @@ public class Render {
                     }
                 }
             } else {
-                if (receiver == this) {
+                if (isReceiving(this)) {
                     try (Painter.State color = p.color(0x444444)) {
                         p.drawRect(0, 0, 50, 50);
                     }
@@ -116,7 +117,7 @@ public class Render {
     }
 
     static class WDTestB extends WContainer {
-        IdentityHashMap<WDrag, Vector2i> pos = new IdentityHashMap<>();
+        IdentityHashMap<WOwner, Vector2i> pos = new IdentityHashMap<>();
 
         public WDTestB() {
             add(0, 0, true);
@@ -133,9 +134,9 @@ public class Render {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
-            if (pos.containsKey(WDrag.sender) && pos.containsKey(WDrag.receiver)) {
-                int x1 = pos.get(WDrag.sender).x;
-                int x2 = pos.get(WDrag.receiver).x;
+            if (pos.containsKey(WDrag.getSender()) && pos.containsKey(WDrag.getReceiver())) {
+                int x1 = pos.get(WDrag.getSender()).x;
+                int x2 = pos.get(WDrag.getReceiver()).x;
                 p.drawRect(Math.min(x1, x2) + 25, 58, Math.abs(x2 - x1), 2);
                 p.drawRect(x1 + 24, 50, 2, 10);
                 p.drawRect(x2 + 24, 50, 2, 10);
