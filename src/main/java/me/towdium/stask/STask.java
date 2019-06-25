@@ -21,7 +21,11 @@ public class STask {
         Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
 
         Timer ticker = new Timer(1 / 200f);
-        try (Window w = new Window("STask", new Page.Simple());
+        try (Window w = new Window("STask", new Page.Impl() {
+            @Override
+            protected void onLayout(int x, int y) {
+            }
+        });
              Network n = new Network()) {
             n.getClient().send(new PString("Hello"));
             w.display();

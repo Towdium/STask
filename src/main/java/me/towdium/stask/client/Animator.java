@@ -5,6 +5,7 @@ import me.towdium.stask.utils.Tickable;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 @ParametersAreNonnullByDefault
 public class Animator implements Tickable {
     private List<Entry> entries = new LinkedList<>();
+    private List<Runnable> pending = new ArrayList<>();
 
     @Override
     public void tick() {
@@ -27,6 +29,8 @@ public class Animator implements Tickable {
             i.tick();
             if (i.finished) it.remove();
         }
+        for (Runnable i : pending) i.run();
+        pending.clear();
     }
 
     public Entry add(float x1, float x2, long mills,
@@ -42,7 +46,7 @@ public class Animator implements Tickable {
         return add(x1, x2, mills, func, clbk, null);
     }
 
-    public static class Entry implements Tickable {
+    public class Entry implements Tickable {
         float x1, x2;
         long start, duration;
         boolean finished;
@@ -68,7 +72,7 @@ public class Animator implements Tickable {
             if (diff > duration) {
                 finished = true;
                 callback.accept(x2);
-                if (finish != null) finish.run();
+                if (finish != null) pending.add(finish);
             } else {
                 float progress = function.apply(diff / (float) duration);
                 callback.accept(x1 * (1 - progress) + x2 * progress);

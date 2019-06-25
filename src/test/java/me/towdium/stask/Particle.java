@@ -14,7 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class Particle {
     public static void main(String[] args) {
-        Page.Simple root = new Page.Simple();
+        Page.Impl root = new Page.Impl();
         root.put(new WParticle(), 0, 0);
 
         try (Window w = new Window("Render", root)) {

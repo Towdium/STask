@@ -2,7 +2,6 @@ package me.towdium.stask.utils;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -23,8 +22,7 @@ public class Cache<K, V> {
         V ret = data.get(key);
         if (ret == null) {
             ret = generator.apply(key);
-            Objects.requireNonNull(ret);
-            data.put(key, ret);
+            if (ret != null) data.put(key, ret);
         }
         return ret;
     }

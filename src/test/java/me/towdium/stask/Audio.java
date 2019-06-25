@@ -14,7 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class Audio {
     public static void main(String[] args) throws InterruptedException {
-        try (Window w = new Window("Audio", new Page.Simple());
+        try (Window w = new Window("Audio", new Page.Impl());
              Speaker s = new Speaker()) {
             Log.client.setLevel(Log.Priority.TRACE);
             Speaker.Source a = s.source();

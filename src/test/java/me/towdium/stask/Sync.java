@@ -43,7 +43,7 @@ public class Sync {
     }
 
     public void run() {
-        Page.Simple s = new Page.Simple();
+        Page.Impl s = new Page.Impl();
         s.put(test, 0, 0);
         try (Window w = new Window("Sync", s);
              Network n = new Network()) {

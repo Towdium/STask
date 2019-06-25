@@ -19,7 +19,7 @@ import java.util.IdentityHashMap;
 @ParametersAreNonnullByDefault
 public class Render {
     public static void main(String[] args) {
-        Page.Simple root = new Page.Simple();
+        Page.Impl root = new Page.Impl();
         root.put((p, m) -> {
             try (Painter.SMatrix matrix = p.matrix();
                  Painter.State ignore = p.color(0xFFAA00)) {

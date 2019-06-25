@@ -20,7 +20,7 @@ public class Resize {
         }
     }
 
-    static class Impl extends Page.Simple {
+    static class Impl extends Page.Impl {
         @Override
         protected void onLayout(int x, int y) {
             clear();

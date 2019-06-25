@@ -19,7 +19,7 @@ public class WPanel extends WArea.Impl {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(0x444444)) {
+        try (Painter.State ignore = p.color(0x222222)) {
             p.drawRect(0, 0, x, y);
         }
     }

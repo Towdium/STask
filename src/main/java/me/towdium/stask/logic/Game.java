@@ -1,10 +1,12 @@
 package me.towdium.stask.logic;
 
+import com.google.gson.Gson;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Tickable;
+import me.towdium.stask.utils.Utilities;
 import org.joml.Vector2i;
 
 import java.util.*;
@@ -15,10 +17,10 @@ import java.util.*;
  */
 public class Game implements Tickable {
     static final float SPEED = 0.1f;
+    Tutorial tutorial;
     Cluster cluster;
     Graph graph;
     Allocation allocation;
-    Policy policy;
     History history = new History();
     Map<Processor, Status> processors = new HashMap<>();
     Map<Comm, Processor> output = new HashMap<>();
@@ -26,12 +28,15 @@ public class Game implements Tickable {
     Map<Task, Processor> executing = new HashMap<>();
     boolean running = false;
 
-    public Game(Cluster c, Graph g, Allocation a, Policy p) {
-        this.cluster = c;
-        this.graph = g;
-        this.allocation = a;
-        this.policy = p;
-        for (Processor i : c.processors.values())
+    public Game(String id) {
+        String json = Utilities.readString("/games/" + id + ".json");
+        Gson gson = new Gson();
+        Pojo.Game pojo = gson.fromJson(json, Pojo.Game.class);
+        cluster = new Cluster(pojo.cluster);
+        graph = new Graph(pojo.graph);
+        tutorial = Tutorial.get(pojo.tutorial);
+        allocation = new Allocation();
+        for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
     }
 
@@ -96,17 +101,11 @@ public class Game implements Tickable {
         return history;
     }
 
-    public static class Policy {
-        boolean multipleComms = false;
-        boolean immediateComms = false;
-        boolean parallelComms = true;
-
-        public boolean available(Status s) {
-            if (immediateComms) return true;
-            if (s.working == null || parallelComms)
-                return multipleComms || s.comms.isEmpty();
-            else return false;
-        }
+    public boolean available(Game.Status s) {
+        if (cluster.policy.immediate) return true;
+        if (s.working == null || cluster.policy.background)
+            return cluster.policy.multiple || s.comms.isEmpty();
+        else return false;
     }
 
     public class Status {
@@ -151,9 +150,9 @@ public class Game implements Tickable {
             if (input.contains(c) || src == processor) return true;
 
             if (!comms.containsKey(c)) {
-                if (src != null && policy.available(this)) {
+                if (src != null && available(this)) {
                     Status s = processors.get(src);
-                    if (policy.available(s)) {
+                    if (available(s)) {
                         s.comms.put(c, 0f);
                         comms.put(c, 0f);
                     }

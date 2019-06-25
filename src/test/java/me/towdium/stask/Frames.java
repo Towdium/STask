@@ -17,7 +17,7 @@ public class Frames {
     @SuppressWarnings("unused")
     public static void main(String[] args) {
         Log.client.setLevel(Log.Priority.TRACE);
-        Page.Simple root = new Page.Simple();
+        Page.Impl root = new Page.Impl();
         root.put(new WButtonText(100, 50, "5").setListener(i -> Utilities.sleep(5)), 10, 10);
         root.put(new WButtonText(100, 50, "10").setListener(i -> Utilities.sleep(10)), 10, 120);
         root.put(new WButtonText(100, 50, "20").setListener(i -> Utilities.sleep(20)), 10, 230);

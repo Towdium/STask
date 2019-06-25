@@ -1,5 +1,8 @@
 package me.towdium.stask.logic;
 
+import com.google.gson.Gson;
+import me.towdium.stask.utils.Utilities;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
@@ -11,11 +14,16 @@ import java.util.*;
 public class Cluster {
     Map<String, Processor> processors = new HashMap<>();
     List<Processor> layout = new ArrayList<>();
+    Policy policy;
     public static final float MULTIPLIER = 100f;
 
     int comm;
 
-    public Cluster(Pojo.Cluster pojo) {
+    public Cluster(String id) {
+        String json = Utilities.readString("/clusters/" + id + ".json");
+        Gson gson = new Gson();
+        Pojo.Cluster pojo = gson.fromJson(json, Pojo.Cluster.class);
+        policy = new Policy(pojo.policy.multiple, pojo.policy.immediate, pojo.policy.background);
         comm = pojo.comm;
         pojo.processors.forEach((s, p) -> {
             Processor tmp = new Processor();
@@ -76,6 +84,18 @@ public class Cluster {
         @Override
         public String toString() {
             return name;
+        }
+    }
+
+    public static class Policy {
+        boolean multiple;
+        boolean immediate;
+        boolean background;
+
+        public Policy(boolean multiple, boolean immediate, boolean background) {
+            this.multiple = multiple;
+            this.immediate = immediate;
+            this.background = background;
         }
     }
 }

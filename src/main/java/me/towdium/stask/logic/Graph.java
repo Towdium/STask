@@ -1,5 +1,8 @@
 package me.towdium.stask.logic;
 
+import com.google.gson.Gson;
+import me.towdium.stask.utils.Utilities;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
@@ -13,7 +16,10 @@ public class Graph {
     Task root;
     List<List<Task>> layout = new ArrayList<>();
 
-    public Graph(Pojo.Graph pojo) {
+    public Graph(String id) {
+        String json = Utilities.readString("/graphs/" + id + ".json");
+        Gson gson = new Gson();
+        Pojo.Graph pojo = gson.fromJson(json, Pojo.Graph.class);
         pojo.tasks.forEach((s, t) -> {
             Task tmp = new Task();
             tmp.time = t.time;

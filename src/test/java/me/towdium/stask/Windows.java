@@ -1,7 +1,7 @@
 package me.towdium.stask;
 
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Page.Simple;
+import me.towdium.stask.client.Page.Impl;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widgets.WDrag;
 import me.towdium.stask.client.Window;
@@ -40,7 +40,7 @@ public class Windows {
     }
 
     public static Page create() {
-        Simple i = new Simple();
+        Impl i = new Impl();
         i.put(new Drag(false), 20, 20);
         i.put(new Drag(true), 90, 20);
         i.put(new Drag(false), 160, 20);

@@ -25,10 +25,27 @@ public class Pojo {
         Map<String, Processor> processors;
         List<String> layout;
         int comm;
+        Policy policy;
+    }
+
+    public static class Policy {
+        boolean multiple, immediate, background;
     }
 
     public static class Processor {
         float speed;
         Map<String, Float> speedup;
+    }
+
+    public static class Game {
+        String cluster, graph, tutorial;
+    }
+
+    public static class Levels {
+        List<Section> sections;
+    }
+
+    public static class Section {
+        List<String> levels;
     }
 }
