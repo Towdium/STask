@@ -30,6 +30,11 @@ public class WPanel extends WArea.Impl {
     }
 
     @Override
+    public void onRefresh(Vector2i mouse) {
+        if (onTest(mouse)) WFocus.clear();
+    }
+
+    @Override
     public boolean onClick(@Nullable Vector2i mouse, boolean left) {
         return onTest(mouse);
     }

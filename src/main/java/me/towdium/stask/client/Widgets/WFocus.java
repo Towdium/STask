@@ -24,6 +24,11 @@ public abstract class WFocus implements WArea {
         return focuses.containsKey(o);
     }
 
+    public static void clear() {
+        owners.clear();
+        focuses.clear();
+    }
+
     private static void put(WFocus w, Object f) {
         remove(w);
         owners.put(w, f);

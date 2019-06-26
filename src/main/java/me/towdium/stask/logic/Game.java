@@ -7,6 +7,7 @@ import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.Utilities;
+import me.towdium.stask.utils.wrap.Trio;
 import org.joml.Vector2i;
 
 import java.util.*;
@@ -101,18 +102,20 @@ public class Game implements Tickable {
         return history;
     }
 
-    public boolean available(Game.Status s) {
+    public boolean available(Game.Status s, Game.Status d) {
         if (cluster.policy.immediate) return true;
-        if (s.working == null || cluster.policy.background)
-            return cluster.policy.multiple || s.comms.isEmpty();
-        else return false;
+        if (!cluster.policy.background && (s.working != null || d.working != null)) return false;
+        if (!cluster.policy.multiple && (!s.comms.isEmpty() || !d.comms.isEmpty())) return false;
+        for (Trio<Float, Boolean, Processor> i : s.comms.values())
+            if (!i.b && i.c == d.processor) return false;
+        return true;
     }
 
     public class Status {
         Processor processor;
         Task working;
         float progress;
-        Map<Comm, Float> comms = new HashMap<>();
+        Map<Comm, Trio<Float, Boolean, Processor>> comms = new HashMap<>();  // progress, input(true), companion
         Set<Comm> input = new HashSet<>();
 
         public Status(Processor processor) {
@@ -126,7 +129,7 @@ public class Game implements Tickable {
             input.clear();
         }
 
-        public void tickPre() {  // todo rework for parallel comm
+        public void tickPre() {
             List<Allocation.Node> ts = allocation.getTasks(processor);
             for (int i = 0; i < ts.size(); i++) {
                 Allocation.Node n = ts.get(i);
@@ -140,22 +143,22 @@ public class Game implements Tickable {
                 if (working == null && i == 0 && ready) {
                     working = n.task;
                     executing.put(working, processor);
-                    allocation.remove(working);
+                    allocation.remove(processor, 0);
+                    i--;
                 }
             }
         }
 
         private boolean attempt(Comm c) {
             Processor src = output.get(c);
-            if (input.contains(c) || src == processor) return true;
+            if (input.contains(c) || src == processor || cluster.policy.immediate) return true;
 
             if (!comms.containsKey(c)) {
-                if (src != null && available(this)) {
-                    Status s = processors.get(src);
-                    if (available(s)) {
-                        s.comms.put(c, 0f);
-                        comms.put(c, 0f);
-                    }
+                if (src == null) return false;
+                Status s = processors.get(src);
+                if (available(s, this)) {
+                    s.comms.put(c, new Trio<>(0f, false, processor));
+                    comms.put(c, new Trio<>(0f, true, s.processor));
                 }
             }
             return false;
@@ -174,15 +177,15 @@ public class Game implements Tickable {
                     progress = 0;
                 }
             }
-            Iterator<Map.Entry<Comm, Float>> it = comms.entrySet().iterator();
+            Iterator<Map.Entry<Comm, Trio<Float, Boolean, Processor>>> it = comms.entrySet().iterator();
             while (it.hasNext()) {
                 ret = true;
-                Map.Entry<Comm, Float> i = it.next();
-                float p = i.getValue() + SPEED / i.getKey().size * cluster.comm;
+                Map.Entry<Comm, Trio<Float, Boolean, Processor>> i = it.next();
+                float p = i.getValue().a + SPEED / i.getKey().size * cluster.comm;
                 if (p > 1) {
                     input.add(i.getKey());
                     it.remove();
-                } else i.setValue(p);
+                } else i.getValue().a = p;
             }
             return ret;
         }
@@ -199,7 +202,7 @@ public class Game implements Tickable {
             return progress;
         }
 
-        public Map<Comm, Float> getComms() {
+        public Map<Comm, Trio<Float, Boolean, Processor>> getComms() {
             return comms;
         }
     }

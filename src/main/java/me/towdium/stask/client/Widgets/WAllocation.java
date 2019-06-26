@@ -370,6 +370,11 @@ public class WAllocation extends WContainer {
                     p.drawRect(0, 0, WIDTH, HEIGHT);
                 }
                 p.drawTextRight(comm.getSrc().getName(), WIDTH - 4, 2 + Painter.fontAscent);
+                if (WFocus.isFocused(comm)) {
+                    try (Painter.State ignore = p.color(0xAAFFFFFF)) {
+                        p.drawRect(0, 0, WIDTH, HEIGHT);
+                    }
+                }
             }
         }
     }

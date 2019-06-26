@@ -4,6 +4,7 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
+import me.towdium.stask.utils.wrap.Trio;
 import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -47,12 +48,12 @@ public class WGame extends WContainer {
             try (Painter.State ignore = p.color(0xAA2222)) {
                 p.drawRect(0, HEIGHT / 3, (int) (WIDTH * status.getProgress()), HEIGHT / 3);
             }
-            Iterator<Float> it = status.getComms().values().iterator();
+            Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
             for (int i = 0; i < 2; i++) {
                 if (it.hasNext()) {
-                    Float e = it.next();
+                    Trio<Float, Boolean, Cluster.Processor> e = it.next();
                     try (Painter.State ignore = p.color(0x2222AA)) {
-                        p.drawRect(0, HEIGHT / 3 * 2 + i * HEIGHT / 6, (int) (WIDTH * e), HEIGHT / 3);
+                        p.drawRect(0, HEIGHT / 3 * 2 + i * HEIGHT / 6, (int) (WIDTH * e.a), HEIGHT / 3);
                     }
                 }
             }
