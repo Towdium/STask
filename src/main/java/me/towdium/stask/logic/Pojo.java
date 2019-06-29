@@ -38,7 +38,9 @@ public class Pojo {
     }
 
     public static class Game {
-        String cluster, graph, tutorial;
+        String cluster, tutorial;
+        List<Integer> times;
+        List<String> graphs;
     }
 
     public static class Levels {

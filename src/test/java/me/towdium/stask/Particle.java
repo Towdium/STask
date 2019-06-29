@@ -42,11 +42,11 @@ public class Particle {
                     double ran = Math.random() * 2 * Math.PI;
                     double x = Math.sin(ran);
                     double y = Math.cos(ran);
-                    animator.add(0, 100, 2000, f,
+                    animator.addColor(0, 100, 2000, f,
                             j -> c.put(w, (int) (x * j) + mouse.x, (int) (y * j) + mouse.y),
                             () -> remove(w));
                 }
-                animator.add(0, 1, 2000, new Animator.FLinear(), i -> c.transparency = i, () -> remove(c));
+                animator.addColor(0, 1, 2000, new Animator.FLinear(), i -> c.transparency = i, () -> remove(c));
             }
             return false;
         }

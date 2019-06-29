@@ -19,12 +19,12 @@ public class Levels {
         Pojo.Levels l = gson.fromJson(Utilities.readString("/general/levels.json"), Pojo.Levels.class);
         for (Pojo.Section s : l.sections) {
             Section tmp = new Section();
-            for (String g : s.levels) tmp.levels.add(new Game(g));
+            tmp.levels.addAll(s.levels);
             sections.add(tmp);
         }
     }
 
     public static class Section {
-        public List<Game> levels = new ArrayList<>();
+        public List<String> levels = new ArrayList<>();
     }
 }

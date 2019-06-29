@@ -4,6 +4,7 @@ import me.towdium.stask.utils.Cache;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -13,18 +14,29 @@ import java.util.function.Predicate;
 public class Event {
     @SuppressWarnings("unchecked")
     public static class Bus {
-        Cache<Class, List<Predicate>> subs = new Cache<>(i -> new ArrayList<>());
+        Cache<Class, List<Consumer>> subs = new Cache<>(i -> new ArrayList<>());
+        Cache<Class, List<Predicate>> gates = new Cache<>(i -> new ArrayList<>());
 
         public boolean post(Event e) {
-            List<Predicate> l = subs.get(e.getClass());
-            if (l == null) return true;
-            for (Predicate c : l)
-                if (c.test(e)) return false;
+            List<Predicate> ps = gates.get(e.getClass());
+            if (ps != null) {
+                for (Predicate p : ps) {
+                    if (p.test(e)) return false;
+                }
+            }
+            List<Consumer> cs = subs.get(e.getClass());
+            if (cs != null) {
+                for (Consumer c : cs) c.accept(e);
+            }
             return true;
         }
 
-        public <T extends Event> void subscribe(Class<T> e, Predicate<T> c) {
+        public <T extends Event> void subscribe(Class<T> e, Consumer<T> c) {
             subs.get(e).add(c);
+        }
+
+        public <T extends Event> void gate(Class<T> e, Predicate<T> p) {
+            gates.get(e).add(p);
         }
     }
 }

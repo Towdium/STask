@@ -3,7 +3,6 @@ package me.towdium.stask.client.pages;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Widgets.*;
 import me.towdium.stask.logic.Game;
-import me.towdium.stask.utils.time.Timer;
 import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,7 +16,6 @@ public class PGame extends Page.Impl {
     PWrapper root;
     Page parent;
     Game game;
-    Timer timer = new Timer(1 / 20f, i -> game.tick());
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
@@ -28,13 +26,13 @@ public class PGame extends Page.Impl {
     @Override
     public void onRefresh(Vector2i mouse) {
         super.onRefresh(mouse);
-        timer.tick();
+        game.tick();
     }
 
     @Override
     protected void onLayout(int x, int y) {
         clear();
-        put(new WGraph(400, y - 200, game), 200, 0);
+        put(new WGraphs(game, x - 300), 300, 0);
         put(new WAllocation(x - 100, 100, game), 0, y - 200);
         put(new WGame(game), 100, 100);
         put(new WHistory(x - 100, 100, game), 0, y - 100);

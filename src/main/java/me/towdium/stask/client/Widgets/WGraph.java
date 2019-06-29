@@ -21,11 +21,16 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
     Game game;
+    Graph graph;
     Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
+    int width;
 
-    public WGraph(int x, int y, Game g) {
+    public WGraph(int y, Game g, Graph r) {
         game = g;
-        List<List<Task>> layout = g.getGraph().getLayout();
+        graph = r;
+        List<List<Task>> layout = r.getLayout();
+        int max = layout.stream().mapToInt(List::size).max().orElse(0);
+        width = max * (WTask.WIDTH + 24) + 24;
         int ys = layout.size();
         int yd = 36;
         int yo = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
@@ -33,11 +38,11 @@ public class WGraph extends WContainer {
             List<Task> row = layout.get(i);
             int xs = row.size();
             int xd = 24;
-            int xo = (x - xs * (WTask.WIDTH + xd) + xd) / 2;
+            int xo = (width - xs * (WTask.WIDTH + xd) + xd) / 2;
             for (int j = 0; j < xs; j++) {
                 Task t = row.get(j);
                 if (t == null) continue;
-                WTask w = new WTask(t, game.getAllocation(), game);
+                WTask w = new WTask(t, game);
                 tasks.put(t, w);
                 put(w, xo + j * (xd + WTask.WIDTH), yo + i * (yd + WTask.HEIGHT));
             }
@@ -79,5 +84,9 @@ public class WGraph extends WContainer {
                 p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 12, 1 + Painter.fontAscent);
             }
         }
+    }
+
+    public int getWidth() {
+        return width;
     }
 }

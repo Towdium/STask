@@ -15,8 +15,14 @@ public class Graph {
     Map<String, Task> tasks = new HashMap<>();
     Task root;
     List<List<Task>> layout = new ArrayList<>();
+    Event.Bus bus;
 
     public Graph(String id) {
+        this(id, new Event.Bus());
+    }
+
+    public Graph(String id, Event.Bus b) {
+        bus = b;
         String json = Utilities.readString("/graphs/" + id + ".json");
         Gson gson = new Gson();
         Pojo.Graph pojo = gson.fromJson(json, Pojo.Graph.class);
@@ -67,6 +73,10 @@ public class Graph {
         return tasks.get(id);
     }
 
+    public Collection<Task> getTasks() {
+        return tasks.values();
+    }
+
     public static class Work {
     }
 
@@ -93,12 +103,16 @@ public class Graph {
         }
     }
 
-    public static class Task extends Work {
+    public class Task extends Work {
         Map<Task, Comm> after = new LinkedHashMap<>();
         Map<Task, Comm> before = new LinkedHashMap<>();
         String name;
         int time;
         String type;
+
+        public Graph getGraph() {
+            return Graph.this;
+        }
 
         public String getName() {
             return name;

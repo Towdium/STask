@@ -1,4 +1,13 @@
 {
-  "graph": "demo",
-  "cluster": "demo"
+  "graphs": [
+    "simple",
+    "demo",
+    "simple"
+  ],
+  "cluster": "demo",
+  "times": [
+    0,
+    2,
+    4
+  ]
 }

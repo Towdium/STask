@@ -25,7 +25,7 @@ public class PWrapper implements Page {
         Runnable add = () -> {
             page = s.get();
             page.onResize(x, y);
-            animator.add(0, 1, 200, new Animator.FBezier(1, 0), i -> transparency = i);
+            animator.addFloat(0, 1, 500, new Animator.FBezier(1, 0), i -> transparency = i);
         };
         Runnable remove = () -> {
             page.onRemove();
@@ -33,7 +33,7 @@ public class PWrapper implements Page {
         };
 
         if (page != null)
-            animator.add(1, 0, 200, new Animator.FBezier(1, 0),
+            animator.addFloat(1, 0, 500, new Animator.FBezier(1, 0),
                     i -> transparency = i, remove);
         else add.run();
     }

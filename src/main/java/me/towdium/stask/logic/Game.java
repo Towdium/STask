@@ -4,39 +4,50 @@ import com.google.gson.Gson;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.logic.events.EGraphAppend;
+import me.towdium.stask.logic.events.EGraphComplete;
 import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.Utilities;
+import me.towdium.stask.utils.time.Timer;
 import me.towdium.stask.utils.wrap.Trio;
 import org.joml.Vector2i;
 
 import java.util.*;
+
 
 /**
  * Author: Towdium
  * Date: 10/06/19
  */
 public class Game implements Tickable {
-    static final float SPEED = 0.1f;
+    static final int RATE = 20;
+    static final float SPEED = 1f / RATE;
     Tutorial tutorial;
     Cluster cluster;
-    Graph graph;
     Allocation allocation;
     History history = new History();
     Map<Processor, Status> processors = new HashMap<>();
     Map<Comm, Processor> output = new HashMap<>();
     Set<Task> finished = new HashSet<>();
     Map<Task, Processor> executing = new HashMap<>();
+    SortedMap<Integer, Graph> graphs = new TreeMap<>();
+    Event.Bus bus = new Event.Bus();
+    int count = 0;
+    boolean statik;
     boolean running = false;
+    Timer timer = new Timer(SPEED, i -> update());
 
     public Game(String id) {
         String json = Utilities.readString("/games/" + id + ".json");
         Gson gson = new Gson();
         Pojo.Game pojo = gson.fromJson(json, Pojo.Game.class);
         cluster = new Cluster(pojo.cluster);
-        graph = new Graph(pojo.graph);
         tutorial = Tutorial.get(pojo.tutorial);
         allocation = new Allocation();
+        statik = pojo.times == null;
+        for (int i = 0; i < pojo.graphs.size(); i++)
+            graphs.put(statik ? 0 : pojo.times.get(i), new Graph(pojo.graphs.get(i)));
         for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
     }
@@ -45,8 +56,8 @@ public class Game implements Tickable {
         return cluster;
     }
 
-    public Graph getGraph() {
-        return graph;
+    public Collection<Graph> getGraphs() {
+        return statik ? graphs.values() : Collections.emptyList();
     }
 
     public Allocation getAllocation() {
@@ -89,13 +100,28 @@ public class Game implements Tickable {
 
     @Override
     public void tick() {
+        timer.tick();
+    }
+
+    public Event.Bus getBus() {
+        return bus;
+    }
+
+    private void update() {
         if (!running) return;
+        if (count % RATE == 0) {
+            int t = count / RATE;
+            SortedMap<Integer, Graph> m = graphs.tailMap(t);
+            m = m.headMap(t + 1);
+            for (Graph g : m.values()) bus.post(new EGraphAppend(g));
+        }
         boolean valid = false;
         for (Status i : processors.values()) i.tickPre();
         history.update();
         for (Status i : processors.values())
             if (i.tickPost()) valid = true;
-        if (!valid) running = false;
+        if (!valid && statik) running = false;
+        count++;
     }
 
     public History getHistory() {
@@ -125,6 +151,7 @@ public class Game implements Tickable {
         public void reset() {
             working = null;
             progress = 0;
+            count = 0;
             comms.clear();
             input.clear();
         }
@@ -173,6 +200,15 @@ public class Game implements Tickable {
                     for (Comm i : working.getBefore().values()) output.put(i, processor);
                     finished.add(working);
                     executing.remove(working);
+                    Graph g = working.getGraph();
+                    boolean complete = true;
+                    for (Task t : g.getTasks()) {
+                        if (!finished.contains(t)) {
+                            complete = false;
+                            break;
+                        }
+                    }
+                    if (complete) bus.post(new EGraphComplete(g));
                     working = null;
                     progress = 0;
                 }
@@ -209,7 +245,6 @@ public class Game implements Tickable {
 
     public class History {
         Cache<Processor, Map<Graph.Work, Vector2i>> records = new Cache<>(i -> new HashMap<>());
-        int count = 0;
 
         public void update() {
             processors.forEach((p, s) -> {
@@ -226,7 +261,6 @@ public class Game implements Tickable {
                     } else record.put(i, new Vector2i(count, count + 1));
                 }
             });
-            count++;
         }
 
         public Map<Graph.Work, Vector2i> getRecord(Processor p) {
@@ -235,7 +269,6 @@ public class Game implements Tickable {
 
         public void reset() {
             records.clear();
-            count = 0;
         }
     }
 }

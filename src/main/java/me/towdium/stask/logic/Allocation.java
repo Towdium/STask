@@ -16,6 +16,15 @@ public class Allocation {
     Cache<Processor, List<Node>> processors = new Cache<>(i -> new TreeList<>());
     Map<Task, Processor> task2processor = new HashMap<>();
     Map<Task, Node> task2node = new HashMap<>();
+    Event.Bus bus;
+
+    public Allocation(Game g) {
+        bus = g.getBus();
+    }
+
+    public Allocation() {
+        bus = new Event.Bus();
+    }
 
     public void allocate(Task t, Processor p) {
         Node n = new Node(t);

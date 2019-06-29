@@ -1,5 +1,6 @@
 package me.towdium.stask.client.Widgets;
 
+import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Game;
@@ -19,9 +20,13 @@ public class WTask extends WCompose {
     public static final int HEIGHT = 56;
     Graph.Task task;
     Allocation allocation;
+    Animator animator = new Animator();
+    Animator.Entry entry = null;
     Game game;
+    int color;
+    State state;
 
-    public WTask(Graph.Task t, Allocation a, Game g) {
+    public WTask(Graph.Task t, Game g) {
         compose(new WFocus.Impl(WIDTH, HEIGHT) {
             @Nullable
             @Override
@@ -42,11 +47,13 @@ public class WTask extends WCompose {
             }
         });
         task = t;
-        allocation = a;
+        allocation = g.getAllocation();
         game = g;
+        state = State.DEFAULT;
+        color = state.color;
     }
 
-    public static void drawTask(Painter p, Graph.Task t, State s, boolean highlight) {
+    public static void drawTask(Painter p, Graph.Task t, int color, boolean highlight) {
         try (Painter.State ignore = p.color(0x666666)) {
             p.drawRect(0, 0, WTask.WIDTH / 2, WTask.HEIGHT / 2);
         }
@@ -56,7 +63,7 @@ public class WTask extends WCompose {
         try (Painter.State ignore = p.color(0x555555)) {
             p.drawRect(0, WTask.HEIGHT / 2, WTask.WIDTH, WTask.HEIGHT / 2);
         }
-        try (Painter.State ignore = p.color(s.color)) {
+        try (Painter.State ignore = p.color(color)) {
             p.drawRect(0, 0, WTask.WIDTH, HEIGHT);
         }
         if (highlight) {
@@ -72,7 +79,7 @@ public class WTask extends WCompose {
     public static void drawTask(Painter p, Graph.Task t, int x, int y) {
         try (Painter.SMatrix m = p.matrix()) {
             m.translate(x, y);
-            drawTask(p, t, State.DEFAULT, false);
+            drawTask(p, t, State.DEFAULT.color, false);
         }
     }
 
@@ -84,12 +91,24 @@ public class WTask extends WCompose {
         for (Graph.Comm c : task.getBefore().values())
             if (WFocus.isFocused(c)) b = true;
 
-        drawTask(p, task, state(), WFocus.isFocused(task) || b);
+        drawTask(p, task, color, WFocus.isFocused(task) || b);
         if (WDrag.isSending(this) && !WDrag.isReceiving()) {
             try (Painter.State ignore = p.priority(true)) {
                 drawTask(p, task, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2);
             }
         }
+    }
+
+    @Override
+    public void onRefresh(Vector2i mouse) {
+        super.onRefresh(mouse);
+        State s = state();
+        if (s != state) {
+            if (entry != null) entry.cancel();
+            entry = animator.addColor(color, s.color, 500, new Animator.FLinear(), i -> color = i);
+            state = s;
+        }
+        animator.tick();
     }
 
     private State state() {
@@ -101,7 +120,7 @@ public class WTask extends WCompose {
 
     public enum State {
         FINISHED(0xAA228822), ALLOCATED(0xAA226688),
-        EXECUTING(0xAA886622), DEFAULT(0xFF000000);
+        EXECUTING(0xAA886622), DEFAULT(0xFF226688);
 
         int color;
 

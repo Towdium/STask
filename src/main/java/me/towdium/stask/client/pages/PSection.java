@@ -3,6 +3,7 @@ package me.towdium.stask.client.pages;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Widgets.WButtonText;
 import me.towdium.stask.client.Widgets.WPanel;
+import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Levels;
 
 /**
@@ -27,7 +28,7 @@ public class PSection extends Page.Impl {
         for (int i = 0; i < section.levels.size(); i++) {
             int n = i;
             put(new WButtonText(250, 40, "Level " + (i + 1)).setListener(j -> root.display(() ->
-                    new PGame(root, this, section.levels.get(n)))), 20, 20 + 60 * i);
+                    new PGame(root, this, new Game(section.levels.get(n))))), 20, 20 + 60 * i);
         }
         put(new WButtonText(250, 40, "back").setListener(i -> root.display(() -> parent)), 20, y - 60);
     }
