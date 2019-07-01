@@ -16,11 +16,13 @@ public class PGame extends Page.Impl {
     PWrapper root;
     Page parent;
     Game game;
+    WGraphs graphs;
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
         parent = p;
         game = g;
+        graphs = new WGraphs(game, 0);
     }
 
     @Override
@@ -32,9 +34,10 @@ public class PGame extends Page.Impl {
     @Override
     protected void onLayout(int x, int y) {
         clear();
-        put(new WGraphs(game, x - 300), 300, 0);
+        graphs.setX(x - 300);
+        put(graphs, 300, 0);
         put(new WAllocation(x - 100, 100, game), 0, y - 200);
-        put(new WGame(game), 100, 100);
+        put(new WCluster(game), 100, 100);
         put(new WHistory(x - 100, game), 0, y - 100);
         put(new WButtonText(80, 30, "start").setListener(i -> game.start()), x - 100, y - 210);
         put(new WButtonText(80, 30, "reset").setListener(i -> game.reset()), x - 100, y - 170);

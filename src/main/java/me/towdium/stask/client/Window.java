@@ -61,6 +61,7 @@ public class Window extends Closeable implements Tickable {
         this.root = root;
         if (display == null) throw new IllegalStateException("No display found");
         id = GLFW.glfwCreateWindow(1280, 720, title, NULL, NULL);
+        GLFW.glfwSetWindowSizeLimits(id, 1280, 720, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
         timer = new Timer(1f / display.refreshRate(), i -> {
             if (i != 0 && debug) Log.client.trace("Dropping " + i + " frames");

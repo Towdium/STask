@@ -141,7 +141,7 @@ public class WHistory extends WContainer {
         public boolean onClick(@Nullable Vector2i mouse, boolean left) {
             if (super.onClick(mouse, left)) return true;
             else if (mouse == null) return false;
-            else if (Quad.inside(mouse, x, WHistory.HEIGHT)) {
+            else if (!game.isRunning() && Quad.inside(mouse, x, WHistory.HEIGHT)) {
                 List<Graph.Work> ws = new ArrayList<>();
                 widgets.backward((w, v) -> {
                     if (w instanceof Node) {

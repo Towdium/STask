@@ -7,6 +7,7 @@ import me.towdium.stask.client.Animator.FQuadratic;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
+import me.towdium.stask.logic.events.EGameReset;
 import me.towdium.stask.logic.events.EGraphAppend;
 import me.towdium.stask.logic.events.EGraphComplete;
 import me.towdium.stask.utils.wrap.Pair;
@@ -34,12 +35,7 @@ public class WGraphs extends WContainer {
     public WGraphs(Game g, int x) {
         this.x = x;
         game = g;
-        int offset = 0;
-        for (Graph i : g.getGraphs()) {
-            WGraph w = new WGraph(HEIGHT, g, i);
-            put(w, offset, 0);
-            offset += w.getWidth();
-        }
+        reset();
         g.getBus().subscribe(EGraphAppend.class, i -> add.add(i.graph));
         g.getBus().subscribe(EGraphComplete.class, i -> {
             Pair<Float, Float> p = new Pair<>(1f, 1f);
@@ -47,11 +43,21 @@ public class WGraphs extends WContainer {
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.a = j);
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.b = j, () -> remove.add(i.graph));
         });
+        g.getBus().subscribe(EGameReset.class, i -> reset());
+    }
+
+    private void reset() {
+        clear();
+        int offset = 0;
+        for (Graph i : game.getGraphs()) {
+            WGraph w = new WGraph(HEIGHT, game, i);
+            put(w, offset, 0);
+            offset += w.getWidth();
+        }
     }
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-
         super.onDraw(p, mouse);
         for (Map.Entry<WGraph, Pair<Float, Float>> i : temp.entrySet()) {
             try (Painter.State ignore1 = p.color(i.getValue().a);

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.logic.events.EGameReset;
 import me.towdium.stask.logic.events.EGraphAppend;
 import me.towdium.stask.logic.events.EGraphComplete;
 import me.towdium.stask.utils.Cache;
@@ -54,6 +55,10 @@ public class Game implements Tickable {
             processors.put(i, new Status(i));
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     public Cluster getCluster() {
         return cluster;
     }
@@ -95,6 +100,7 @@ public class Game implements Tickable {
         executing.clear();
         history.reset();
         allocation.reset();
+        bus.post(new EGameReset());
     }
 
     public void pause() {

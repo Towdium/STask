@@ -15,10 +15,10 @@ import java.util.Iterator;
  * Date: 10/06/19
  */
 @ParametersAreNonnullByDefault
-public class WGame extends WContainer {
+public class WCluster extends WContainer {
     Game game;
 
-    public WGame(Game game) {
+    public WCluster(Game game) {
         this.game = game;
         int start = 0;
         for (Cluster.Processor i : game.getCluster().getLayout()) {

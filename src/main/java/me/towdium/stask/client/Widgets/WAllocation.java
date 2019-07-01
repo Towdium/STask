@@ -7,6 +7,7 @@ import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Quad;
+import me.towdium.stask.utils.wrap.Wrapper;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 
@@ -102,7 +103,6 @@ public class WAllocation extends WContainer {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
-
             try (Painter.State ignore = p.color(multiplier * 0x444444)) {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
@@ -115,7 +115,10 @@ public class WAllocation extends WContainer {
         @Override
         public void onMove(Vector2i mouse) {
             super.onMove(mouse);
-            index = getIndex(mouse);
+            int temp = getTemp();
+            int total = game.getAllocation().getTasks(processor).size();
+            int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
+            index = Math.max(Math.min(total, pos), temp) - temp;
         }
 
         private void sync() {
@@ -129,9 +132,23 @@ public class WAllocation extends WContainer {
         }
 
         private int getIndex(Vector2i mouse) {
+            int temp = getTemp();
             int total = game.getAllocation().getTasks(processor).size();
             int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
-            return Math.min(total, pos);
+            return Math.max(Math.min(total + temp, pos), temp);
+        }
+
+        private int getTemp() {
+            Wrapper<Integer> i = new Wrapper<>(0);
+            widgets.forward((w, v) -> {
+                if (w instanceof Node) {
+                    Node n = (Node) w;
+                    Processor p = game.getAllocation().getProcessor(n.task);
+                    if (p == null) i.v++;
+                }
+                return false;
+            });
+            return i.v;
         }
 
         class Node extends WCompose implements WArea {
