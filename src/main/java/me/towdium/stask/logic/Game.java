@@ -14,6 +14,7 @@ import me.towdium.stask.utils.wrap.Trio;
 import org.joml.Vector2i;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -31,7 +32,7 @@ public class Game implements Tickable {
     Map<Comm, Processor> output = new HashMap<>();
     Set<Task> finished = new HashSet<>();
     Map<Task, Processor> executing = new HashMap<>();
-    SortedMap<Integer, Graph> graphs = new TreeMap<>();
+    SortedMap<Integer, List<Graph>> graphs = new TreeMap<>();
     Event.Bus bus = new Event.Bus();
     int count = 0;
     boolean statik;
@@ -47,7 +48,8 @@ public class Game implements Tickable {
         allocation = new Allocation();
         statik = pojo.times == null;
         for (int i = 0; i < pojo.graphs.size(); i++)
-            graphs.put(statik ? 0 : pojo.times.get(i), new Graph(pojo.graphs.get(i)));
+            graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
+                    j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
         for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
     }
@@ -57,7 +59,8 @@ public class Game implements Tickable {
     }
 
     public Collection<Graph> getGraphs() {
-        return statik ? graphs.values() : Collections.emptyList();
+        return statik ? graphs.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList()) : Collections.emptyList();
     }
 
     public Allocation getAllocation() {
@@ -111,9 +114,10 @@ public class Game implements Tickable {
         if (!running) return;
         if (count % RATE == 0) {
             int t = count / RATE;
-            SortedMap<Integer, Graph> m = graphs.tailMap(t);
+            SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
             m = m.headMap(t + 1);
-            for (Graph g : m.values()) bus.post(new EGraphAppend(g));
+            m.values().stream().flatMap(Collection::stream)
+                    .forEach(i -> bus.post(new EGraphAppend(i)));
         }
         boolean valid = false;
         for (Status i : processors.values()) i.tickPre();

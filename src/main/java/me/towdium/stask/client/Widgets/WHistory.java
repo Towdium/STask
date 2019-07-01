@@ -4,10 +4,13 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
+import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +26,7 @@ public class WHistory extends WContainer {
     Game game;
     Map<Cluster.Processor, Rail> processors = new HashMap<>();
 
-    public WHistory(int x, int y, Game g) {
+    public WHistory(int x, Game g) {
         game = g;
         List<Cluster.Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
@@ -34,13 +37,86 @@ public class WHistory extends WContainer {
         }
     }
 
+    private void overlay(Rail r, int x, List<Graph.Work> ws) {
+        Vector2i v = find(r);
+        Overlay o = new Overlay(ws);
+        put(o, Math.max(x - o.x / 2, 0), v.y - o.y);
+    }
+
+    class Overlay extends WContainer {
+        static final int MARGIN = 10;
+        int x, y;
+        WPanel panel;
+
+        public Overlay(List<Graph.Work> ws) {
+            x = Node.WIDTH + 2 * MARGIN;
+            y = ws.size() * Node.HEIGHT + 2 * MARGIN;
+            put(panel = new WPanel(x, y), 0, 0);
+            for (int i = 0; i < ws.size(); i++) put(new Node(ws.get(i)), MARGIN, MARGIN + i * Node.HEIGHT);
+        }
+
+        @Override
+        public boolean onPress(@Nullable Vector2i mouse, boolean left) {
+            if (!panel.onTest(mouse)) WHistory.this.remove(this);
+            return super.onPress(mouse, left);
+        }
+
+        @Override
+        public boolean onKey(int code) {
+            if (code == GLFW.GLFW_KEY_ESCAPE) {
+                WHistory.this.remove(this);
+                return true;
+            } else return super.onKey(code);
+        }
+
+        class Node extends WFocus.Impl {
+            public static final int WIDTH = 170;
+            public static final int HEIGHT = 28;
+            Graph.Work work;
+
+            public Node(Graph.Work work) {
+                super(WIDTH, HEIGHT);
+                this.work = work;
+            }
+
+            @Override
+            public void onDraw(Painter p, Vector2i mouse) {
+                super.onDraw(p, mouse);
+                try (Painter.State ignore = p.color(0x666666)) {
+                    p.drawRect(0, 0, WIDTH, HEIGHT);
+                }
+                if (work instanceof Graph.Task) {
+                    Graph.Task t = (Graph.Task) work;
+                    p.drawTextRight(t.getName(), WIDTH - 4, 2 + Painter.fontAscent);
+                } else if (work instanceof Graph.Comm) {
+                    Graph.Comm c = (Graph.Comm) work;
+                    String s = c.getSrc().getName() + " \u25B6 " + c.getDst().getName();
+                    p.drawTextRight(s, WIDTH - 4, 2 + Painter.fontAscent);
+                }
+                if (WFocus.isFocused(work)) {
+                    try (Painter.State ignore = p.color(0xAAFFFFFF)) {
+                        p.drawRect(0, 0, WIDTH, HEIGHT);
+                    }
+                }
+            }
+
+            @Nullable
+            @Override
+            public Object onFocus() {
+                return work;
+            }
+        }
+    }
+
     class Rail extends WContainer {
         Cluster.Processor processor;
         int multiplier;
+        int x;
 
         public Rail(Cluster.Processor p, int x, int m) {
             processor = p;
             multiplier = m;
+            this.x = x;
         }
 
         @Override
@@ -55,11 +131,32 @@ public class WHistory extends WContainer {
 
         @Override
         public void onRefresh(Vector2i mouse) {
-
             clear();
             game.getHistory().getRecord(processor).forEach((w, p) ->
                     put(new Node(w, p.y - p.x), p.x + MARGIN, 0));
             super.onRefresh(mouse);
+        }
+
+        @Override
+        public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+            if (super.onClick(mouse, left)) return true;
+            else if (mouse == null) return false;
+            else if (Quad.inside(mouse, x, WHistory.HEIGHT)) {
+                List<Graph.Work> ws = new ArrayList<>();
+                widgets.backward((w, v) -> {
+                    if (w instanceof Node) {
+                        Node n = (Node) w;
+                        if (!n.onTest(mouse.sub(v, new Vector2i()))) return false;
+                        Graph.Work o = n.onFocus();
+                        if (o != null) ws.add(o);
+                    }
+                    return false;
+                });
+                if (ws.size() > 1) {
+                    overlay(this, mouse.x, ws);
+                    return true;
+                } else return false;
+            } else return false;
         }
 
         class Node extends WFocus.Impl {
