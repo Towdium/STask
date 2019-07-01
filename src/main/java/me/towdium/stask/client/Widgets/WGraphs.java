@@ -5,11 +5,10 @@ import me.towdium.stask.client.Animator.FBezier;
 import me.towdium.stask.client.Animator.FLinear;
 import me.towdium.stask.client.Animator.FQuadratic;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.logic.Event.EGame;
+import me.towdium.stask.logic.Event.EGraph;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
-import me.towdium.stask.logic.events.EGameReset;
-import me.towdium.stask.logic.events.EGraphAppend;
-import me.towdium.stask.logic.events.EGraphComplete;
 import me.towdium.stask.utils.wrap.Pair;
 import org.joml.Vector2i;
 
@@ -36,14 +35,14 @@ public class WGraphs extends WContainer {
         this.x = x;
         game = g;
         reset();
-        g.getBus().subscribe(EGraphAppend.class, i -> add.add(i.graph));
-        g.getBus().subscribe(EGraphComplete.class, i -> {
+        g.getBus().subscribe(EGraph.Append.class, i -> add.add(i.graph));
+        g.getBus().subscribe(EGraph.Complete.class, i -> {
             Pair<Float, Float> p = new Pair<>(1f, 1f);
             temp.put(graphs.get(i.graph), p);
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.a = j);
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.b = j, () -> remove.add(i.graph));
         });
-        g.getBus().subscribe(EGameReset.class, i -> reset());
+        g.getBus().subscribe(EGame.Reset.class, i -> reset());
     }
 
     private void reset() {

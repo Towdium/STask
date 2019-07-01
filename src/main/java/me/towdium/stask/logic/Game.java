@@ -2,11 +2,10 @@ package me.towdium.stask.logic;
 
 import com.google.gson.Gson;
 import me.towdium.stask.logic.Cluster.Processor;
+import me.towdium.stask.logic.Event.EGame;
+import me.towdium.stask.logic.Event.EGraph;
 import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
-import me.towdium.stask.logic.events.EGameReset;
-import me.towdium.stask.logic.events.EGraphAppend;
-import me.towdium.stask.logic.events.EGraphComplete;
 import me.towdium.stask.utils.Cache;
 import me.towdium.stask.utils.Tickable;
 import me.towdium.stask.utils.Utilities;
@@ -100,7 +99,7 @@ public class Game implements Tickable {
         executing.clear();
         history.reset();
         allocation.reset();
-        bus.post(new EGameReset());
+        bus.post(new EGame.Reset());
     }
 
     public void pause() {
@@ -123,7 +122,7 @@ public class Game implements Tickable {
             SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
             m = m.headMap(t + 1);
             m.values().stream().flatMap(Collection::stream)
-                    .forEach(i -> bus.post(new EGraphAppend(i)));
+                    .forEach(i -> bus.post(new EGraph.Append(i)));
         }
         boolean valid = false;
         for (Status i : processors.values()) i.tickPre();
@@ -218,7 +217,7 @@ public class Game implements Tickable {
                             break;
                         }
                     }
-                    if (complete) bus.post(new EGraphComplete(g));
+                    if (complete) bus.post(new EGraph.Complete(g));
                     working = null;
                     progress = 0;
                 }
