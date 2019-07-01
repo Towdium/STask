@@ -1,7 +1,7 @@
 package me.towdium.stask;
 
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.WButtonText;
+import me.towdium.stask.client.widgets.WButtonText;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Utilities;

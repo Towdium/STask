@@ -1,7 +1,7 @@
 package me.towdium.stask;
 
 import me.towdium.stask.client.*;
-import me.towdium.stask.client.Widgets.WContainer;
+import me.towdium.stask.client.widgets.WContainer;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;

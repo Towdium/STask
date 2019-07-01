@@ -3,7 +3,7 @@ package me.towdium.stask;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Page.Impl;
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Widgets.WDrag;
+import me.towdium.stask.client.widgets.WDrag;
 import me.towdium.stask.client.Window;
 import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;

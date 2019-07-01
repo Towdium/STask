@@ -1,9 +1,9 @@
 package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.WButton;
-import me.towdium.stask.client.Widgets.WButtonText;
-import me.towdium.stask.client.Widgets.WPanel;
+import me.towdium.stask.client.widgets.WButton;
+import me.towdium.stask.client.widgets.WButtonText;
+import me.towdium.stask.client.widgets.WPanel;
 import me.towdium.stask.client.Window;
 
 /**

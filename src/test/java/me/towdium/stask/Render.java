@@ -2,9 +2,9 @@ package me.towdium.stask;
 
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Widgets.WContainer;
-import me.towdium.stask.client.Widgets.WDrag;
-import me.towdium.stask.client.Widgets.WOwner;
+import me.towdium.stask.client.widgets.WContainer;
+import me.towdium.stask.client.widgets.WDrag;
+import me.towdium.stask.client.widgets.WOwner;
 import me.towdium.stask.client.Window;
 import org.joml.Vector2i;
 

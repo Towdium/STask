@@ -1,8 +1,8 @@
 package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.WButtonText;
-import me.towdium.stask.client.Widgets.WPanel;
+import me.towdium.stask.client.widgets.WButtonText;
+import me.towdium.stask.client.widgets.WPanel;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Levels;
 

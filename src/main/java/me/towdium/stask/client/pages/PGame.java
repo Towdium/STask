@@ -1,7 +1,7 @@
 package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Widgets.*;
+import me.towdium.stask.client.widgets.*;
 import me.towdium.stask.logic.Game;
 import org.joml.Vector2i;
 

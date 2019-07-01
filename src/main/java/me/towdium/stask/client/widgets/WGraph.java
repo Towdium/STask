@@ -1,4 +1,4 @@
-package me.towdium.stask.client.Widgets;
+package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.logic.Game;
