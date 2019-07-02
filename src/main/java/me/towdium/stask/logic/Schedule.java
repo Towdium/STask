@@ -12,61 +12,57 @@ import java.util.*;
  * Author: Towdium
  * Date: 09/06/19
  */
-public class Allocation {
+public class Schedule {
     Cache<Processor, List<Node>> processors = new Cache<>(i -> new TreeList<>());
-    Map<Task, Processor> task2processor = new HashMap<>();
-    Map<Task, Node> task2node = new HashMap<>();
+    Map<Task, Node> tasks = new HashMap<>();
     Event.Bus bus;
 
-    public Allocation(Game g) {
+    public Schedule(Game g) {
         bus = g.getBus();
     }
 
-    public Allocation() {
+    public Schedule() {
         bus = new Event.Bus();
     }
 
     public void allocate(Task t, Processor p) {
-        Node n = new Node(t);
+        Node n = new Node(t, p);
         processors.get(p).add(n);
-        task2processor.put(t, p);
-        task2node.put(t, n);
+        tasks.put(t, n);
     }
 
     public void allocate(Task t, Processor p, int pos) {
-        Node n = new Node(t);
+        Node n = new Node(t, p);
         processors.get(p).add(pos, n);
-        task2processor.put(t, p);
-        task2node.put(t, n);
+        tasks.put(t, n);
     }
 
     public boolean allocated(Task t) {
-        return task2processor.containsKey(t);
+        return tasks.containsKey(t);
     }
 
     public void remove(Task t) {
-        Processor p = task2processor.get(t);
+        Processor p = tasks.get(t).processor;
         if (p == null) return;
-        Node n = task2node.remove(t);
+        Node n = tasks.remove(t);
         if (n == null) throw new RuntimeException("Internal error");
         processors.get(p).remove(n);
-        task2processor.remove(t);
     }
 
     public void remove(Processor p, int idx) {
         Node n = processors.get(p).remove(idx);
-        task2processor.remove(n.task);
-        task2node.remove(n.task);
+        tasks.remove(n.task);
     }
 
     @Nullable
     public Node getNode(Task t) {
-        return task2node.get(t);
+        return tasks.get(t);
     }
 
     @Nullable
     public Processor getProcessor(Task t) {
-        return task2processor.get(t);
+        Node n = tasks.get(t);
+        return n == null ? null : n.processor;
     }
 
     public List<Node> getTasks(Processor p) {
@@ -75,16 +71,18 @@ public class Allocation {
 
     public void reset() {
         processors.clear();
-        task2processor.clear();
+        tasks.clear();
     }
 
     public static class Node {
         Task task;
+        Processor processor;
         List<Graph.Comm> comms = new ArrayList<>();
 
-        public Node(Task t) {
+        public Node(Task t, Processor p) {
             task = t;
-            comms.addAll(task.after.values());
+            processor = p;
+            comms.addAll(task.predecessor.values());
         }
 
         public Task getTask() {

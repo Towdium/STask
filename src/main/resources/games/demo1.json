@@ -4,7 +4,7 @@
     "demo",
     "simple"
   ],
-  "cluster": "demo",
+  "cluster": "real",
   "times": [
     0,
     2,

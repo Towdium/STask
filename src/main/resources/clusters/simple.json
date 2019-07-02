@@ -1,0 +1,20 @@
+{
+  "comm": 1,
+  "processors": {
+    "a": {
+      "speed": 1,
+      "speedup": {}
+    },
+    "b": {
+      "speed": 1,
+      "speedup": {}
+    }
+  },
+  "layout": [
+    "a",
+    "b"
+  ],
+  "policy": {
+    "immediate": true
+  }
+}

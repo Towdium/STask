@@ -2,9 +2,9 @@ package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
+import me.towdium.stask.logic.Schedule;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -19,7 +19,7 @@ public class WTask extends WCompose {
     public static final int WIDTH = 80;
     public static final int HEIGHT = 56;
     Graph.Task task;
-    Allocation allocation;
+    Schedule schedule;
     Animator animator = new Animator();
     Animator.Entry entry = null;
     Game game;
@@ -47,7 +47,7 @@ public class WTask extends WCompose {
             }
         });
         task = t;
-        allocation = g.getAllocation();
+        schedule = g.getSchedule();
         game = g;
         state = State.DEFAULT;
         color = state.color;
@@ -86,9 +86,9 @@ public class WTask extends WCompose {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         boolean b = false;
-        for (Graph.Comm c : task.getAfter().values())
+        for (Graph.Comm c : task.getPredecessor().values())
             if (WFocus.isFocused(c)) b = true;
-        for (Graph.Comm c : task.getBefore().values())
+        for (Graph.Comm c : task.getSuccessor().values())
             if (WFocus.isFocused(c)) b = true;
 
         drawTask(p, task, color, WFocus.isFocused(task) || b);
@@ -112,9 +112,9 @@ public class WTask extends WCompose {
     }
 
     private State state() {
-        if (allocation.allocated(task)) return State.ALLOCATED;
-        else if (game.finished(task)) return State.FINISHED;
+        if (game.finished(task)) return State.FINISHED;
         else if (game.executing(task)) return State.EXECUTING;
+        else if (schedule.allocated(task)) return State.ALLOCATED;
         else return State.DEFAULT;
     }
 

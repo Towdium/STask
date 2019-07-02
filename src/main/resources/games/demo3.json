@@ -1,0 +1,8 @@
+{
+  "graphs": [
+    "simple",
+    "demo",
+    "simple"
+  ],
+  "cluster": "real"
+}

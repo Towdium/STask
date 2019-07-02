@@ -26,7 +26,7 @@ public class Game implements Tickable {
     static final float SPEED = 1f / RATE;
     Tutorial tutorial;
     Cluster cluster;
-    Allocation allocation;
+    Schedule schedule;
     History history = new History();
     Map<Processor, Status> processors = new HashMap<>();
     Map<Comm, Processor> output = new HashMap<>();
@@ -45,13 +45,17 @@ public class Game implements Tickable {
         Pojo.Game pojo = gson.fromJson(json, Pojo.Game.class);
         cluster = new Cluster(pojo.cluster);
         tutorial = Tutorial.get(pojo.tutorial);
-        allocation = new Allocation();
+        schedule = new Schedule();
         statik = pojo.times == null;
         for (int i = 0; i < pojo.graphs.size(); i++)
             graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
                     j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
         for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
+    }
+
+    public boolean isStatic() {
+        return statik;
     }
 
     public boolean isRunning() {
@@ -67,8 +71,8 @@ public class Game implements Tickable {
                 .collect(Collectors.toList()) : Collections.emptyList();
     }
 
-    public Allocation getAllocation() {
-        return allocation;
+    public Schedule getSchedule() {
+        return schedule;
     }
 
     public Map<Processor, Status> getProcessors() {
@@ -98,7 +102,7 @@ public class Game implements Tickable {
         finished.clear();
         executing.clear();
         history.reset();
-        allocation.reset();
+        schedule.reset();
         bus.post(new EGame.Reset());
     }
 
@@ -117,7 +121,7 @@ public class Game implements Tickable {
 
     private void update() {
         if (!running) return;
-        if (count % RATE == 0) {
+        if (count % RATE == 0 && !statik) {
             int t = count / RATE;
             SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
             m = m.headMap(t + 1);
@@ -166,9 +170,9 @@ public class Game implements Tickable {
         }
 
         public void tickPre() {
-            List<Allocation.Node> ts = allocation.getTasks(processor);
+            List<Schedule.Node> ts = schedule.getTasks(processor);
             for (int i = 0; i < ts.size(); i++) {
-                Allocation.Node n = ts.get(i);
+                Schedule.Node n = ts.get(i);
                 boolean ready = true;
                 for (Comm c : n.comms) {
                     if (!attempt(c)) {
@@ -179,7 +183,7 @@ public class Game implements Tickable {
                 if (working == null && i == 0 && ready) {
                     working = n.task;
                     executing.put(working, processor);
-                    allocation.remove(processor, 0);
+                    schedule.remove(processor, 0);
                     i--;
                 }
             }
@@ -187,7 +191,8 @@ public class Game implements Tickable {
 
         private boolean attempt(Comm c) {
             Processor src = output.get(c);
-            if (input.contains(c) || src == processor || cluster.policy.immediate) return true;
+            if (cluster.policy.immediate && src != null) return true;
+            if (input.contains(c) || src == processor) return true;
 
             if (!comms.containsKey(c)) {
                 if (src == null) return false;
@@ -206,7 +211,7 @@ public class Game implements Tickable {
                 ret = true;
                 progress += SPEED / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
                 if (progress > 1) {
-                    for (Comm i : working.getBefore().values()) output.put(i, processor);
+                    for (Comm i : working.getSuccessor().values()) output.put(i, processor);
                     finished.add(working);
                     executing.remove(working);
                     Graph g = working.getGraph();

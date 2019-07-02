@@ -13,9 +13,10 @@ import java.util.*;
 @ParametersAreNonnullByDefault
 public class Graph {
     Map<String, Task> tasks = new HashMap<>();
-    Task root;
     List<List<Task>> layout = new ArrayList<>();
     Event.Bus bus;
+    List<Task> entries = new ArrayList<>();
+    List<Task> exits = new ArrayList<>();
 
     public Graph(String id) {
         this(id, new Event.Bus());
@@ -38,35 +39,23 @@ public class Graph {
             t.after.forEach((i, j) -> {
                 Task pre = tasks.get(i);
                 Comm c = new Comm(pre, crr, j);
-                crr.after.put(pre, c);
-                pre.before.put(crr, c);
+                crr.predecessor.put(pre, c);
+                pre.successor.put(crr, c);
             });
         });
         pojo.layout.forEach(i -> {
             List<Task> tmp = new ArrayList<>();
             i.forEach(j -> tmp.add(j == null ? null : tasks.get(j)));
-            layout.add(Collections.unmodifiableList(tmp));
+            layout.add(tmp);
         });
-
-        int countA = 0;
-        int countB = 0;
         for (Task t : tasks.values()) {
-            if (t.before.isEmpty()) countB++;
-            if (t.after.isEmpty()) {
-                root = t;
-                countA++;
-            }
-            if (countB > 1) throw new RuntimeException("Multiple end points.");
-            if (countA > 1) throw new RuntimeException("Multiple start points.");
+            if (t.successor.isEmpty()) exits.add(t);
+            if (t.predecessor.isEmpty()) entries.add(t);
         }
     }
 
     public List<List<Task>> getLayout() {
         return Collections.unmodifiableList(layout);
-    }
-
-    public Task getRoot() {
-        return root;
     }
 
     public Task getTask(String id) {
@@ -104,8 +93,8 @@ public class Graph {
     }
 
     public class Task extends Work {
-        Map<Task, Comm> after = new LinkedHashMap<>();
-        Map<Task, Comm> before = new LinkedHashMap<>();
+        Map<Task, Comm> predecessor = new LinkedHashMap<>();
+        Map<Task, Comm> successor = new LinkedHashMap<>();
         String name;
         int time;
         String type;
@@ -126,12 +115,12 @@ public class Graph {
             return type;
         }
 
-        public Map<Task, Comm> getAfter() {
-            return Collections.unmodifiableMap(after);
+        public Map<Task, Comm> getPredecessor() {
+            return Collections.unmodifiableMap(predecessor);
         }
 
-        public Map<Task, Comm> getBefore() {
-            return Collections.unmodifiableMap(before);
+        public Map<Task, Comm> getSuccessor() {
+            return Collections.unmodifiableMap(successor);
         }
     }
 }

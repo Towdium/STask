@@ -1,11 +1,11 @@
 package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Allocation;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.wrap.Wrapper;
 import org.joml.Vector2i;
@@ -24,13 +24,13 @@ import java.util.Objects;
  */
 @ParametersAreNonnullByDefault
 @SuppressWarnings("Duplicates")
-public class WAllocation extends WContainer {
+public class WSchedule extends WContainer {
 
     Game game;
     Overlay overlay = null;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
 
-    public WAllocation(int x, int y, Game g) {
+    public WSchedule(int x, int y, Game g) {
         game = g;
         List<Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
@@ -49,8 +49,8 @@ public class WAllocation extends WContainer {
             }
             return false;
         }
-        Processor p = game.getAllocation().getProcessor(n.task);
-        if (p == null || n.task.getAfter().isEmpty()) return false;
+        Processor p = game.getSchedule().getProcessor(n.task);
+        if (p == null || n.task.getPredecessor().isEmpty()) return false;
         Rail r = processors.get(p);
         Vector2i v1 = find(r);
         Vector2i v2 = r.find(n);
@@ -58,7 +58,7 @@ public class WAllocation extends WContainer {
             remove(overlay);
             overlay = null;
         }
-        Allocation.Node an = game.getAllocation().getNode(n.task);
+        Schedule.Node an = game.getSchedule().getNode(n.task);
         Vector2i v = v1.add(v2, new Vector2i());
         overlay = new Overlay(Objects.requireNonNull(an, "Internal error"));
         put(overlay, v.x + Rail.WIDTH / 2 - overlay.x / 2, v.y - overlay.y);
@@ -80,7 +80,7 @@ public class WAllocation extends WContainer {
                 @Override
                 public void onReceived(Object o) {
                     if (o instanceof Task) {
-                        game.getAllocation().allocate((Task) o, processor, index);
+                        game.getSchedule().allocate((Task) o, processor, index);
                         sync();
                     }
                 }
@@ -116,14 +116,14 @@ public class WAllocation extends WContainer {
         public void onMove(Vector2i mouse) {
             super.onMove(mouse);
             int temp = getTemp();
-            int total = game.getAllocation().getTasks(processor).size();
+            int total = game.getSchedule().getTasks(processor).size();
             int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
             index = Math.max(Math.min(total, pos), temp) - temp;
         }
 
         private void sync() {
             clear();
-            List<Allocation.Node> ts = game.getAllocation().getTasks(processor);
+            List<Schedule.Node> ts = game.getSchedule().getTasks(processor);
             Task t = game.getProcessor(processor).getWorking();
             if (t != null) put(new Node(t, -1), MARGIN, 0);
             for (int i = 0; i < ts.size(); i++)
@@ -133,7 +133,7 @@ public class WAllocation extends WContainer {
 
         private int getIndex(Vector2i mouse) {
             int temp = getTemp();
-            int total = game.getAllocation().getTasks(processor).size();
+            int total = game.getSchedule().getTasks(processor).size();
             int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
             return Math.max(Math.min(total + temp, pos), temp);
         }
@@ -143,7 +143,7 @@ public class WAllocation extends WContainer {
             widgets.forward((w, v) -> {
                 if (w instanceof Node) {
                     Node n = (Node) w;
-                    Processor p = game.getAllocation().getProcessor(n.task);
+                    Processor p = game.getSchedule().getProcessor(n.task);
                     if (p == null) i.v++;
                 }
                 return false;
@@ -162,7 +162,7 @@ public class WAllocation extends WContainer {
                     @Override
                     public Object onStarting() {
                         overlay(null);
-                        game.getAllocation().remove(processor, idx);
+                        game.getSchedule().remove(processor, idx);
                         ghost = Node.this;
                         sync();
                         visible = false;
@@ -171,7 +171,7 @@ public class WAllocation extends WContainer {
 
                     @Override
                     public void onRejected() {
-                        game.getAllocation().allocate(task, processor, idx);
+                        game.getSchedule().allocate(task, processor, idx);
                         ghost = null;
                         sync();
                     }
@@ -212,7 +212,7 @@ public class WAllocation extends WContainer {
                     float progress;
                     Game.Status s = game.getProcessor(processor);
                     if (task == s.getWorking()) progress = s.getProgress();
-                    else if (game.getAllocation().allocated(task)) progress = 0;
+                    else if (game.getSchedule().allocated(task)) progress = 0;
                     else progress = 1;
 
                     try (Painter.State ignore = p.color(0x888888)) {
@@ -247,14 +247,14 @@ public class WAllocation extends WContainer {
         static final int WIDTH = 60;
         static final int HEIGHT = 30;
         static final int MARGIN = 10;
-        Allocation.Node node;
+        Schedule.Node node;
         WPanel panel;
         List<Graph.Comm> comms;
         Node ghost;
         int x, y;
         int index = -1;
 
-        public Overlay(Allocation.Node n) {
+        public Overlay(Schedule.Node n) {
             compose(new WDrag() {
                 @Override
                 public boolean onTest(@Nullable Vector2i mouse) {

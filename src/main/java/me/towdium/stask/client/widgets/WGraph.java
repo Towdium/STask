@@ -53,7 +53,7 @@ public class WGraph extends WContainer {
     public void onDraw(Painter p, Vector2i mouse) {
         List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
         for (Graph.Task i : tasks.keySet()) {
-            for (Map.Entry<Task, Graph.Comm> j : i.getBefore().entrySet()) {
+            for (Map.Entry<Task, Graph.Comm> j : i.getSuccessor().entrySet()) {
                 if (WFocus.isFocused(i) || WFocus.isFocused(j.getKey()) || WFocus.isFocused(j.getValue()))
                     late.add(new Pair<>(i, j.getKey()));
                 else drawConnection(p, i, j.getKey(), false);
@@ -81,7 +81,7 @@ public class WGraph extends WContainer {
                 try (Painter.State ignore = p.color(0x888888)) {
                     p.drawRect(0, 0, 24, 24);
                 }
-                p.drawTextCenter(Integer.toString(a.getBefore().get(b).getSize()), 12, 1 + Painter.fontAscent);
+                p.drawTextCenter(Integer.toString(a.getSuccessor().get(b).getSize()), 12, 1 + Painter.fontAscent);
             }
         }
     }
