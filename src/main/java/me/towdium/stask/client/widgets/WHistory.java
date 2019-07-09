@@ -1,6 +1,8 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
@@ -37,10 +39,12 @@ public class WHistory extends WContainer {
         }
     }
 
-    private void overlay(Rail r, int x, List<Graph.Work> ws) {
-        Vector2i v = find(r);
+    private void overlay(List<Graph.Work> ws, Vector2i m) {
         Overlay o = new Overlay(ws);
-        put(o, Math.max(x - o.x / 2, 0), v.y - o.y);
+        Page p = Widget.page();
+        Vector2i v = p.mouse().sub(m, new Vector2i()).add(Math.max(m.x - o.x / 2, 0), -o.y);
+        Page.Simple s = new Page.Simple(o, v);
+        p.overlay(s);
     }
 
     class Overlay extends WContainer {
@@ -57,14 +61,14 @@ public class WHistory extends WContainer {
 
         @Override
         public boolean onPress(@Nullable Vector2i mouse, boolean left) {
-            if (!panel.onTest(mouse)) WHistory.this.remove(this);
+            if (!panel.onTest(mouse)) Widget.page().overlay(null);
             return super.onPress(mouse, left);
         }
 
         @Override
         public boolean onKey(int code) {
             if (code == GLFW.GLFW_KEY_ESCAPE) {
-                WHistory.this.remove(this);
+                Widget.page().overlay(null);
                 return true;
             } else return super.onKey(code);
         }
@@ -127,6 +131,7 @@ public class WHistory extends WContainer {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
+            p.drawRect(MARGIN + game.getCount() - 1, 0, 2, HEIGHT);
         }
 
         @Override
@@ -153,7 +158,7 @@ public class WHistory extends WContainer {
                     return false;
                 });
                 if (ws.size() > 1) {
-                    overlay(this, mouse.x, ws);
+                    overlay(ws, mouse);
                     return true;
                 } else return false;
             } else return false;

@@ -1,7 +1,9 @@
 package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Animator;
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Schedule;
@@ -77,6 +79,8 @@ public class WTask extends WCompose {
     }
 
     public static void drawTask(Painter p, Graph.Task t, int x, int y) {
+        x -= WIDTH / 2;
+        y -= HEIGHT / 2;
         try (Painter.SMatrix m = p.matrix()) {
             m.translate(x, y);
             drawTask(p, t, State.DEFAULT.color, false);
@@ -93,9 +97,7 @@ public class WTask extends WCompose {
 
         drawTask(p, task, color, WFocus.isFocused(task) || b);
         if (WDrag.isSending(this) && !WDrag.isReceiving()) {
-            try (Painter.State ignore = p.priority(true)) {
-                drawTask(p, task, mouse.x - WIDTH / 2, mouse.y - HEIGHT / 2);
-            }
+            Widget.page().overlay(new Page.Once((a, m) -> drawTask(a, task, m.x, m.y)));
         }
     }
 
@@ -110,6 +112,7 @@ public class WTask extends WCompose {
         }
         animator.tick();
     }
+
 
     private State state() {
         if (game.finished(task)) return State.FINISHED;

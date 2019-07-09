@@ -58,6 +58,10 @@ public class Game implements Tickable {
         return statik;
     }
 
+    public int getCount() {
+        return count;
+    }
+
     public boolean isRunning() {
         return running;
     }

@@ -2,10 +2,10 @@ package me.towdium.stask;
 
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Window;
 import me.towdium.stask.client.widgets.WContainer;
 import me.towdium.stask.client.widgets.WDrag;
 import me.towdium.stask.client.widgets.WOwner;
-import me.towdium.stask.client.Window;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -68,7 +68,7 @@ public class Render {
 
             if (hold) {
                 if (isSending(this)) {
-                    try (Painter.State prior = p.priority(true);
+                    try (//Painter.State prior = p.priority(true);
                          Painter.SMatrix mat = p.matrix()) {
                         mat.translate(mouse.x - 25, mouse.y - 25);
                         try (Painter.State color = p.color(0x888888)) {

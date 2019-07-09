@@ -50,4 +50,8 @@ public interface Widget {
     default boolean onPress(@Nullable Vector2i mouse, boolean left) {
         return false;
     }
+
+    static Page page() {
+        return Page.Ref.getPage();
+    }
 }

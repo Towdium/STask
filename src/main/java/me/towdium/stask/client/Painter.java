@@ -44,7 +44,6 @@ public class Painter {
     Stack<Matrix4f> matrices = new Stack<>();
     Stack<Quad> masks = new Stack<>();
     Stack<Integer> colors = new Stack<>();
-    Stack<Boolean> priority = new Stack<>();
     static final Vector4f TEST_B = new Vector4f(0, 1, 0, 1);
     Texture empty = new Texture(-1);
     int shaderMModel;
@@ -86,8 +85,6 @@ public class Painter {
         updateMatrix();
         colors.push(0xFFFFFF);
         updateColor();
-        priority.push(false);
-        updatePriority();
         maskUpdate();
     }
 
@@ -339,15 +336,6 @@ public class Painter {
         return color((alpha << 24) + 0xFFFFFF);
     }
 
-    public State priority(boolean prioritized) {
-        priority.push(prioritized);
-        updatePriority();
-        return () -> {
-            priority.pop();
-            updatePriority();
-        };
-    }
-
     private void updateColor() {
         int c = colors.peek();
         float a = 1 - (c >> 24 & 255) / 255.0F;
@@ -372,16 +360,6 @@ public class Painter {
         BUF_24.flip();
         GL30C.glUniform4fv(shaderVClip, BUF_24);
         BUF_24.clear();
-    }
-
-    private void updatePriority() {
-        if (priority.peek()) {
-            GL30C.glStencilFunc(GL30C.GL_ALWAYS, 1, 0xFF);
-            GL30C.glStencilOp(GL30C.GL_REPLACE, GL30C.GL_REPLACE, GL30C.GL_REPLACE);
-        } else {
-            GL30C.glStencilFunc(GL30C.GL_NOTEQUAL, 1, 0xFF);
-            GL30C.glStencilOp(GL30C.GL_KEEP, GL30C.GL_KEEP, GL30C.GL_KEEP);
-        }
     }
 
     private void updateMatrix() {

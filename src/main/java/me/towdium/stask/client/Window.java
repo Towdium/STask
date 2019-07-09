@@ -63,7 +63,7 @@ public class Window extends Closeable implements Tickable {
         id = GLFW.glfwCreateWindow(1280, 720, title, NULL, NULL);
         GLFW.glfwSetWindowSizeLimits(id, 1280, 720, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
         if (id == NULL) throw new RuntimeException("Failed to create the GLFW window");
-        timer = new Timer(1f / display.refreshRate(), i -> {
+        timer = new Timer(1f / 200, i -> {
             if (i != 0 && debug) Log.client.trace("Dropping " + i + " frames");
             fps.tick();
             loop();
@@ -100,7 +100,6 @@ public class Window extends Closeable implements Tickable {
             painter.onResize(width, height);
         });
 
-        GL30C.glEnable(GL30C.GL_STENCIL_TEST);
         GL30C.glEnable(GL30C.GL_MULTISAMPLE);
         GL30C.glEnable(GL30C.GL_CLIP_DISTANCE0);
         GL30C.glEnable(GL30C.GL_CLIP_DISTANCE1);
@@ -149,8 +148,9 @@ public class Window extends Closeable implements Tickable {
     }
 
     private void loop() {
+        long time = System.currentTimeMillis();
         GLFW.glfwMakeContextCurrent(id);
-        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT | GL30C.GL_STENCIL_BUFFER_BIT);
+        GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT);
         Vector2i m = mouse();
         root.onRefresh(m);
         if (!m.equals(mouse)) {
@@ -163,6 +163,7 @@ public class Window extends Closeable implements Tickable {
         }
         root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
+        //if (debug) Log.client.trace("Frame time: " + (System.currentTimeMillis() - time) + " ms");
     }
 
     public boolean getMouse(boolean left) {

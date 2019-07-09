@@ -96,6 +96,11 @@ public class WContainer implements Widget {
         return this;
     }
 
+    public WContainer put(Widget widget, Vector2i p) {
+        widgets.put(widget, p);
+        return this;
+    }
+
     public void setMask(int xp, int yp, int xs, int ys) {
         mask = new Quad(xp, yp, xs, ys);
     }

@@ -1,6 +1,8 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
@@ -25,9 +27,7 @@ import java.util.Objects;
 @ParametersAreNonnullByDefault
 @SuppressWarnings("Duplicates")
 public class WSchedule extends WContainer {
-
     Game game;
-    Overlay overlay = null;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
 
     public WSchedule(int x, int y, Game g) {
@@ -41,27 +41,13 @@ public class WSchedule extends WContainer {
         }
     }
 
-    private boolean overlay(@Nullable Rail.Node n) {
-        if (n == null) {
-            if (overlay != null) {
-                remove(overlay);
-                overlay = null;
-            }
-            return false;
-        }
-        Processor p = game.getSchedule().getProcessor(n.task);
-        if (p == null || n.task.getPredecessor().isEmpty()) return false;
-        Rail r = processors.get(p);
-        Vector2i v1 = find(r);
-        Vector2i v2 = r.find(n);
-        if (overlay != null) {
-            remove(overlay);
-            overlay = null;
-        }
-        Schedule.Node an = game.getSchedule().getNode(n.task);
-        Vector2i v = v1.add(v2, new Vector2i());
-        overlay = new Overlay(Objects.requireNonNull(an, "Internal error"));
-        put(overlay, v.x + Rail.WIDTH / 2 - overlay.x / 2, v.y - overlay.y);
+    private boolean overlay(Rail.Node n, Vector2i m) {
+        Schedule.Node d = game.getSchedule().getNode(n.task);
+        Overlay o = new Overlay(Objects.requireNonNull(d, "Internal error"));
+        Page r = Widget.page();
+        Vector2i v = r.mouse().sub(m).add(Rail.WIDTH / 2 - o.x / 2, -o.y);
+        Page.Simple s = new Page.Simple(o, v);
+        r.overlay(s);
         return true;
     }
 
@@ -161,7 +147,6 @@ public class WSchedule extends WContainer {
                     @Nullable
                     @Override
                     public Object onStarting() {
-                        overlay(null);
                         game.getSchedule().remove(processor, idx);
                         ghost = Node.this;
                         sync();
@@ -208,7 +193,6 @@ public class WSchedule extends WContainer {
             public void onDraw(Painter p, Vector2i mouse) {
                 super.onDraw(p, mouse);
                 if (visible) {
-
                     float progress;
                     Game.Status s = game.getProcessor(processor);
                     if (task == s.getWorking()) progress = s.getProgress();
@@ -225,15 +209,18 @@ public class WSchedule extends WContainer {
                     }
                     p.drawTextRight(task.getName(), WIDTH - 6, Painter.fontAscent + 2);
                 }
-
                 if (WDrag.isSending(this) && !WDrag.isReceiving())
-                    WTask.drawTask(p, task, mouse.x - WTask.WIDTH / 2,
-                            mouse.y - WTask.HEIGHT / 2);
+                    Widget.page().overlay(new Page.Once((a, m) -> WTask.drawTask(a, task, m.x, m.y)));
             }
 
             @Override
             public boolean onClick(@Nullable Vector2i mouse, boolean left) {
-                return super.onClick(mouse, left) || (!WDrag.isSending() && onTest(mouse) && overlay(this));
+                if (super.onClick(mouse, left)) return true;
+                else if (mouse == null) return false;
+                else if (onTest(mouse)) {
+                    overlay(this, mouse);
+                    return true;
+                } else return false;
             }
 
             @Override
@@ -282,7 +269,7 @@ public class WSchedule extends WContainer {
 
         @Override
         public boolean onPress(@Nullable Vector2i mouse, boolean left) {
-            if (!panel.onTest(mouse)) overlay(null);
+            if (!panel.onTest(mouse)) Widget.page().overlay(null);
             return super.onPress(mouse, left);
         }
 
@@ -302,7 +289,7 @@ public class WSchedule extends WContainer {
         @Override
         public boolean onKey(int code) {
             if (code == GLFW.GLFW_KEY_ESCAPE) {
-                overlay(null);
+                Widget.page().overlay(null);
                 return true;
             } else return super.onKey(code);
         }
@@ -329,7 +316,7 @@ public class WSchedule extends WContainer {
 
         @Override
         public boolean onClick(@Nullable Vector2i mouse, boolean left) {
-            if (!super.onClick(mouse, left)) overlay(null);
+            if (!super.onClick(mouse, left)) Widget.page().overlay(null);
             return true;
         }
 

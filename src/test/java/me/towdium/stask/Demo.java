@@ -12,7 +12,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class Demo {
-
     public static void main(String[] args) {
         PWrapper wrapper = new PWrapper();
 
