@@ -25,8 +25,8 @@ public class PGame extends Page.Impl {
     Game game;
     WGraphs graphs;
     Widget tutorial;
-    WButton start = new WButtonText(120, 30, "start",
-            () -> BUS.attempt(new Start())).setListener(i -> {
+    WButton start = new WButtonText(120, 30, "start").setListener(i -> {
+        if (!BUS.attempt(new Start())) return;
         game.start();
         BUS.post(new Start());
     });
@@ -34,25 +34,25 @@ public class PGame extends Page.Impl {
         Algorithm a = new AListHLEFT();
         a.run(game.getGraphs(), game.getCluster(), game.getSchedule());
     });
-    WButton reset = new WButtonText(120, 30, "reset",
-            () -> BUS.attempt(new Reset())).setListener(i -> {
+    WButton reset = new WButtonText(120, 30, "reset").setListener(i -> {
+        if (!BUS.attempt(new Reset())) return;
         game.reset();
         BUS.post(new Reset());
     });
-    WButton pause = new WButtonText(120, 30, "pause",
-            () -> BUS.attempt(new Pause())).setListener(i -> {
+    WButton pause = new WButtonText(120, 30, "pause").setListener(i -> {
+        if (!BUS.attempt(new Pause())) return;
         game.pause();
         BUS.post(new Pause());
     });
-    WButton step = new WButtonText(120, 30, "step",
-            () -> BUS.attempt(new Step())).setListener(i -> {
+    WButton step = new WButtonText(120, 30, "step").setListener(i -> {
+        if (!BUS.attempt(new Step())) return;
         game.start();
         game.tick();
         game.pause();
         BUS.post(new Step());
     });
-    WButton leave = new WButtonText(120, 30, "leave",
-            () -> BUS.attempt(new Leave())).setListener(i -> {
+    WButton leave = new WButtonText(120, 30, "leave").setListener(i -> {
+        if (!BUS.attempt(new Leave())) return;
         BUS.post(new Leave());
         root.display(() -> parent);
     });
@@ -77,12 +77,11 @@ public class PGame extends Page.Impl {
         clear();
         graphs.setX(x - 300);
         put(graphs, 300, 0);
-        put(new WSchedule(x - 100, 100, game), 0, y - 200);
+        put(new WSchedule(x - 300, 100, game), 0, y - 200);
         put(new WCluster(game), 100, 100);
-        put(new WHistory(x - 100, game), 0, y - 100);
+        put(new WHistory(x - 300, game), 0, y - 100);
         put(schedule, x - 140, y - 250);
         put(start, x - 140, y - 210);
-
         put(reset, x - 140, y - 170);
         put(pause, x - 140, y - 130);
         put(step, x - 140, y - 90);

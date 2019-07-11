@@ -54,4 +54,14 @@ public interface Widget {
     static Page page() {
         return Page.Ref.getPage();
     }
+
+    @FunctionalInterface
+    interface ListenerAction<W> {
+        void invoke(W widget);
+    }
+
+    @FunctionalInterface
+    interface ListenerValue<W, V> {
+        void invoke(W widget, V old, V neu);
+    }
 }

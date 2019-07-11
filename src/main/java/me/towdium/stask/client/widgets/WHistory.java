@@ -27,9 +27,13 @@ public class WHistory extends WContainer {
     static final int MARGIN = 48;
     Game game;
     Map<Cluster.Processor, Rail> processors = new HashMap<>();
+    int latest = 0;
+    WBar bar;
+    int width;
 
     public WHistory(int x, Game g) {
         game = g;
+        width = x;
         List<Cluster.Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
             Cluster.Processor p = ps.get(i);
@@ -37,6 +41,26 @@ public class WHistory extends WContainer {
             put(r, 0, HEIGHT * i);
             processors.put(p, r);
         }
+        bar = new WBar(x - MARGIN).setListener((w, o, n) -> {
+            int offset;
+            int count = game.getCount();
+            if (count < width - MARGIN) offset = 0;
+            else offset = (int) ((count - width + MARGIN) * n);
+            processors.values().forEach(i -> i.setOffset(offset));
+        });
+        put(bar, MARGIN, ps.size() * HEIGHT);
+    }
+
+    @Override
+    public void onRefresh(Vector2i mouse) {
+        int c = game.getCount();
+        if (c != latest) {
+            latest = c;
+            bar.setPos(1);
+            bar.setRatio(latest == 0 ? 1 : Math.min((width - MARGIN) / (float) latest, 1));
+            processors.values().forEach(i -> i.setOffset(Math.max(0, latest - (width - MARGIN))));
+        }
+        super.onRefresh(mouse);
     }
 
     private void overlay(List<Graph.Work> ws, Vector2i m) {
@@ -116,29 +140,40 @@ public class WHistory extends WContainer {
         Cluster.Processor processor;
         int multiplier;
         int x;
+        int offset = 0;
+        WContainer container = new WContainer();
 
         public Rail(Cluster.Processor p, int x, int m) {
             processor = p;
             multiplier = m;
             this.x = x;
+            put(container, MARGIN, 0);
+        }
+
+        public void setOffset(int x) {
+            offset = x;
+            put(container, -offset, 0);
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            super.onDraw(p, mouse);
-
+            try (Painter.State ignore = p.mask(MARGIN, 0, x - MARGIN, HEIGHT)) {
+                super.onDraw(p, mouse);
+            }
             try (Painter.State ignore = p.color(multiplier * 0x444444)) {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
-            p.drawRect(MARGIN + game.getCount() - 1, 0, 2, HEIGHT);
+            try (Painter.State ignore = p.mask(MARGIN - 1, 0, x - MARGIN + 2, HEIGHT)) {
+                p.drawRect(MARGIN + game.getCount() - 1 - offset, 0, 2, HEIGHT);
+            }
         }
 
         @Override
         public void onRefresh(Vector2i mouse) {
-            clear();
+            container.clear();
             game.getHistory().getRecord(processor).forEach((w, p) ->
-                    put(new Node(w, p.y - p.x), p.x + MARGIN, 0));
+                    container.put(new Node(w, p.y - p.x), p.x + MARGIN, 0));
             super.onRefresh(mouse);
         }
 
@@ -148,10 +183,10 @@ public class WHistory extends WContainer {
             else if (mouse == null) return false;
             else if (!game.isRunning() && Quad.inside(mouse, x, WHistory.HEIGHT)) {
                 List<Graph.Work> ws = new ArrayList<>();
-                widgets.backward((w, v) -> {
+                container.widgets.backward((w, v) -> {
                     if (w instanceof Node) {
                         Node n = (Node) w;
-                        if (!n.onTest(mouse.sub(v, new Vector2i()))) return false;
+                        if (!n.onTest(mouse.sub(v, new Vector2i()).add(offset, 0))) return false;
                         Graph.Work o = n.onFocus();
                         if (o != null) ws.add(o);
                     }

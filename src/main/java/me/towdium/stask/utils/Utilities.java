@@ -61,9 +61,4 @@ public class Utilities {
             e.printStackTrace();
         }
     }
-
-    @FunctionalInterface
-    public interface ListenerAction<W> {
-        void invoke(W widget);
-    }
 }
