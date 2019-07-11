@@ -1,9 +1,12 @@
 package me.towdium.stask.logic;
 
+import me.towdium.stask.client.Widget;
 import me.towdium.stask.utils.Cache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -12,29 +15,45 @@ import java.util.function.Predicate;
  * Date: 26/06/19
  */
 public class Event {
+    public static class Filter implements Predicate<Event> {
+        Predicate<Event> predicate;
+
+        public Filter(Object owner) {
+            Event.Bus.BUS.gate(Event.class, owner, this);
+        }
+
+        @Override
+        public boolean test(Event event) {
+            return predicate == null || predicate.test(event);
+        }
+
+        public void update(Predicate<Event> p) {
+            predicate = p;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public static class Bus {
-        Cache<Class, List<Consumer>> subs = new Cache<>(i -> new ArrayList<>());
-        Cache<Class, List<Predicate>> gates = new Cache<>(i -> new ArrayList<>());
+        public static final Bus BUS = new Bus();
+        Cache<Class, WeakHashMap<Object, List<Consumer>>> subs = new Cache<>(i -> new WeakHashMap<>());
+        Cache<Class, WeakHashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new WeakHashMap<>());
+
+        private Bus() {
+        }
 
         public boolean attempt(Event e) {
             for (Class i : getType(e)) {
-                List<Predicate> ps = gates.get(i);
-                if (ps != null) {
-                    for (Predicate p : ps) {
-                        if (p.test(e)) return false;
-                    }
-                }
+                WeakHashMap<Object, List<Predicate>> ps = gates.get(i);
+                if (ps != null && ps.values().stream().flatMap(Collection::stream)
+                        .anyMatch(j -> !j.test(e))) return false;
             }
             return true;
         }
 
         public void post(Event e) {
             for (Class i : getType(e)) {
-                List<Consumer> cs = subs.get(i);
-                if (cs != null) {
-                    for (Consumer c : cs) c.accept(e);
-                }
+                WeakHashMap<Object, List<Consumer>> cs = subs.get(i);
+                if (cs != null) cs.values().stream().flatMap(Collection::stream).forEach(j -> j.accept(e));
             }
         }
 
@@ -48,51 +67,83 @@ public class Event {
             return ret;
         }
 
-        public <T extends Event> void subscribe(Class<T> e, Consumer<T> c) {
-            subs.get(e).add(c);
+        public <T extends Event> void subscribe(Class<T> e, Object o, Consumer<T> c) {
+            subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
         }
 
-        public <T extends Event> void gate(Class<T> e, Predicate<T> p) {
-            gates.get(e).add(p);
+        public <T extends Event> void gate(Class<T> e, Object o, Predicate<T> p) {
+            gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
         }
     }
 
     public static abstract class ETask extends Event {
         Graph.Task task;
-        Cluster.Processor processor;
 
-        public ETask(Graph.Task task, Cluster.Processor processor) {
+
+        public ETask(Graph.Task task) {
             this.task = task;
-            this.processor = processor;
         }
 
-        public static class Scheduled extends ETask {
-            public Scheduled(Graph.Task task, Cluster.Processor processor) {
-                super(task, processor);
+        public static class Pick extends ETask {
+            Widget source;
+
+            public Pick(Graph.Task task, Widget source) {
+                super(task);
+                this.source = source;
+            }
+        }
+
+        public static class Schedule extends ETask {
+            Cluster.Processor processor;
+
+            public Schedule(Graph.Task task, Cluster.Processor processor) {
+                super(task);
+                this.processor = processor;
             }
         }
 
         public static class Executed extends ETask {
+            Cluster.Processor processor;
+
             public Executed(Graph.Task task, Cluster.Processor processor) {
-                super(task, processor);
+                super(task);
+                this.processor = processor;
             }
         }
 
         public static class Completed extends ETask {
+            Cluster.Processor processor;
+
             public Completed(Graph.Task task, Cluster.Processor processor) {
-                super(task, processor);
+                super(task);
+                this.processor = processor;
             }
         }
 
         public static class Cancelled extends ETask {
+            Cluster.Processor processor;
+
             public Cancelled(Graph.Task task, Cluster.Processor processor) {
-                super(task, processor);
+                super(task);
+                this.processor = processor;
             }
         }
     }
 
     public static abstract class EGame extends Event {
         public static class Reset extends EGame {
+        }
+
+        public static class Pause extends EGame {
+        }
+
+        public static class Start extends EGame {
+        }
+
+        public static class Step extends EGame {
+        }
+
+        public static class Leave extends EGame {
         }
     }
 

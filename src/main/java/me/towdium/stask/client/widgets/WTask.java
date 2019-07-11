@@ -4,6 +4,7 @@ import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
+import me.towdium.stask.logic.Event;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Schedule;
@@ -45,7 +46,8 @@ public class WTask extends WCompose {
             @Nullable
             @Override
             public Object onStarting() {
-                return task;
+                boolean b = Event.Bus.BUS.attempt(new Event.ETask.Pick(task, this));
+                return b ? task : null;
             }
         });
         task = t;
@@ -112,7 +114,6 @@ public class WTask extends WCompose {
         }
         animator.tick();
     }
-
 
     private State state() {
         if (game.finished(task)) return State.FINISHED;

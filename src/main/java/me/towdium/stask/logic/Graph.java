@@ -14,16 +14,10 @@ import java.util.*;
 public class Graph {
     Map<String, Task> tasks = new HashMap<>();
     List<List<Task>> layout = new ArrayList<>();
-    Event.Bus bus;
     List<Task> entries = new ArrayList<>();
     List<Task> exits = new ArrayList<>();
 
     public Graph(String id) {
-        this(id, new Event.Bus());
-    }
-
-    public Graph(String id, Event.Bus b) {
-        bus = b;
         String json = Utilities.readString("/graphs/" + id + ".json");
         Gson gson = new Gson();
         Pojo.Graph pojo = gson.fromJson(json, Pojo.Graph.class);

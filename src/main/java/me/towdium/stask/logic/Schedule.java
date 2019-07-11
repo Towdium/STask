@@ -15,15 +15,6 @@ import java.util.*;
 public class Schedule {
     Cache<Processor, List<Node>> processors = new Cache<>(i -> new TreeList<>());
     Map<Task, Node> tasks = new HashMap<>();
-    Event.Bus bus;
-
-    public Schedule(Game g) {
-        bus = g.getBus();
-    }
-
-    public Schedule() {
-        bus = new Event.Bus();
-    }
 
     public void allocate(Task t, Processor p) {
         Node n = new Node(t, p);
