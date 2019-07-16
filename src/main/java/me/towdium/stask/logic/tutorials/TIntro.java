@@ -13,8 +13,6 @@ import org.joml.Vector2i;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 
-import static me.towdium.stask.logic.Event.Bus.BUS;
-
 /**
  * Author: Towdium
  * Date: 11/07/19
@@ -30,7 +28,7 @@ public class TIntro extends Tutorial.Impl {
                 new Start());
     }
 
-    static class Allocate1 extends AllocateN {
+    class Allocate1 extends AllocateN {
         static final String S1 = "Welcome! This game aims to teach the " +
                 "concept of task graph scheduling, a problem in parallel " +
                 "systems.\n\n" +
@@ -59,7 +57,7 @@ public class TIntro extends Tutorial.Impl {
         }
 
         @Override
-        public void activate(WTutorial w) {
+        protected void add(WTutorial w) {
             w.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
 
             Game g = new Game("tutorial");
@@ -94,21 +92,12 @@ public class TIntro extends Tutorial.Impl {
         }
     }
 
-    static class AllocateN implements Tutorial.Impl.Stage {
-        boolean p;
+    class AllocateN implements Tutorial.Impl.Stage {
         String task, processor;
 
         public AllocateN(String task, String processor) {
             this.task = task;
             this.processor = processor;
-            BUS.subscribe(Event.ETask.Schedule.class, this, e -> {
-                if (e.task.getName().equals(task) && e.processor.getName().equals(processor)) p = true;
-            });
-        }
-
-        @Override
-        public boolean pass() {
-            return p;
         }
 
         @Override
@@ -121,12 +110,19 @@ public class TIntro extends Tutorial.Impl {
 
         @Override
         public void activate(WTutorial w) {
+            bus.subscribe(Event.ETask.Schedule.class, this, e -> {
+                if (e.task.getName().equals(task) && e.processor.getName().equals(processor)) pass();
+            });
+            add(w);
+        }
+
+        protected void add(WTutorial w) {
             String s = "Then allocate task " + task + " to processor " + processor + ".";
             w.update((p, m) -> p.drawTextWrapped(s, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
         }
     }
 
-    static class Start implements Tutorial.Impl.Stage {
+    class Start implements Tutorial.Impl.Stage {
         static final String S1 = "The appearance of tasks change according to the state. " +
                 "At default, they are grey. When assigned, they turn blue. When being executed, " +
                 "they turn yellow. When finished, they turn green. Therefore, one task graph is " +
@@ -136,15 +132,8 @@ public class TIntro extends Tutorial.Impl {
                 "and also recorded inside the history bar when tasks are executed.\n\n" +
                 "Now things are set up. Let's hit the start button to execute the schedule.";
 
-        boolean p = false;
-
         public Start() {
-            BUS.subscribe(Event.EGame.Start.class, this, e -> p = true);
-        }
 
-        @Override
-        public boolean pass() {
-            return p;
         }
 
         @Override
@@ -154,6 +143,7 @@ public class TIntro extends Tutorial.Impl {
 
         @Override
         public void activate(WTutorial w) {
+            bus.subscribe(Event.EGame.Start.class, this, e -> pass());
             w.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
             w.update((p, m) -> p.drawTextWrapped(S2, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
         }
