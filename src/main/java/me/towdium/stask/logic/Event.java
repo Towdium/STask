@@ -38,9 +38,6 @@ public class Event {
         Cache<Class, WeakHashMap<Object, List<Consumer>>> subs = new Cache<>(i -> new WeakHashMap<>());
         Cache<Class, WeakHashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new WeakHashMap<>());
 
-        private Bus() {
-        }
-
         public boolean attempt(Event e) {
             for (Class i : getType(e)) {
                 WeakHashMap<Object, List<Predicate>> ps = gates.get(i);
@@ -77,15 +74,14 @@ public class Event {
     }
 
     public static abstract class ETask extends Event {
-        Graph.Task task;
-
+        public Graph.Task task;
 
         public ETask(Graph.Task task) {
             this.task = task;
         }
 
         public static class Pick extends ETask {
-            Widget source;
+            public Widget source;
 
             public Pick(Graph.Task task, Widget source) {
                 super(task);
@@ -94,7 +90,7 @@ public class Event {
         }
 
         public static class Schedule extends ETask {
-            Cluster.Processor processor;
+            public Cluster.Processor processor;
 
             public Schedule(Graph.Task task, Cluster.Processor processor) {
                 super(task);
@@ -103,7 +99,7 @@ public class Event {
         }
 
         public static class Executed extends ETask {
-            Cluster.Processor processor;
+            public Cluster.Processor processor;
 
             public Executed(Graph.Task task, Cluster.Processor processor) {
                 super(task);
@@ -112,7 +108,7 @@ public class Event {
         }
 
         public static class Completed extends ETask {
-            Cluster.Processor processor;
+            public Cluster.Processor processor;
 
             public Completed(Graph.Task task, Cluster.Processor processor) {
                 super(task);
@@ -121,7 +117,7 @@ public class Event {
         }
 
         public static class Cancelled extends ETask {
-            Cluster.Processor processor;
+            public Cluster.Processor processor;
 
             public Cancelled(Graph.Task task, Cluster.Processor processor) {
                 super(task);

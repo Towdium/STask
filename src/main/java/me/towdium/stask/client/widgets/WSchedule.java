@@ -68,7 +68,9 @@ public class WSchedule extends WContainer {
                 @Override
                 public void onReceived(Object o) {
                     if (o instanceof Task) {
-                        game.getSchedule().allocate((Task) o, processor, index);
+                        Task t = (Task) o;
+                        BUS.post(new Schedule(t, processor));
+                        game.getSchedule().allocate(t, processor, index);
                         sync();
                     }
                 }
@@ -76,11 +78,8 @@ public class WSchedule extends WContainer {
                 @Override
                 public boolean onAttempt(Object o, Vector2i mouse) {
                     if (o instanceof Task) {
-                        Task t = (Task) o;
-                        if (BUS.attempt(new Schedule(t, processor))) {
-                            BUS.post(new Schedule(t, processor));
-                            return true;
-                        }
+
+                        return BUS.attempt(new Schedule((Task) o, processor));
                     }
                     return false;
                 }

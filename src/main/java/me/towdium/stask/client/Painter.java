@@ -134,16 +134,16 @@ public class Painter {
                 }
                 if (pos > xs) {
                     x = 0;
-                    y += fontHeight;
+                    y += fontHeight * 1.2;
                     for (int j = old; j < i; j++) {
                         char ch = s.charAt(j);
                         if (ch == '\n') {
                             x = 0;
-                            y += fontHeight;
+                            y += fontHeight * 1.2;
                         } else if (x + glyphs.get(sc).get(ch).advance < xs) {
                             x += drawChar(ch, x, y, sc);
                         } else if (ch != ' ' && ch != '　') {
-                            y += fontHeight;
+                            y += fontHeight * 1.2;
                             x = drawChar(ch, 0, y, sc);
                         }
                     }
@@ -153,7 +153,7 @@ public class Painter {
                         if (ch != '\n') x += drawChar(ch, x, y, sc);
                         else {
                             x = 0;
-                            y += fontHeight;
+                            y += fontHeight * 1.2;
                         }
                     }
                 }

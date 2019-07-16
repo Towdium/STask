@@ -18,14 +18,18 @@ public abstract class WButton extends WArea.Impl {
         super(x, y);
     }
 
-    public WButton setListener(ListenerAction<? super WButton> r) {
+    public WButton setListener(@Nullable ListenerAction<? super WButton> r) {
         listener = r;
         return this;
     }
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(onTest(mouse) ? 0x444444 : 0x666666)) {
+        int color;
+        if (listener == null) color = 0x333333;
+        else color = onTest(mouse) ? 0x444444 : 0x666666;
+
+        try (Painter.State ignore = p.color(color)) {
             p.drawRect(0, 0, x, y);
         }
     }

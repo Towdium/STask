@@ -86,6 +86,6 @@ public class PGame extends Page.Impl {
         put(pause, x - 140, y - 130);
         put(step, x - 140, y - 90);
         put(leave, x - 140, y - 50);
-        if (tutorial != null) put(tutorial, x - Tutorial.WIDTH - 20, 20);
+        if (tutorial != null) put(tutorial, x - WTutorial.WIDTH - 20, 20);
     }
 }

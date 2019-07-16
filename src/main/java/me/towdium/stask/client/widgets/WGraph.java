@@ -20,10 +20,10 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WGraph extends WContainer {
-    Game game;
-    Graph graph;
-    Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
-    int width;
+    protected Game game;
+    protected Graph graph;
+    protected Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
+    protected int width;
 
     public WGraph(int y, Game g, Graph r) {
         game = g;
@@ -63,7 +63,7 @@ public class WGraph extends WContainer {
         super.onDraw(p, mouse);
     }
 
-    private void drawConnection(Painter p, Task a, Task b, boolean highlight) {
+    protected void drawConnection(Painter p, Task a, Task b, boolean highlight) {
         Vector2f start = new Vector2f(find(tasks.get(a))).add(WTask.WIDTH / 2f, WTask.HEIGHT).add(0, -1);
         Vector2f end = new Vector2f(find(tasks.get(b))).add(WTask.WIDTH / 2f, 0).add(0, 1);
         Vector2f diff = end.sub(start, new Vector2f());

@@ -53,6 +53,14 @@ public class WBar extends WContainer {
         }
     }
 
+    @Override
+    public void onDraw(Painter p, Vector2i mouse) {
+        try (Painter.State ignore = p.color(0x333333)) {
+            p.drawRect(0, 0, width, HEIGHT);
+        }
+        super.onDraw(p, mouse);
+    }
+
     public WBar setListener(ListenerValue<WBar, Float> listener) {
         this.listener = listener;
         return this;
