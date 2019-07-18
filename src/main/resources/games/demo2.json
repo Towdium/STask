@@ -4,5 +4,6 @@
     "demo",
     "simple"
   ],
-  "cluster": "simple"
+  "cluster": "simple",
+  "aims": []
 }

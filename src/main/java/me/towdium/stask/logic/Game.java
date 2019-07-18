@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Event.EGame;
 import me.towdium.stask.logic.Event.EGraph;
+import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Graph.Comm;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Cache;
@@ -16,6 +17,8 @@ import org.joml.Vector2i;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static me.towdium.stask.logic.Event.Bus.BUS;
 
 
 /**
@@ -34,6 +37,8 @@ public class Game implements Tickable {
     Set<Task> finished = new HashSet<>();
     Map<Task, Processor> executing = new HashMap<>();
     SortedMap<Integer, List<Graph>> graphs = new TreeMap<>();
+    Set<Graph> unfinished;
+    List<Integer> aims;
     int count = 0;
     boolean statik;
     boolean running = false;
@@ -48,12 +53,22 @@ public class Game implements Tickable {
         tutorial = pojo.tutorial == null ? null : Tutorial.get(pojo.tutorial, this);
         schedule = new Schedule();
         statik = pojo.times == null;
+        aims = new ArrayList<>(pojo.aims);
         name = id;
         for (int i = 0; i < pojo.graphs.size(); i++)
             graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
                     j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
         for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
+        unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+    }
+
+    public int getSeconds() {
+        return count / RATE;
+    }
+
+    public List<Integer> getAims() {
+        return aims;
     }
 
     public boolean isStatic() {
@@ -118,7 +133,8 @@ public class Game implements Tickable {
         executing.clear();
         history.reset();
         schedule.reset();
-        Event.Bus.BUS.post(new EGame.Reset());
+        unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        BUS.post(new EGame.Reset());
     }
 
     public void pause() {
@@ -137,7 +153,7 @@ public class Game implements Tickable {
             SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
             m = m.headMap(t + 1);
             m.values().stream().flatMap(Collection::stream)
-                    .forEach(i -> Event.Bus.BUS.post(new EGraph.Append(i)));
+                    .forEach(i -> BUS.post(new EGraph.Append(i)));
         }
         boolean valid = false;
         for (Status i : processors.values()) i.tickPre();
@@ -222,6 +238,7 @@ public class Game implements Tickable {
                 ret = true;
                 progress += SPEED / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
                 if (progress > 1) {
+                    BUS.post(new ETask.Completed(working, processor));
                     for (Comm i : working.getSuccessor().values()) output.put(i, processor);
                     finished.add(working);
                     executing.remove(working);
@@ -233,7 +250,12 @@ public class Game implements Tickable {
                             break;
                         }
                     }
-                    if (complete) Event.Bus.BUS.post(new EGraph.Complete(g));
+                    if (complete) {
+                        BUS.post(new EGraph.Complete(g));
+                        unfinished.remove(g);
+                        if (unfinished.isEmpty())
+                            BUS.post(new EGame.Finish());
+                    }
                     working = null;
                     progress = 0;
                 }

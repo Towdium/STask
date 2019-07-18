@@ -105,7 +105,10 @@ public class TIntro extends Tutorial.Impl {
             if (e instanceof Event.ETask.Schedule) {
                 Event.ETask.Schedule s = (Event.ETask.Schedule) e;
                 return s.task.getName().equals(task) && s.processor.getName().equals(processor);
-            } else return e instanceof Event.ETask.Pick;
+            } else if (e instanceof Event.ETask.Pick) {
+                Event.ETask.Pick p = (Event.ETask.Pick) e;
+                return p.source instanceof WTask;
+            } else return false;
         }
 
         @Override
@@ -131,10 +134,6 @@ public class TIntro extends Tutorial.Impl {
         static final String S2 = "The state of processors will be rendered in real time, " +
                 "and also recorded inside the history bar when tasks are executed.\n\n" +
                 "Now things are set up. Let's hit the start button to execute the schedule.";
-
-        public Start() {
-
-        }
 
         @Override
         public boolean test(Event e) {

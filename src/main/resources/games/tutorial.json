@@ -2,5 +2,6 @@
   "graphs": [
     "tutorial"
   ],
-  "cluster": "real"
+  "cluster": "real",
+  "aims": []
 }

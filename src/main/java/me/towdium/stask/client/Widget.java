@@ -55,6 +55,10 @@ public interface Widget {
         return Page.Ref.getPage();
     }
 
+    static Window window() {
+        return Window.getCurrent();
+    }
+
     @FunctionalInterface
     interface ListenerAction<W> {
         void invoke(W widget);

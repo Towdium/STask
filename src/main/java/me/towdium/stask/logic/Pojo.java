@@ -41,6 +41,7 @@ public class Pojo {
         String cluster, tutorial;
         List<Integer> times;
         List<String> graphs;
+        List<Integer> aims;
     }
 
     public static class Levels {

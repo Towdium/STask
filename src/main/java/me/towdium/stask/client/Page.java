@@ -31,7 +31,6 @@ public interface Page extends Widget {
 
     class Impl extends WContainer implements Page {
         int multiplier = 1;
-
         Page overlay = null;
         Vector2i mouse = new Vector2i();
         static final int WIDTH = 1280;
@@ -52,7 +51,7 @@ public interface Page extends Widget {
         @Override
         public void onRefresh(Vector2i mouse) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             super.onRefresh(m);
             if (overlay != null) overlay.onRefresh(m);
@@ -61,7 +60,7 @@ public interface Page extends Widget {
         @Override
         public boolean onDrag(@Nullable Vector2i mouse, boolean left) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             return (overlay != null && overlay.onDrag(m, left)) || super.onDrag(m, left);
         }
@@ -69,27 +68,27 @@ public interface Page extends Widget {
         @Override
         public boolean onPress(@Nullable Vector2i mouse, boolean left) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             return (overlay != null && overlay.onPress(m, left)) || super.onPress(m, left);
         }
 
         @Override
         public boolean onDrop(boolean left) {
-            Ref.page = this;
+            if (update()) Ref.page = this;
             return (overlay != null && overlay.onDrop(left)) || super.onDrop(left);
         }
 
         @Override
         public void onRemove() {
-            Ref.page = this;
+            if (update()) Ref.page = this;
             super.onRemove();
             if (overlay != null) overlay.onRemove();
         }
 
         @Override
         public final void onResize(int x, int y) {
-            Ref.page = this;
+            if (update()) Ref.page = this;
             multiplier = Math.max(Math.min((y + HEIGHT / 2 - 1) / HEIGHT, (x + WIDTH / 2 - 1) / WIDTH), 1);
             onLayout((x + multiplier - 1) / multiplier, (y + multiplier - 1) / multiplier);
             if (overlay != null) overlay.onResize(x, y);
@@ -99,6 +98,13 @@ public interface Page extends Widget {
         public void overlay(@Nullable Page p) {
             if (overlay != null) overlay.onRemove();
             overlay = p;
+            Window window = Widget.window();
+            Vector2i size = window.getSize();
+            if (p != null) p.onResize(size.x, size.y);
+        }
+
+        protected boolean update() {
+            return true;
         }
 
         public Page overlay() {
@@ -108,7 +114,7 @@ public interface Page extends Widget {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             try (Painter.SMatrix s = p.matrix()) {
                 s.scale(multiplier, multiplier, 1);
                 Vector2i m = convert(mouse);
@@ -120,7 +126,7 @@ public interface Page extends Widget {
         @Override
         public boolean onClick(@Nullable Vector2i mouse, boolean left) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             return (overlay != null && overlay.onClick(m, left)) || super.onClick(m, left);
         }
@@ -128,7 +134,7 @@ public interface Page extends Widget {
         @Override
         public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             return (overlay != null && overlay.onTooltip(m, tooltip)) || super.onTooltip(m, tooltip);
         }
@@ -136,7 +142,7 @@ public interface Page extends Widget {
         @Override
         public void onMove(Vector2i mouse) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             super.onMove(m);
             if (overlay != null) overlay.onMove(m);
@@ -145,7 +151,7 @@ public interface Page extends Widget {
         @Override
         public boolean onScroll(@Nullable Vector2i mouse, int diff) {
             this.mouse = mouse;
-            Ref.page = this;
+            if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             return (overlay != null && overlay.onScroll(m, diff)) || super.onScroll(m, diff);
         }
@@ -158,27 +164,42 @@ public interface Page extends Widget {
         }
     }
 
-    class Simple extends WContainer implements Page {
-        public Simple(Widget w, int x, int y) {
-            put(w, x, y);
-        }
-
-        public Simple(Widget w, Vector2i p) {
-            put(w, p);
-        }
-    }
-
-    class Once implements Page {
-        BiConsumer<Painter, Vector2i> consumer;
-
+    class Once extends Impl {
         public Once(BiConsumer<Painter, Vector2i> c) {
-            consumer = c;
+            put(c::accept, 0, 0);
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            consumer.accept(p, mouse);
+            super.onDraw(p, mouse);
             Ref.page.overlay(null);
+        }
+
+        @Override
+        protected boolean update() {
+            return false;
+        }
+    }
+
+    class Center extends Impl {
+        Widget widget;
+        int xs, ys;
+
+        public Center(Widget w, int xs, int ys) {
+            widget = w;
+            this.xs = xs;
+            this.ys = ys;
+        }
+
+        @Override
+        protected void onLayout(int x, int y) {
+            super.onLayout(x, y);
+            put(widget, (x - xs) / 2, (y - ys) / 2);
+        }
+
+        @Override
+        protected boolean update() {
+            return false;
         }
     }
 

@@ -4,7 +4,7 @@ import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
-import me.towdium.stask.logic.Event;
+import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Schedule;
@@ -12,6 +12,8 @@ import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import static me.towdium.stask.logic.Event.Bus.BUS;
 
 /**
  * Author: Towdium
@@ -46,8 +48,10 @@ public class WTask extends WCompose {
             @Nullable
             @Override
             public Object onStarting() {
-                boolean b = Event.Bus.BUS.attempt(new Event.ETask.Pick(task, this));
-                return b ? task : null;
+                if (BUS.attempt(new ETask.Pick(task, WTask.this))) {
+                    BUS.post(new ETask.Pick(task, WTask.this));
+                    return task;
+                } else return null;
             }
         });
         task = t;

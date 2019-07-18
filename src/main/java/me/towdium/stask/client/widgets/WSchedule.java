@@ -4,14 +4,14 @@ import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Cluster.Processor;
-import me.towdium.stask.logic.Event.ETask.Schedule;
+import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
+import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.wrap.Wrapper;
 import org.joml.Vector2i;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
+import static me.towdium.stask.logic.Schedule.Node;
 
 /**
  * Author: Towdium
@@ -44,11 +45,12 @@ public class WSchedule extends WContainer {
     }
 
     private boolean overlay(Rail.Node n, Vector2i m) {
-        me.towdium.stask.logic.Schedule.Node d = game.getSchedule().getNode(n.task);
+        Node d = game.getSchedule().getNode(n.task);
         Overlay o = new Overlay(Objects.requireNonNull(d, "Internal error"));
         Page r = Widget.page();
         Vector2i v = r.mouse().sub(m).add(Rail.WIDTH / 2 - o.x / 2, -o.y);
-        Page.Simple s = new Page.Simple(o, v);
+        Page.Impl s = new Page.Impl();
+        s.put(o, v);
         r.overlay(s);
         return true;
     }
@@ -69,7 +71,7 @@ public class WSchedule extends WContainer {
                 public void onReceived(Object o) {
                     if (o instanceof Task) {
                         Task t = (Task) o;
-                        BUS.post(new Schedule(t, processor));
+                        BUS.post(new ETask.Schedule(t, processor));
                         game.getSchedule().allocate(t, processor, index);
                         sync();
                     }
@@ -79,7 +81,7 @@ public class WSchedule extends WContainer {
                 public boolean onAttempt(Object o, Vector2i mouse) {
                     if (o instanceof Task) {
 
-                        return BUS.attempt(new Schedule((Task) o, processor));
+                        return BUS.attempt(new ETask.Schedule((Task) o, processor));
                     }
                     return false;
                 }
@@ -117,7 +119,7 @@ public class WSchedule extends WContainer {
 
         private void sync() {
             clear();
-            List<me.towdium.stask.logic.Schedule.Node> ts = game.getSchedule().getTasks(processor);
+            List<Schedule.Node> ts = game.getSchedule().getTasks(processor);
             Task t = game.getProcessor(processor).getWorking();
             if (t != null) put(new Node(t, -1), MARGIN, 0);
             for (int i = 0; i < ts.size(); i++)
@@ -155,11 +157,14 @@ public class WSchedule extends WContainer {
                     @Nullable
                     @Override
                     public Object onStarting() {
-                        game.getSchedule().remove(processor, idx);
-                        ghost = Node.this;
-                        sync();
-                        visible = false;
-                        return task;
+                        if (BUS.attempt(new ETask.Pick(task, WSchedule.this))) {
+                            game.getSchedule().remove(processor, idx);
+                            ghost = Node.this;
+                            sync();
+                            visible = false;
+                            BUS.post(new ETask.Pick(task, WSchedule.this));
+                            return task;
+                        } else return null;
                     }
 
                     @Override
@@ -242,14 +247,17 @@ public class WSchedule extends WContainer {
         static final int WIDTH = 60;
         static final int HEIGHT = 30;
         static final int MARGIN = 10;
-        me.towdium.stask.logic.Schedule.Node node;
-        WPanel panel;
+        Schedule.Node node;
         List<Graph.Comm> comms;
         Node ghost;
         int x, y;
         int index = -1;
 
-        public Overlay(me.towdium.stask.logic.Schedule.Node n) {
+        public Overlay(Schedule.Node n) {
+            node = n;
+            comms = node.getComms();
+            y = HEIGHT * comms.size() + 2 * MARGIN;
+            x = WIDTH + 2 * MARGIN;
             compose(new WDrag() {
                 @Override
                 public boolean onTest(@Nullable Vector2i mouse) {
@@ -268,17 +276,7 @@ public class WSchedule extends WContainer {
                     return o instanceof Graph.Comm;
                 }
             });
-            node = n;
-            comms = node.getComms();
-            y = HEIGHT * comms.size() + 2 * MARGIN;
-            x = WIDTH + 2 * MARGIN;
-            panel = new WPanel(x, y);
-        }
-
-        @Override
-        public boolean onPress(@Nullable Vector2i mouse, boolean left) {
-            if (!panel.onTest(mouse)) Widget.page().overlay(null);
-            return super.onPress(mouse, left);
+            compose(new WOverlay(x, y));
         }
 
         @Override
@@ -295,14 +293,6 @@ public class WSchedule extends WContainer {
         }
 
         @Override
-        public boolean onKey(int code) {
-            if (code == GLFW.GLFW_KEY_ESCAPE) {
-                Widget.page().overlay(null);
-                return true;
-            } else return super.onKey(code);
-        }
-
-        @Override
         public void onMove(Vector2i mouse) {
             super.onMove(mouse);
             index = getIndex(mouse);
@@ -316,7 +306,6 @@ public class WSchedule extends WContainer {
 
         private void sync() {
             clear();
-            put(panel, 0, 0);
             for (int i = 0; i < comms.size(); i++)
                 put(new Node(comms.get(i)), MARGIN, MARGIN + i * HEIGHT);
             if (ghost != null) put(ghost, 0, 0);

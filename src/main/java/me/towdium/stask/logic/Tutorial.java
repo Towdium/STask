@@ -41,6 +41,7 @@ public interface Tutorial {
         public Impl(Game g) {
             game = g;
             Event.Bus.BUS.subscribe(Event.class, this, i -> bus.post(i));
+            Event.Bus.BUS.subscribe(Event.EGame.Leave.class, this, i -> filter.update(j -> true));
         }
 
         public void initialize(Stage... ss) {
@@ -64,6 +65,7 @@ public interface Tutorial {
         protected void pass() {
             int next = index + 1;
             if (next < stages.size()) update(next);
+            else widget.clear();
         }
 
         public interface Stage {

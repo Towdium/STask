@@ -8,7 +8,6 @@ import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -67,34 +66,20 @@ public class WHistory extends WContainer {
         Overlay o = new Overlay(ws);
         Page p = Widget.page();
         Vector2i v = p.mouse().sub(m, new Vector2i()).add(Math.max(m.x - o.x / 2, 0), -o.y);
-        Page.Simple s = new Page.Simple(o, v);
+        Page.Impl s = new Page.Impl();
+        s.put(o, v);
         p.overlay(s);
     }
 
     class Overlay extends WContainer {
         static final int MARGIN = 10;
         int x, y;
-        WPanel panel;
 
         public Overlay(List<Graph.Work> ws) {
             x = Node.WIDTH + 2 * MARGIN;
             y = ws.size() * Node.HEIGHT + 2 * MARGIN;
-            put(panel = new WPanel(x, y), 0, 0);
+            put(new WOverlay(x, y), 0, 0);
             for (int i = 0; i < ws.size(); i++) put(new Node(ws.get(i)), MARGIN, MARGIN + i * Node.HEIGHT);
-        }
-
-        @Override
-        public boolean onPress(@Nullable Vector2i mouse, boolean left) {
-            if (!panel.onTest(mouse)) Widget.page().overlay(null);
-            return super.onPress(mouse, left);
-        }
-
-        @Override
-        public boolean onKey(int code) {
-            if (code == GLFW.GLFW_KEY_ESCAPE) {
-                Widget.page().overlay(null);
-                return true;
-            } else return super.onKey(code);
         }
 
         class Node extends WFocus.Impl {

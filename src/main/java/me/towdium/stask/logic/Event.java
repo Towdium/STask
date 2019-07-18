@@ -141,6 +141,9 @@ public class Event {
 
         public static class Leave extends EGame {
         }
+
+        public static class Finish extends EGame {
+        }
     }
 
     public static abstract class EGraph extends Event {

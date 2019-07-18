@@ -31,6 +31,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Window extends Closeable implements Tickable {
     static int counter;
     static GLFWVidMode display;
+    static Window current;
     long id;
     boolean debug = false;
     boolean terminate = false;
@@ -58,6 +59,7 @@ public class Window extends Closeable implements Tickable {
         }
 
         counter++;
+        current = this;
         this.root = root;
         if (display == null) throw new IllegalStateException("No display found");
         id = GLFW.glfwCreateWindow(1280, 720, title, NULL, NULL);
@@ -74,6 +76,7 @@ public class Window extends Closeable implements Tickable {
         GLFW.glfwMakeContextCurrent(id);
         GL.createCapabilities();
         GLFW.glfwSetMouseButtonCallback(id, (window, button, action, mods) -> {
+            current = this;
             if (button > GLFW.GLFW_MOUSE_BUTTON_2) return;
             Vector2i m = mouse();
             boolean left = button == GLFW.GLFW_MOUSE_BUTTON_1;
@@ -87,10 +90,12 @@ public class Window extends Closeable implements Tickable {
             }
         });
         GLFW.glfwSetWindowSizeCallback(id, (window, width, height) -> {
+            current = this;
             this.root.onResize(width, height);
             loop();
         });
         GLFW.glfwSetKeyCallback(id, (window, key, code, action, mods) -> {
+            current = this;
             if (key == GLFW.GLFW_KEY_GRAVE_ACCENT) pause = action != GLFW.GLFW_RELEASE;
             else this.root.onKey(key);
         });
@@ -117,6 +122,10 @@ public class Window extends Closeable implements Tickable {
         painter = new Painter(this);
     }
 
+    public static Window getCurrent() {
+        return current;
+    }
+
     public void setDebug(boolean b) {
         debug = b;
     }
@@ -126,6 +135,7 @@ public class Window extends Closeable implements Tickable {
     }
 
     public void display() {
+        current = this;
         Vector2i size = getSize();
         GLFW.glfwSetWindowPos(id, (display.width() - size.x) / 2, (display.height() - size.y) / 2);
         GLFW.glfwShowWindow(id);
@@ -148,7 +158,7 @@ public class Window extends Closeable implements Tickable {
     }
 
     private void loop() {
-        long time = System.currentTimeMillis();
+        current = this;
         GLFW.glfwMakeContextCurrent(id);
         GL30C.glClear(GL30C.GL_COLOR_BUFFER_BIT);
         Vector2i m = mouse();
@@ -163,7 +173,6 @@ public class Window extends Closeable implements Tickable {
         }
         root.onDraw(painter, m);
         GLFW.glfwSwapBuffers(id);
-        //if (debug) Log.client.trace("Frame time: " + (System.currentTimeMillis() - time) + " ms");
     }
 
     public boolean getMouse(boolean left) {
