@@ -3,6 +3,7 @@ package me.towdium.stask.client.pages;
 import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Painter.Resource;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.client.widgets.*;
 import me.towdium.stask.logic.Algorithm;
@@ -29,7 +30,7 @@ public class PGame extends Page.Impl {
     Game game;
     WGraphs graphs;
     Widget tutorial;
-    WButton start = new WButtonText(120, 30, "start").setListener(i -> {
+    WButton start = new WButtonIcon(120, 30, Resource.START).setListener(i -> {
         if (!BUS.attempt(new Start())) return;
         game.start();
         BUS.post(new Start());
@@ -82,9 +83,9 @@ public class PGame extends Page.Impl {
         clear();
         graphs.setX(x - 300);
         put(graphs, 300, 0);
-        put(new WSchedule(x - 300, 100, game), 0, y - 200);
+        put(new WSchedule(x - 300, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
         put(new WCluster(game), 100, 100);
-        put(new WHistory(x - 300, game), 0, y - 100);
+        put(new WHistory(x - 300, game), 0, y - WHistory.HEIGHT);
         put(schedule, x - 140, y - 250);
         put(start, x - 140, y - 210);
         put(reset, x - 140, y - 170);

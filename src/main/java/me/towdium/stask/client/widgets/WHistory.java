@@ -22,13 +22,13 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WHistory extends WContainer {
-    static final int HEIGHT = 30;
-    static final int MARGIN = 48;
+    public static final int HEIGHT = WHistory.Rail.HEIGHT * 4 + WBar.HEIGHT;
     Game game;
     Map<Cluster.Processor, Rail> processors = new HashMap<>();
     int latest = 0;
     WBar bar;
     int width;
+    int offset = 0;
 
     public WHistory(int x, Game g) {
         game = g;
@@ -37,17 +37,27 @@ public class WHistory extends WContainer {
         for (int i = 0; i < ps.size(); i++) {
             Cluster.Processor p = ps.get(i);
             Rail r = new Rail(p, x, i % 2 + 1);
-            put(r, 0, HEIGHT * i);
+            put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
-        bar = new WBar(x - MARGIN).setListener((w, o, n) -> {
-            int offset;
+        bar = new WBar(x - Rail.MARGIN).setListener((w, o, n) -> {
             int count = game.getCount();
-            if (count < width - MARGIN) offset = 0;
-            else offset = (int) ((count - width + MARGIN) * n);
+            if (count < width - Rail.MARGIN) offset = 0;
+            else offset = (int) ((count - width + Rail.MARGIN) * n);
             processors.values().forEach(i -> i.setOffset(offset));
         });
-        put(bar, MARGIN, ps.size() * HEIGHT);
+        put(bar, Rail.MARGIN, 4 * Rail.HEIGHT);
+    }
+
+    @Override
+    public void onDraw(Painter p, Vector2i mouse) {
+        try (Painter.State ignore = p.color(0x333333)) {
+            p.drawRect(0, 0, Rail.MARGIN, 4 * Rail.HEIGHT);
+        }
+        super.onDraw(p, mouse);
+        try (Painter.State ignore = p.mask(Rail.MARGIN - 1, 0, width - Rail.MARGIN + 2, HEIGHT)) {
+            p.drawRect(Rail.MARGIN + game.getCount() - 1 - offset, 0, 2, 4 * Rail.HEIGHT);
+        }
     }
 
     @Override
@@ -56,8 +66,8 @@ public class WHistory extends WContainer {
         if (c != latest) {
             latest = c;
             bar.setPos(1);
-            bar.setRatio(latest == 0 ? 1 : Math.min((width - MARGIN) / (float) latest, 1));
-            processors.values().forEach(i -> i.setOffset(Math.max(0, latest - (width - MARGIN))));
+            bar.setRatio(latest == 0 ? 1 : Math.min((width - Rail.MARGIN) / (float) latest, 1));
+            processors.values().forEach(i -> i.setOffset(Math.max(0, latest - (width - Rail.MARGIN))));
         }
         super.onRefresh(mouse);
     }
@@ -66,7 +76,7 @@ public class WHistory extends WContainer {
         Overlay o = new Overlay(ws);
         Page p = Widget.page();
         Vector2i v = p.mouse().sub(m, new Vector2i()).add(Math.max(m.x - o.x / 2, 0), -o.y);
-        Page.Impl s = new Page.Impl();
+        Page.Overlay s = new Page.Overlay();
         s.put(o, v);
         p.overlay(s);
     }
@@ -122,6 +132,8 @@ public class WHistory extends WContainer {
     }
 
     class Rail extends WContainer {
+        static final int HEIGHT = 30;
+        static final int MARGIN = 48;
         Cluster.Processor processor;
         int multiplier;
         int x;
@@ -149,9 +161,6 @@ public class WHistory extends WContainer {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
-            try (Painter.State ignore = p.mask(MARGIN - 1, 0, x - MARGIN + 2, HEIGHT)) {
-                p.drawRect(MARGIN + game.getCount() - 1 - offset, 0, 2, HEIGHT);
-            }
         }
 
         @Override
@@ -166,7 +175,7 @@ public class WHistory extends WContainer {
         public boolean onClick(@Nullable Vector2i mouse, boolean left) {
             if (super.onClick(mouse, left)) return true;
             else if (mouse == null) return false;
-            else if (!game.isRunning() && Quad.inside(mouse, x, WHistory.HEIGHT)) {
+            else if (!game.isRunning() && Quad.inside(mouse, x, HEIGHT)) {
                 List<Graph.Work> ws = new ArrayList<>();
                 container.widgets.backward((w, v) -> {
                     if (w instanceof Node) {

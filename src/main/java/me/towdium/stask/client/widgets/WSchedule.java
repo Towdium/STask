@@ -32,8 +32,9 @@ import static me.towdium.stask.logic.Schedule.Node;
 public class WSchedule extends WContainer {
     Game game;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
+    public static final int HEIGHT = Rail.HEIGHT * 4;
 
-    public WSchedule(int x, int y, Game g) {
+    public WSchedule(int x, Game g) {
         game = g;
         List<Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
@@ -44,12 +45,20 @@ public class WSchedule extends WContainer {
         }
     }
 
+    @Override
+    public void onDraw(Painter p, Vector2i mouse) {
+        try (Painter.State ignore = p.color(0x333333)) {
+            p.drawRect(0, 0, Rail.MARGIN, 4 * Rail.HEIGHT);
+        }
+        super.onDraw(p, mouse);
+    }
+
     private boolean overlay(Rail.Node n, Vector2i m) {
         Node d = game.getSchedule().getNode(n.task);
         Overlay o = new Overlay(Objects.requireNonNull(d, "Internal error"));
         Page r = Widget.page();
         Vector2i v = r.mouse().sub(m).add(Rail.WIDTH / 2 - o.x / 2, -o.y);
-        Page.Impl s = new Page.Impl();
+        Page.Overlay s = new Page.Overlay();
         s.put(o, v);
         r.overlay(s);
         return true;

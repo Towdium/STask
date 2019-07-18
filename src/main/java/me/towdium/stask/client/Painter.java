@@ -244,6 +244,14 @@ public class Painter {
         flush();
     }
 
+    public void drawResource(Resource r, int x, int y) {
+        try (SMatrix matrix = matrix()) {
+            matrix.translate(x, y);
+            matrix.scale(r.mul, r.mul);
+            drawTexture(r.id, 0, 0, r.xs, r.ys, r.xp, r.yp);
+        }
+    }
+
     public void drawTexture(String texture, int xdp, int ydp, int xds, int yds,
                             int xsp, int ysp, int xss, int yss, int b) {
         drawTexture(texture, xdp, ydp, xds, yds, xsp, ysp, xss, yss, b, b, b, b);
@@ -459,6 +467,26 @@ public class Painter {
         }
     }
 
+    public static class Resource {
+        public static final Resource START = new Resource("1", 0, 0, 120, 120);
+        public final String id;
+        public final int xp, yp, xs, ys;
+        public final float mul;
+
+        public Resource(String id, int xp, int yp, int xs, int ys, float mul) {
+            this.id = id;
+            this.xp = xp;
+            this.yp = yp;
+            this.xs = xs;
+            this.ys = ys;
+            this.mul = mul;
+        }
+
+        public Resource(String id, int xp, int yp, int xs, int ys) {
+            this(id, xp, yp, xs, ys, 0.5f);
+        }
+    }
+
     private class Texture {
         static final int SOLID = 0, ALPHA = 1, TEXTURE = 2;
 
@@ -470,7 +498,7 @@ public class Painter {
 
         public Texture(String s) {
             int c, x, y;
-            ByteBuffer image = Utilities.readBytes("/textures/" + s);
+            ByteBuffer image = Utilities.readBytes("/textures/" + s + ".png");
             if (image == null) throw new RuntimeException("Failed to load texture: " + s);
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -490,8 +518,8 @@ public class Painter {
             int format = c == 3 ? GL30C.GL_RGB : GL30C.GL_RGBA;
             id = GL30C.glGenTextures();
             GL30C.glBindTexture(GL30C.GL_TEXTURE_2D, id);
-            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_NEAREST);
-            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_NEAREST);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MAG_FILTER, GL30C.GL_LINEAR);
+            GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_MIN_FILTER, GL30C.GL_LINEAR);
             GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_S, GL30C.GL_CLAMP_TO_EDGE);
             GL30C.glTexParameteri(GL30C.GL_TEXTURE_2D, GL30C.GL_TEXTURE_WRAP_T, GL30C.GL_CLAMP_TO_EDGE);
             if (c == 3 && (x & 3) != 0) GL30C.glPixelStorei(GL30C.GL_UNPACK_ALIGNMENT, 2 - (x & 1));

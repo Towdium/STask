@@ -115,12 +115,12 @@ public interface Page extends Widget {
         public void onDraw(Painter p, Vector2i mouse) {
             this.mouse = mouse;
             if (update()) Ref.page = this;
+            Vector2i m = convert(mouse);
             try (Painter.SMatrix s = p.matrix()) {
                 s.scale(multiplier, multiplier, 1);
-                Vector2i m = convert(mouse);
                 super.onDraw(p, m);
-                if (overlay != null) overlay.onDraw(p, m);
             }
+            if (overlay != null) overlay.onDraw(p, m);
         }
 
         @Override
@@ -175,6 +175,13 @@ public interface Page extends Widget {
             Ref.page.overlay(null);
         }
 
+        @Override
+        protected boolean update() {
+            return false;
+        }
+    }
+
+    class Overlay extends Impl {
         @Override
         protected boolean update() {
             return false;

@@ -1,10 +1,10 @@
 package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.Page;
+import me.towdium.stask.client.Window;
 import me.towdium.stask.client.widgets.WButton;
 import me.towdium.stask.client.widgets.WButtonText;
 import me.towdium.stask.client.widgets.WPanel;
-import me.towdium.stask.client.Window;
 
 /**
  * Author: Towdium
