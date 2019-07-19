@@ -130,6 +130,12 @@ public class Event {
         public static class Reset extends EGame {
         }
 
+        public static class SpeedUp extends EGame {
+        }
+
+        public static class SpeedDown extends EGame {
+        }
+
         public static class Pause extends EGame {
         }
 

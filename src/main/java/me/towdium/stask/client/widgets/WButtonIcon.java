@@ -21,6 +21,6 @@ public class WButtonIcon extends WButton {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         super.onDraw(p, mouse);
-        p.drawResource(Painter.Resource.START, (int) (x - res.xs * res.mul) / 2, (int) (y - res.ys * res.mul) / 2);
+        p.drawResource(res, (int) (x - res.xs * res.mul) / 2, (int) (y - res.ys * res.mul) / 2);
     }
 }

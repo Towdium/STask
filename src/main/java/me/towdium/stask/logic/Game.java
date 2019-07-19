@@ -42,6 +42,7 @@ public class Game implements Tickable {
     int count = 0;
     boolean statik;
     boolean running = false;
+    int speed = 1;
     String name;
     Timer timer = new Timer(SPEED, i -> update());
 
@@ -61,6 +62,14 @@ public class Game implements Tickable {
         for (Processor i : cluster.processors.values())
             processors.put(i, new Status(i));
         unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+    }
+
+    public int getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
     }
 
     public int getSeconds() {
@@ -148,20 +157,22 @@ public class Game implements Tickable {
 
     private void update() {
         if (!running) return;
-        if (count % RATE == 0 && !statik) {
-            int t = count / RATE;
-            SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
-            m = m.headMap(t + 1);
-            m.values().stream().flatMap(Collection::stream)
-                    .forEach(i -> BUS.post(new EGraph.Append(i)));
+        for (int j = 0; j < speed; j++) {
+            if (count % RATE == 0 && !statik) {
+                int t = count / RATE;
+                SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
+                m = m.headMap(t + 1);
+                m.values().stream().flatMap(Collection::stream)
+                        .forEach(i -> BUS.post(new EGraph.Append(i)));
+            }
+            boolean valid = false;
+            for (Status i : processors.values()) i.tickPre();
+            history.update();
+            for (Status i : processors.values())
+                if (i.tickPost()) valid = true;
+            if (!valid && statik) running = false;
+            count++;
         }
-        boolean valid = false;
-        for (Status i : processors.values()) i.tickPre();
-        history.update();
-        for (Status i : processors.values())
-            if (i.tickPost()) valid = true;
-        if (!valid && statik) running = false;
-        count++;
     }
 
     public History getHistory() {

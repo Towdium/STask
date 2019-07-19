@@ -6,12 +6,10 @@ import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Painter.Resource;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.client.widgets.*;
-import me.towdium.stask.logic.Algorithm;
 import me.towdium.stask.logic.Event;
 import me.towdium.stask.logic.Event.EGame.*;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Tutorial;
-import me.towdium.stask.logic.algorithms.AListHLEFT;
 import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,41 +23,15 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  */
 @ParametersAreNonnullByDefault
 public class PGame extends Page.Impl {
+    public static final int CONTROL_WIDTH = 200;
+    public static final int CONTROL_HEIGHT = 150;
+
     PWrapper root;
     Page parent;
     Game game;
     WGraphs graphs;
     Widget tutorial;
-    WButton start = new WButtonIcon(120, 30, Resource.START).setListener(i -> {
-        if (!BUS.attempt(new Start())) return;
-        game.start();
-        BUS.post(new Start());
-    });
-    WButton schedule = new WButtonText(120, 30, "schedule").setListener(i -> {
-        Algorithm a = new AListHLEFT();
-        a.run(game.getGraphs(), game.getCluster(), game.getSchedule());
-    });
-    WButton reset = new WButtonText(120, 30, "reset").setListener(i -> {
-        if (!BUS.attempt(new Reset())) return;
-        game.reset();
-        BUS.post(new Reset());
-    });
-    WButton pause = new WButtonText(120, 30, "pause").setListener(i -> {
-        if (!BUS.attempt(new Pause())) return;
-        game.pause();
-        BUS.post(new Pause());
-    });
-    WButton step = new WButtonText(120, 30, "step").setListener(i -> {
-        if (!BUS.attempt(new Step())) return;
-        game.start();
-        game.tick();
-        game.pause();
-        BUS.post(new Step());
-    });
-    WButton leave = new WButtonText(120, 30, "leave").setListener(i -> {
-        BUS.post(new Leave());
-        root.display(() -> parent);
-    });
+    Control control;
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
@@ -83,15 +55,13 @@ public class PGame extends Page.Impl {
         clear();
         graphs.setX(x - 300);
         put(graphs, 300, 0);
-        put(new WSchedule(x - 300, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
+        put(new WSchedule(x - CONTROL_WIDTH - 5, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
         put(new WCluster(game), 100, 100);
-        put(new WHistory(x - 300, game), 0, y - WHistory.HEIGHT);
-        put(schedule, x - 140, y - 250);
-        put(start, x - 140, y - 210);
-        put(reset, x - 140, y - 170);
-        put(pause, x - 140, y - 130);
-        put(step, x - 140, y - 90);
-        put(leave, x - 140, y - 50);
+        put(new WHistory(x - CONTROL_WIDTH - 5, game), 0, y - WHistory.HEIGHT);
+        put(new Control(), x - CONTROL_WIDTH - 5, y - 170);
+        put(new WRectangle(x - CONTROL_WIDTH - 5, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - 5);
+        put(new WRectangle(x, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
+        put(new WRectangle(5, WHistory.HEIGHT + WSchedule.HEIGHT + 10, 0xCCCCCC), x - CONTROL_WIDTH - 5, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
         if (tutorial != null) put(tutorial, x - WTutorial.WIDTH - 20, 20);
     }
 
@@ -137,6 +107,81 @@ public class PGame extends Page.Impl {
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
             p.drawTextCenter("Level completed", WIDTH / 2, 20 + Painter.fontAscent);
+        }
+    }
+
+    class Control extends WContainer {
+        boolean step = false;
+        WButton start = new WButtonIcon(48, 48, Resource.START);
+        WButton reset = new WButtonIcon(48, 48, Resource.RESET).setListener(i -> {
+            if (!BUS.attempt(new Reset())) return;
+            game.reset();
+            BUS.post(new Reset());
+        });
+        WButton pause = new WButtonIcon(48, 48, Resource.PAUSE);
+        WButton minus = new WButtonIcon(36, 36, Resource.MINUS).setListener(game.isStatic() ? this::minus : null);
+        WButton plus = new WButtonIcon(36, 36, Resource.PLUS).setListener(game.isStatic() ? this::plus : null);
+        WButton leave = new WButtonIcon(48, 48, Resource.CLOSE).setListener(i -> {
+            BUS.post(new Leave());
+            root.display(() -> parent);
+        });
+
+        public Control() {
+            put(start, 20, 50);
+            put(reset, 80, 50);
+            put(leave, 140, 50);
+            put(plus, 100, 0);
+            put(minus, 150, 0);
+            put(new WRectangle(65, 36, 0x333333), 20, 0);
+
+            start.setListener(i -> {
+                if (step) {
+                    if (!BUS.attempt(new Step())) return;
+                    game.start();
+                    game.tick();
+                    game.pause();
+                    BUS.post(new Step());
+                } else {
+                    if (!BUS.attempt(new Start())) return;
+                    game.start();
+                    BUS.post(new Start());
+                    remove(i);
+                    put(pause, 20, 50);
+                }
+            });
+
+            pause.setListener(i -> {
+                if (!BUS.attempt(new Pause())) return;
+                game.pause();
+                BUS.post(new Pause());
+                remove(i);
+                put(start, 20, 50);
+            });
+        }
+
+        @Override
+        public void onDraw(Painter p, Vector2i mouse) {
+            super.onDraw(p, mouse);
+            p.drawText("x" + (step ? 0 : game.getSpeed()), 30, 5 + Painter.fontAscent);
+        }
+
+        private void minus(WButton i) {
+            if (!BUS.attempt(new SpeedDown())) return;
+            int s = game.getSpeed();
+            if (s != 1) game.setSpeed(s / 2);
+            else step = true;
+            BUS.post(new SpeedDown());
+            if (step) i.setListener(null);
+            if (game.getSpeed() < 16) plus.setListener(this::plus);
+        }
+
+        private void plus(WButton i) {
+            if (!BUS.attempt(new SpeedUp())) return;
+            if (step) step = false;
+            else game.setSpeed(2 * game.getSpeed());
+            BUS.post(new SpeedUp());
+            if (game.getSpeed() >= 16) i.setListener(null);
+            if (!step) minus.setListener(this::minus);
         }
     }
 }

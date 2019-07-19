@@ -37,11 +37,17 @@ public interface Tutorial {
         WTutorial widget = new WTutorial();
         Event.Filter filter = new Event.Filter(this);
         protected Event.Bus bus = new Event.Bus();
+        boolean active = true;
 
         public Impl(Game g) {
             game = g;
-            Event.Bus.BUS.subscribe(Event.class, this, i -> bus.post(i));
-            Event.Bus.BUS.subscribe(Event.EGame.Leave.class, this, i -> filter.update(j -> true));
+            Event.Bus.BUS.subscribe(Event.class, this, i -> {
+                if (active) bus.post(i);
+            });
+            Event.Bus.BUS.subscribe(Event.EGame.Leave.class, this, i -> {
+                filter.update(j -> true);
+                active = false;
+            });
         }
 
         public void initialize(Stage... ss) {
@@ -65,7 +71,10 @@ public interface Tutorial {
         protected void pass() {
             int next = index + 1;
             if (next < stages.size()) update(next);
-            else widget.clear();
+            else {
+                widget.clear();
+                filter.update(i -> true);
+            }
         }
 
         public interface Stage {
