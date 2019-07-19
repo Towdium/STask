@@ -22,7 +22,6 @@ import java.util.*;
  */
 @ParametersAreNonnullByDefault
 public class WGraphs extends WContainer {
-    public static final int HEIGHT = 500;
     Animator animator = new Animator();
     Queue<Graph> add = new LinkedList<>();
     Queue<Graph> remove = new LinkedList<>();
@@ -30,10 +29,11 @@ public class WGraphs extends WContainer {
     Map<WGraph, Pair<Float, Float>> temp = new HashMap<>(); // background, transparency
     Game game;
     boolean moving = false;
-    int x;
+    int x, y;
 
-    public WGraphs(Game g, int x) {
+    public WGraphs(Game g, int x, int y) {
         this.x = x;
+        this.y = y;
         game = g;
         reset();
         Event.Bus.BUS.subscribe(EGraph.Append.class, this, i -> add.add(i.graph));
@@ -47,11 +47,16 @@ public class WGraphs extends WContainer {
         Event.Bus.BUS.subscribe(EGame.Reset.class, this, i -> reset());
     }
 
+    public void setY(int y) {
+        this.y = y;
+        for (WGraph i : graphs.values()) i.setY(y);
+    }
+
     private void reset() {
         clear();
         int offset = 0;
         for (Graph i : game.getGraphs()) {
-            WGraph w = new WGraph(HEIGHT, game, i);
+            WGraph w = new WGraph(y, game, i);
             put(w, offset, 0);
             graphs.put(i, w);
             offset += w.getWidth();
@@ -64,13 +69,13 @@ public class WGraphs extends WContainer {
         for (Map.Entry<WGraph, Pair<Float, Float>> i : temp.entrySet()) {
             try (Painter.State ignore1 = p.color(i.getValue().a);
                  Painter.State ignore2 = p.color(0x228822)) {
-                p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), HEIGHT);
+                p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), y);
             }
         }
         for (Map.Entry<WGraph, Pair<Float, Float>> i : temp.entrySet()) {
             try (Painter.State ignore1 = p.color(i.getValue().b);
                  Painter.State ignore2 = p.color(0x161616)) {
-                p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), HEIGHT);
+                p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), y);
             }
         }
     }
@@ -96,7 +101,7 @@ public class WGraphs extends WContainer {
                 temp.remove(out);
             } else if (!add.isEmpty()) {
                 Graph g = Objects.requireNonNull(add.poll(), "Internal error");
-                WGraph in = new WGraph(HEIGHT, game, g);
+                WGraph in = new WGraph(y, game, g);
                 graphs.put(g, in);
                 WidgetMap.Entry e = widgets.tail.last;
                 WGraph last = (WGraph) e.wgt;

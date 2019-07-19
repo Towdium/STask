@@ -24,20 +24,18 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
 @ParametersAreNonnullByDefault
 public class PGame extends Page.Impl {
     public static final int CONTROL_WIDTH = 200;
-    public static final int CONTROL_HEIGHT = 150;
 
     PWrapper root;
     Page parent;
     Game game;
     WGraphs graphs;
     Widget tutorial;
-    Control control;
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
         parent = p;
         game = g;
-        graphs = new WGraphs(game, 0);
+        graphs = new WGraphs(game, 0, 0);
         Tutorial t = game.getTutorial();
         if (t != null) tutorial = t.widget();
         BUS.subscribe(Event.EGame.Finish.class, this, i ->
@@ -54,11 +52,13 @@ public class PGame extends Page.Impl {
     protected void onLayout(int x, int y) {
         clear();
         graphs.setX(x - 300);
+        graphs.setY(y - WSchedule.HEIGHT - WHistory.HEIGHT - 10);
         put(graphs, 300, 0);
         put(new WSchedule(x - CONTROL_WIDTH - 5, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
-        put(new WCluster(game), 100, 100);
+        put(new WCluster(game), 20, 80);
         put(new WHistory(x - CONTROL_WIDTH - 5, game), 0, y - WHistory.HEIGHT);
         put(new Control(), x - CONTROL_WIDTH - 5, y - 170);
+        put(new WRectangle(5, y - WSchedule.HEIGHT - WHistory.HEIGHT - 10, 0xCCCCCC), WCluster.WIDTH + 40, 0);
         put(new WRectangle(x - CONTROL_WIDTH - 5, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - 5);
         put(new WRectangle(x, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
         put(new WRectangle(5, WHistory.HEIGHT + WSchedule.HEIGHT + 10, 0xCCCCCC), x - CONTROL_WIDTH - 5, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);

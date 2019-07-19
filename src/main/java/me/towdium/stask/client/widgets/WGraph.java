@@ -24,6 +24,9 @@ public class WGraph extends WContainer {
     protected Graph graph;
     protected Map<Graph.Task, WTask> tasks = new IdentityHashMap<>();
     protected int width;
+    protected int height;
+    protected int offset;
+    protected WContainer container = new WContainer();
 
     public WGraph(int y, Game g, Graph r) {
         game = g;
@@ -33,7 +36,8 @@ public class WGraph extends WContainer {
         width = max * (WTask.WIDTH + 24) + 24;
         int ys = layout.size();
         int yd = 36;
-        int yo = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
+        offset = (y - ys * (WTask.HEIGHT + yd) + yd) / 2;
+        height = ys * (WTask.HEIGHT + yd) - yd;
         for (int i = 0; i < ys; i++) {
             List<Task> row = layout.get(i);
             int xs = row.size();
@@ -44,28 +48,37 @@ public class WGraph extends WContainer {
                 if (t == null) continue;
                 WTask w = new WTask(t, game);
                 tasks.put(t, w);
-                put(w, xo + j * (xd + WTask.WIDTH), yo + i * (yd + WTask.HEIGHT));
+                container.put(w, xo + j * (xd + WTask.WIDTH), i * (yd + WTask.HEIGHT));
             }
         }
+        put(container, 0, offset);
     }
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
-        for (Graph.Task i : tasks.keySet()) {
-            for (Map.Entry<Task, Graph.Comm> j : i.getSuccessor().entrySet()) {
-                if (WFocus.isFocused(i) || WFocus.isFocused(j.getKey()) || WFocus.isFocused(j.getValue()))
-                    late.add(new Pair<>(i, j.getKey()));
-                else drawConnection(p, i, j.getKey(), false);
+        try (Painter.SMatrix matrix = p.matrix()) {
+            matrix.translate(0, offset);
+            List<Pair<Graph.Task, Graph.Task>> late = new ArrayList<>();
+            for (Graph.Task i : tasks.keySet()) {
+                for (Map.Entry<Task, Graph.Comm> j : i.getSuccessor().entrySet()) {
+                    if (WFocus.isFocused(i) || WFocus.isFocused(j.getKey()) || WFocus.isFocused(j.getValue()))
+                        late.add(new Pair<>(i, j.getKey()));
+                    else drawConnection(p, i, j.getKey(), false);
+                }
             }
+            for (Pair<Task, Task> i : late) drawConnection(p, i.a, i.b, true);
         }
-        for (Pair<Task, Task> i : late) drawConnection(p, i.a, i.b, true);
         super.onDraw(p, mouse);
     }
 
+    public void setY(int y) {
+        offset = (y - height) / 2;
+        put(container, 0, offset);
+    }
+
     protected void drawConnection(Painter p, Task a, Task b, boolean highlight) {
-        Vector2f start = new Vector2f(find(tasks.get(a))).add(WTask.WIDTH / 2f, WTask.HEIGHT).add(0, -1);
-        Vector2f end = new Vector2f(find(tasks.get(b))).add(WTask.WIDTH / 2f, 0).add(0, 1);
+        Vector2f start = new Vector2f(container.find(tasks.get(a))).add(WTask.WIDTH / 2f, WTask.HEIGHT).add(0, -1);
+        Vector2f end = new Vector2f(container.find(tasks.get(b))).add(WTask.WIDTH / 2f, 0).add(0, 1);
         Vector2f diff = end.sub(start, new Vector2f());
         try (Painter.SMatrix s = p.matrix()) {
             s.translate(start.x, start.y);

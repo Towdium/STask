@@ -35,6 +35,10 @@ public class Cluster {
         pojo.layout.forEach(s -> layout.add(processors.get(s)));
     }
 
+    public Policy getPolicy() {
+        return policy;
+    }
+
     public Map<String, Processor> getProcessors() {
         return Collections.unmodifiableMap(processors);
     }
@@ -88,9 +92,9 @@ public class Cluster {
     }
 
     public static class Policy {
-        boolean multiple;
-        boolean immediate;
-        boolean background;
+        public final boolean multiple;
+        public final boolean immediate;
+        public final boolean background;
 
         public Policy(boolean multiple, boolean immediate, boolean background) {
             this.multiple = multiple;
