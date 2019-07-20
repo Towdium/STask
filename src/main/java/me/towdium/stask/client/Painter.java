@@ -467,31 +467,6 @@ public class Painter {
         }
     }
 
-    public static class Resource {
-        public static final Resource START = new Resource("1", 0, 0, 120, 120, 0.4f);
-        public static final Resource PAUSE = new Resource("1", 120, 0, 120, 120, 0.4f);
-        public static final Resource RESET = new Resource("1", 240, 0, 120, 120, 0.4f);
-        public static final Resource CLOSE = new Resource("1", 360, 0, 120, 120, 0.4f);
-        public static final Resource PLUS = new Resource("1", 480, 0, 120, 120, 0.3f);
-        public static final Resource MINUS = new Resource("1", 600, 0, 120, 120, 0.3f);
-        public final String id;
-        public final int xp, yp, xs, ys;
-        public final float mul;
-
-        public Resource(String id, int xp, int yp, int xs, int ys, float mul) {
-            this.id = id;
-            this.xp = xp;
-            this.yp = yp;
-            this.xs = xs;
-            this.ys = ys;
-            this.mul = mul;
-        }
-
-        public Resource(String id, int xp, int yp, int xs, int ys) {
-            this(id, xp, yp, xs, ys, 0.5f);
-        }
-    }
-
     private class Texture {
         static final int SOLID = 0, ALPHA = 1, TEXTURE = 2;
 

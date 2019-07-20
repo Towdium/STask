@@ -29,7 +29,7 @@ public class Pojo {
     }
 
     public static class Policy {
-        boolean multiple, immediate, background;
+        boolean multiple, background;
     }
 
     public static class Processor {

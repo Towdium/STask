@@ -1,11 +1,8 @@
 package me.towdium.stask.client.pages;
 
-import me.towdium.stask.client.Animator;
-import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Painter.Resource;
-import me.towdium.stask.client.Widget;
+import me.towdium.stask.client.*;
 import me.towdium.stask.client.widgets.*;
+import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Event;
 import me.towdium.stask.logic.Event.EGame.*;
 import me.towdium.stask.logic.Game;
@@ -30,34 +27,49 @@ public class PGame extends Page.Impl {
     Game game;
     WGraphs graphs;
     Widget tutorial;
+    WText timer = new WText(0xFFFFFF, "");
+    WText comm;
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
         parent = p;
         game = g;
         graphs = new WGraphs(game, 0, 0);
+        Cluster cluster = game.getCluster();
+        comm = new WText(0xFFFFFF, cluster.getComm() == 0 ? "" : "x" + cluster.getComm());
         Tutorial t = game.getTutorial();
         if (t != null) tutorial = t.widget();
         BUS.subscribe(Event.EGame.Finish.class, this, i ->
-                Widget.page().overlay(new Center(new Success(), Success.WIDTH, Success.HEIGHT)));
+                Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT)));
     }
 
     @Override
     public void onRefresh(Vector2i mouse) {
         super.onRefresh(mouse);
         game.tick();
+        int sec = game.getSeconds();
+        timer.str = String.format("%02d:%02d", sec / 60, sec % 60);
     }
 
     @Override
     protected void onLayout(int x, int y) {
+        WStatus.text = "";
         clear();
         graphs.setX(x - 300);
         graphs.setY(y - WSchedule.HEIGHT - WHistory.HEIGHT - 10);
         put(graphs, 300, 0);
         put(new WSchedule(x - CONTROL_WIDTH - 5, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
-        put(new WCluster(game), 20, 80);
+        put(new WCluster(game), 20, (y - WHistory.HEIGHT - WSchedule.HEIGHT - 92 - WCluster.HEIGHT) / 2 + 82);
         put(new WHistory(x - CONTROL_WIDTH - 5, game), 0, y - WHistory.HEIGHT);
-        put(new Control(), x - CONTROL_WIDTH - 5, y - 170);
+        put(new Control(), x - CONTROL_WIDTH - 5, y - 190);
+        put(new WStatus(), x - CONTROL_WIDTH + 5, y - Painter.fontHeight - 3);
+        put(timer, 35, 5);
+        put(comm, 35, 46);
+        put(new WTooltip.Impl(WCluster.WIDTH + 40, 36, "Game timer"), 0, 0);
+        put(new WTooltip.Impl(WCluster.WIDTH + 40, 36, "Comm. speed"), 0, 41);
+        put(new WRectangle(WCluster.WIDTH + 40, 5, 0xCCCCCC), 0, 36);
+        put(new WRectangle(WCluster.WIDTH + 40, 5, 0xCCCCCC), 0, 77);
+        put(new WRectangle(CONTROL_WIDTH, 5, 0xCCCCCC), x - CONTROL_WIDTH, y - 33);
         put(new WRectangle(5, y - WSchedule.HEIGHT - WHistory.HEIGHT - 10, 0xCCCCCC), WCluster.WIDTH + 40, 0);
         put(new WRectangle(x - CONTROL_WIDTH - 5, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - 5);
         put(new WRectangle(x, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
@@ -68,17 +80,18 @@ public class PGame extends Page.Impl {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         super.onDraw(p, mouse);
-        int sec = game.getSeconds();
-        String s = String.format("%02d:%02d", sec / 60, sec % 60);
-        p.drawText(s, 0, Painter.fontAscent);
+        p.drawResource(Resource.CLOCK, 2, 2);
+        p.drawResource(Resource.COMM, 2, 44);
+        if (game.getCluster().getComm() == 0)
+            p.drawResource(Resource.INFINITY, 20, 45);
     }
 
-    class Success extends WContainer {
+    class Complete extends WContainer {
         static final int WIDTH = 300;
         static final int HEIGHT = 100;
         Animator animator = new Animator();
 
-        public Success() {
+        public Complete() {
             put(new WOverlay(WIDTH, HEIGHT), 0, 0);
             List<Integer> aims = game.getAims();
             int len = aims.size() * 80 - 30;
@@ -92,7 +105,7 @@ public class PGame extends Page.Impl {
                 int c = game.getSeconds() > a ? 0xFF8888 : 0x88FF88;
                 animate = () -> animator.addColor(0xFFFFFF, c, 500,
                         new Animator.FBezier(0, 0), j -> w.color = j, r);
-                put(w, (WIDTH - len) / 2 + i * 80, 75);
+                put(w, (WIDTH - len) / 2 + i * 80, 55);
             }
             animate.run();
         }
@@ -112,16 +125,16 @@ public class PGame extends Page.Impl {
 
     class Control extends WContainer {
         boolean step = false;
-        WButton start = new WButtonIcon(48, 48, Resource.START);
-        WButton reset = new WButtonIcon(48, 48, Resource.RESET).setListener(i -> {
+        WButton start = new WButtonIcon(48, 48, Resource.START, "Start");
+        WButton reset = new WButtonIcon(48, 48, Resource.RESET, "Reset").setListener(i -> {
             if (!BUS.attempt(new Reset())) return;
             game.reset();
             BUS.post(new Reset());
         });
-        WButton pause = new WButtonIcon(48, 48, Resource.PAUSE);
-        WButton minus = new WButtonIcon(36, 36, Resource.MINUS).setListener(game.isStatic() ? this::minus : null);
-        WButton plus = new WButtonIcon(36, 36, Resource.PLUS).setListener(game.isStatic() ? this::plus : null);
-        WButton leave = new WButtonIcon(48, 48, Resource.CLOSE).setListener(i -> {
+        WButton pause = new WButtonIcon(48, 48, Resource.PAUSE, "Pause");
+        WButton plus = new WButtonIcon(36, 36, Resource.PLUS, "Speed up").setListener(game.isStatic() ? this::plus : null);
+        WButton minus = new WButtonIcon(36, 36, Resource.MINUS, "Speed down").setListener(game.isStatic() ? this::minus : null);
+        WButton leave = new WButtonIcon(48, 48, Resource.CLOSE, "Quit").setListener(i -> {
             BUS.post(new Leave());
             root.display(() -> parent);
         });
@@ -150,7 +163,7 @@ public class PGame extends Page.Impl {
                 }
             });
 
-            pause.setListener(i -> {
+            if (!game.isStatic()) pause.setListener(i -> {
                 if (!BUS.attempt(new Pause())) return;
                 game.pause();
                 BUS.post(new Pause());

@@ -23,7 +23,8 @@ public class Cluster {
         String json = Utilities.readString("/clusters/" + id + ".json");
         Gson gson = new Gson();
         Pojo.Cluster pojo = gson.fromJson(json, Pojo.Cluster.class);
-        policy = new Policy(pojo.policy.multiple, pojo.policy.immediate, pojo.policy.background);
+        if (pojo.policy == null) policy = null;
+        else policy = new Policy(pojo.policy.multiple, pojo.policy.background);
         comm = pojo.comm;
         pojo.processors.forEach((s, p) -> {
             Processor tmp = new Processor();
@@ -33,6 +34,10 @@ public class Cluster {
             processors.put(s, tmp);
         });
         pojo.layout.forEach(s -> layout.add(processors.get(s)));
+    }
+
+    public int getComm() {
+        return comm;
     }
 
     public Policy getPolicy() {
@@ -93,12 +98,10 @@ public class Cluster {
 
     public static class Policy {
         public final boolean multiple;
-        public final boolean immediate;
         public final boolean background;
 
-        public Policy(boolean multiple, boolean immediate, boolean background) {
+        public Policy(boolean multiple, boolean background) {
             this.multiple = multiple;
-            this.immediate = immediate;
             this.background = background;
         }
     }

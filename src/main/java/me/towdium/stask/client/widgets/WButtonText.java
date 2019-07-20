@@ -3,6 +3,7 @@ package me.towdium.stask.client.widgets;
 import me.towdium.stask.client.Painter;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -14,7 +15,11 @@ public class WButtonText extends WButton {
     String s;
 
     public WButtonText(int x, int y, String s) {
-        super(x, y);
+        this(x, y, s, null);
+    }
+
+    public WButtonText(int x, int y, String s, @Nullable String text) {
+        super(x, y, text);
         this.s = s;
     }
 

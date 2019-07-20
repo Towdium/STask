@@ -11,11 +11,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * Date: 08/04/19
  */
 @ParametersAreNonnullByDefault
-public abstract class WButton extends WArea.Impl {
+public abstract class WButton extends WTooltip.Impl {
     protected ListenerAction<? super WButton> listener;
 
-    public WButton(int x, int y) {
-        super(x, y);
+    public WButton(int x, int y, @Nullable String text) {
+        super(x, y, text);
     }
 
     public WButton setListener(@Nullable ListenerAction<? super WButton> r) {

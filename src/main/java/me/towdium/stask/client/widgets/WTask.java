@@ -1,9 +1,6 @@
 package me.towdium.stask.client.widgets;
 
-import me.towdium.stask.client.Animator;
-import me.towdium.stask.client.Page;
-import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Widget;
+import me.towdium.stask.client.*;
 import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
@@ -21,7 +18,7 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  */
 @ParametersAreNonnullByDefault
 public class WTask extends WCompose {
-    public static final int WIDTH = 80;
+    public static final int WIDTH = 100;
     public static final int HEIGHT = 56;
     Graph.Task task;
     Schedule schedule;
@@ -74,14 +71,21 @@ public class WTask extends WCompose {
         try (Painter.State ignore = p.color(color)) {
             p.drawRect(0, 0, WTask.WIDTH, HEIGHT);
         }
+
+        p.drawTextRight(Integer.toString(t.getTime()), WTask.WIDTH / 2 - 6, Painter.fontAscent + 1);
+        p.drawTextRight(t.getType(), WTask.WIDTH - 6, Painter.fontAscent);
+        p.drawTextRight(t.getName(), WTask.WIDTH - 6, Painter.fontAscent + WTask.HEIGHT / 2 + 1);
+        try (Painter.State ignore = p.color(0xFFFFFF)) {
+            p.drawResource(Resource.CLOCK, -1, -1);
+            p.drawResource(Resource.CLASS, 50, -1);
+            p.drawResource(Resource.CURSOR, 1, 27);
+        }
+
         if (highlight) {
             try (Painter.State ignore = p.color(0xAAFFFFFF)) {
                 p.drawRect(0, 0, WTask.WIDTH, WTask.HEIGHT);
             }
         }
-        p.drawTextRight(Integer.toString(t.getTime()), WTask.WIDTH / 2 - 6, Painter.fontAscent + 1);
-        p.drawTextRight(t.getType(), WTask.WIDTH - 6, Painter.fontAscent);
-        p.drawTextRight(t.getName(), WTask.WIDTH - 6, Painter.fontAscent + WTask.HEIGHT / 2 + 1);
     }
 
     public static void drawTask(Painter p, Graph.Task t, int x, int y) {

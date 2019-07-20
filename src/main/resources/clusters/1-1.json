@@ -1,5 +1,5 @@
 {
-  "comm": 1,
+  "comm": 0,
   "processors": {
     "a": {
       "speed": 1,
@@ -13,8 +13,5 @@
   "layout": [
     "a",
     "b"
-  ],
-  "policy": {
-    "immediate": true
-  }
+  ]
 }

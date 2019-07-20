@@ -1,8 +1,10 @@
 package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Resource;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -11,10 +13,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class WButtonIcon extends WButton {
-    Painter.Resource res;
+    Resource res;
 
-    public WButtonIcon(int x, int y, Painter.Resource r) {
-        super(x, y);
+    public WButtonIcon(int x, int y, Resource r) {
+        this(x, y, r, null);
+    }
+
+    public WButtonIcon(int x, int y, Resource r, @Nullable String text) {
+        super(x, y, text);
         res = r;
     }
 

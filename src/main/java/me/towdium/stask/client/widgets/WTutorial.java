@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Resource;
 import me.towdium.stask.client.Widget;
 
 import java.util.ArrayList;
@@ -19,8 +20,8 @@ public class WTutorial extends WContainer {
 
     public WTutorial() {
         put(new WPanel(WIDTH, HEIGHT), 0, 0);
-        put(right = new WButtonText(40, 30, ">"), 340, 360);
-        put(left = new WButtonText(40, 30, "<"), 20, 360);
+        put(right = new WButtonIcon(40, 30, Resource.RIGHT, "Next"), 340, 360);
+        put(left = new WButtonIcon(40, 30, Resource.LEFT, "Previous"), 20, 360);
     }
 
     public void update(Widget w, boolean change) {

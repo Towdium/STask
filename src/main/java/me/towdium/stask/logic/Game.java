@@ -180,7 +180,7 @@ public class Game implements Tickable {
     }
 
     public boolean available(Game.Status s, Game.Status d) {
-        if (cluster.policy.immediate) return true;
+        if (cluster.comm == 0) return true;
         if (!cluster.policy.background && (s.working != null || d.working != null)) return false;
         if (!cluster.policy.multiple && (!s.comms.isEmpty() || !d.comms.isEmpty())) return false;
         for (Trio<Float, Boolean, Processor> i : s.comms.values())
@@ -229,7 +229,7 @@ public class Game implements Tickable {
 
         private boolean attempt(Comm c) {
             Processor src = output.get(c);
-            if (cluster.policy.immediate && src != null) return true;
+            if (cluster.comm == 0 && src != null) return true;
             if (input.contains(c) || src == processor) return true;
 
             if (!comms.containsKey(c)) {

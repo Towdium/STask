@@ -8,22 +8,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Author: Towdium
- * Date: 17/07/19
+ * Date: 19/07/19
  */
 @ParametersAreNonnullByDefault
-public class WText implements Widget {
-    public int color;
-    public String str;
-
-    public WText(int color, String str) {
-        this.color = color;
-        this.str = str;
-    }
+public class WStatus implements Widget {
+    public static String text = null;
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(color)) {
-            p.drawText(str, 0, Painter.fontAscent);
-        }
+        if (text != null) p.drawText(text, 0, Painter.fontAscent);
     }
 }

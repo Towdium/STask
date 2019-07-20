@@ -1,6 +1,7 @@
 package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Resource;
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
@@ -20,6 +21,7 @@ import java.util.Map;
 @ParametersAreNonnullByDefault
 public class WCluster extends WContainer {
     public static final int WIDTH = Node.WIDTH + 60;
+    public static final int HEIGHT = 4 * (Node.HEIGHT + Node.SPACING) - Node.SPACING;
     Game game;
     Map<Cluster.Processor, Integer> processors = new HashMap<>();
 
@@ -79,13 +81,13 @@ public class WCluster extends WContainer {
             try (Painter.State ignore = p.color(0x444444)) {
                 p.drawRect(0, 0, WIDTH, HEIGHT);
             }
-            p.drawTextRight(status.getProcessor().getName(), 62, Painter.fontAscent + 1);
+            p.drawTextRight(status.getProcessor().getName(), 78, Painter.fontAscent + 1);
             try (Painter.State ignore = p.color(0x44882200)) {
-                p.drawRect(70, 0, 62, 28, 2);
-                p.drawRect(70, 0, (int) (62 * status.getProgress()), 28);
+                p.drawRect(88, 0, 44, 28, 2);
+                p.drawRect(88, 0, (int) (44 * status.getProgress()), 28);
             }
             try (Painter.State ignore = p.color(0x44226688)) {
-                if (game.getCluster().getPolicy().immediate) {
+                if (game.getCluster().getComm() == 0) {
                     p.drawRect(0, 28, 132, 28, 2);
                     try (Painter.SMatrix matrix = p.matrix()) {
                         matrix.translate(0, 28);
@@ -104,6 +106,7 @@ public class WCluster extends WContainer {
                     if (it.hasNext()) p.drawRect(0, 28, (int) (132 * it.next().a), 28);
                 }
             }
+            p.drawResource(Resource.PROCESSOR, 0, 0);
         }
     }
 }
