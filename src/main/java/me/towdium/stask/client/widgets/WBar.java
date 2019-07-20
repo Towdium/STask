@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.utils.Quad;
 import org.joml.Vector2i;
@@ -55,7 +56,7 @@ public class WBar extends WContainer {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(0x333333)) {
+        try (Painter.State ignore = p.color(Colour.DISABLED)) {
             p.drawRect(0, 0, width, HEIGHT);
         }
         super.onDraw(p, mouse);
@@ -75,7 +76,7 @@ public class WBar extends WContainer {
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            int color = onTest(mouse) || drag ? 0xAAAAAA : 0x666666;
+            int color = onTest(mouse) || drag ? Colour.HOVERED : Colour.INTERACT;
             try (Painter.State ignore = p.color(color)) {
                 p.drawRect(0, 0, x, HEIGHT);
             }

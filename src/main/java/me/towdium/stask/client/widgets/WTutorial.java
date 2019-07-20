@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class WTutorial extends WContainer {
     public static final int WIDTH = 400;
-    public static final int HEIGHT = 400;
+    public static final int HEIGHT = 420;
 
     List<Widget> widgets = new ArrayList<>();
     WButton left, right;
@@ -20,8 +20,8 @@ public class WTutorial extends WContainer {
 
     public WTutorial() {
         put(new WPanel(WIDTH, HEIGHT), 0, 0);
-        put(right = new WButtonIcon(40, 30, Resource.RIGHT, "Next"), 340, 360);
-        put(left = new WButtonIcon(40, 30, Resource.LEFT, "Previous"), 20, 360);
+        put(right = new WButtonIcon(30, 30, Resource.RIGHT, "Next"), 360, 380);
+        put(left = new WButtonIcon(30, 30, Resource.LEFT, "Previous"), 10, 380);
     }
 
     public void update(Widget w, boolean change) {

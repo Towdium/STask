@@ -42,6 +42,7 @@ public class Pojo {
         List<Integer> times;
         List<String> graphs;
         List<Integer> aims;
+        String desc;
     }
 
     public static class Levels {
@@ -50,5 +51,6 @@ public class Pojo {
 
     public static class Section {
         List<String> levels;
+        String desc;
     }
 }

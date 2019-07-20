@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
@@ -21,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
-import static me.towdium.stask.logic.Schedule.Node;
+
 
 /**
  * Author: Towdium
@@ -39,7 +40,7 @@ public class WSchedule extends WContainer {
         List<Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
             Processor p = ps.get(i);
-            Rail r = new Rail(p, x, i % 2 + 1);
+            Rail r = new Rail(p, x, i % 2 == 0);
             put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
@@ -47,34 +48,34 @@ public class WSchedule extends WContainer {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(0x333333)) {
+        try (Painter.State ignore = p.color(Colour.DISABLED)) {
             p.drawRect(0, 0, Rail.MARGIN, 4 * Rail.HEIGHT);
         }
         super.onDraw(p, mouse);
     }
 
-    private boolean overlay(Rail.Node n, Vector2i m) {
-        Node d = game.getSchedule().getNode(n.task);
+    private void overlay(Rail.Node n, Vector2i m) {
+        Schedule.Node d = game.getSchedule().getNode(n.task);
         Overlay o = new Overlay(Objects.requireNonNull(d, "Internal error"));
+        if (d.getComms().size() <= 1) return;
         Page r = Widget.page();
         Vector2i v = r.mouse().sub(m).add(Rail.WIDTH / 2 - o.x / 2, -o.y);
         Page.Overlay s = new Page.Overlay();
         s.put(o, v);
         r.overlay(s);
-        return true;
     }
 
     class Rail extends WCompose {
         static final int WIDTH = 80;
         static final int HEIGHT = 30;
-        static final int MARGIN = 48;
+        static final int MARGIN = 70;
 
         Processor processor;
         int index = -1;
-        int multiplier;
+        boolean highlight;
         Node ghost = null;
 
-        public Rail(Processor p, int x, int m) {
+        public Rail(Processor p, int x, boolean h) {
             compose(new WDrag.Impl(x, HEIGHT) {
                 @Override
                 public void onReceived(Object o) {
@@ -88,15 +89,11 @@ public class WSchedule extends WContainer {
 
                 @Override
                 public boolean onAttempt(Object o, Vector2i mouse) {
-                    if (o instanceof Task) {
-
-                        return BUS.attempt(new ETask.Schedule((Task) o, processor));
-                    }
-                    return false;
+                    return o instanceof Task && BUS.attempt(new ETask.Schedule((Task) o, processor));
                 }
             });
             processor = p;
-            multiplier = m;
+            highlight = h;
         }
 
         @Override
@@ -108,7 +105,7 @@ public class WSchedule extends WContainer {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
-            try (Painter.State ignore = p.color(multiplier * 0x444444)) {
+            try (Painter.State ignore = p.color(highlight ? Colour.ACTIVE2 : Colour.ACTIVE1)) {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
@@ -156,7 +153,7 @@ public class WSchedule extends WContainer {
             return i.v;
         }
 
-        class Node extends WCompose implements WArea {
+        class Node extends WCompose implements WArea {  // TODO fix crash when picking
             Task task;
             int idx;
             boolean visible = true;
@@ -221,11 +218,11 @@ public class WSchedule extends WContainer {
                     else if (game.getSchedule().allocated(task)) progress = 0;
                     else progress = 1;
 
-                    try (Painter.State ignore = p.color(0x888888)) {
+                    try (Painter.State ignore = p.color(Colour.ACTIVE3)) {
                         p.drawRect(0, 0, (int) (WIDTH * progress), HEIGHT);
                     }
 
-                    int color = WFocus.isFocused(task) ? 0xCCCCCC : 0x888888;
+                    int color = WFocus.isFocused(task) ? 0xCCCCCC : Colour.ACTIVE3;
                     try (Painter.State ignore = p.color(color)) {
                         p.drawRect(0, 0, WIDTH, HEIGHT, 2);
                     }

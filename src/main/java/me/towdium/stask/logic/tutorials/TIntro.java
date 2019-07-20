@@ -5,6 +5,8 @@ import me.towdium.stask.client.widgets.WGraph;
 import me.towdium.stask.client.widgets.WTask;
 import me.towdium.stask.client.widgets.WTutorial;
 import me.towdium.stask.logic.Event;
+import me.towdium.stask.logic.Event.EGame;
+import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Tutorial;
@@ -12,6 +14,8 @@ import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
+
+import static me.towdium.stask.logic.Event.Bus.BUS;
 
 /**
  * Author: Towdium
@@ -57,12 +61,12 @@ public class TIntro extends Tutorial.Impl {
         }
 
         @Override
-        protected void add(WTutorial w) {
-            w.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+        protected void add() {
+            widget.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
 
             Game g = new Game("tutorial");
             Graph r = g.getGraphs().iterator().next();
-            w.update((p, m) -> {
+            widget.update((p, m) -> {
                 p.drawTextWrapped(S2, 10, 140 + Painter.fontAscent, WTutorial.WIDTH - 20);
                 WTask.drawTask(p, r.getTask("a"), 200, 70);
             }, false);
@@ -78,7 +82,7 @@ public class TIntro extends Tutorial.Impl {
                     }
                 }
             };
-            w.update((p, m) -> {
+            widget.update((p, m) -> {
                 try (Painter.SMatrix matrix = p.matrix()) {
                     matrix.translate(200 - a.getWidth() / 2, 5);
                     a.onDraw(p, m);
@@ -86,9 +90,9 @@ public class TIntro extends Tutorial.Impl {
                 p.drawTextWrapped(S3, 10, 200 + Painter.fontAscent, WTutorial.WIDTH - 20);
             }, false);
 
-            w.update((p, m) -> p.drawTextWrapped(S4, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
-            w.update((p, m) -> p.drawTextWrapped(S5, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
-            w.update((p, m) -> p.drawTextWrapped(S6, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
+            widget.update((p, m) -> p.drawTextWrapped(S4, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
+            widget.update((p, m) -> p.drawTextWrapped(S5, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
+            widget.update((p, m) -> p.drawTextWrapped(S6, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
         }
     }
 
@@ -101,27 +105,29 @@ public class TIntro extends Tutorial.Impl {
         }
 
         @Override
-        public boolean test(Event e) {
-            if (e instanceof Event.ETask.Schedule) {
-                Event.ETask.Schedule s = (Event.ETask.Schedule) e;
-                return s.task.getName().equals(task) && s.processor.getName().equals(processor);
-            } else if (e instanceof Event.ETask.Pick) {
-                Event.ETask.Pick p = (Event.ETask.Pick) e;
-                return p.source instanceof WTask;
-            } else return false;
-        }
-
-        @Override
-        public void activate(WTutorial w) {
-            bus.subscribe(Event.ETask.Schedule.class, this, e -> {
+        public void activate() {
+            BUS.subscribe(ETask.Schedule.class, this, e -> {
                 if (e.task.getName().equals(task) && e.processor.getName().equals(processor)) pass();
             });
-            add(w);
+            BUS.gate(Event.class, this, e -> {
+                if (e instanceof ETask.Schedule) {
+                    ETask.Schedule s = (ETask.Schedule) e;
+                    return s.task.getName().equals(task) && s.processor.getName().equals(processor);
+                } else if (e instanceof ETask.Pick) {
+                    ETask.Pick p = (ETask.Pick) e;
+                    return p.source instanceof WTask;
+                } else return false;
+            });
+            add();
         }
 
-        protected void add(WTutorial w) {
+        public void deactivate() {
+            BUS.cancel(this);
+        }
+
+        protected void add() {
             String s = "Then allocate task " + task + " to processor " + processor + ".";
-            w.update((p, m) -> p.drawTextWrapped(s, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+            widget.update((p, m) -> p.drawTextWrapped(s, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
         }
     }
 
@@ -136,15 +142,16 @@ public class TIntro extends Tutorial.Impl {
                 "Now things are set up. Let's hit the start button to execute the schedule.";
 
         @Override
-        public boolean test(Event e) {
-            return e instanceof Event.EGame.Start;
+        public void activate() {
+            BUS.subscribe(EGame.Start.class, this, e -> pass());
+            BUS.gate(Event.class, this, e -> e instanceof EGame.Start);
+            widget.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+            widget.update((p, m) -> p.drawTextWrapped(S2, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
         }
 
         @Override
-        public void activate(WTutorial w) {
-            bus.subscribe(Event.EGame.Start.class, this, e -> pass());
-            w.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
-            w.update((p, m) -> p.drawTextWrapped(S2, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+        public void deactivate() {
+            BUS.cancel(this);
         }
     }
 }

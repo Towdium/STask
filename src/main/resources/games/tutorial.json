@@ -3,5 +3,6 @@
     "tutorial"
   ],
   "cluster": "real",
-  "aims": []
+  "aims": [],
+  "desc": "tutorial"
 }

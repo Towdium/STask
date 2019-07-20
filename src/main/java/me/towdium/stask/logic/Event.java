@@ -2,11 +2,9 @@ package me.towdium.stask.logic;
 
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.utils.Cache;
+import me.towdium.stask.utils.wrap.Trio;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -35,23 +33,51 @@ public class Event {
     @SuppressWarnings("unchecked")
     public static class Bus {
         public static final Bus BUS = new Bus();
-        Cache<Class, WeakHashMap<Object, List<Consumer>>> subs = new Cache<>(i -> new WeakHashMap<>());
-        Cache<Class, WeakHashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new WeakHashMap<>());
+        Cache<Class, HashMap<Object, List<Consumer>>> subs = new Cache<>(i -> new HashMap<>());
+        Cache<Class, HashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new HashMap<>());
+        HashMap<Object, Set<Class>> record = new HashMap<>();
+        boolean active = false;
+        List<Trio<Class, Object, Consumer>> subsQueue = new ArrayList<>();
+        List<Trio<Class, Object, Predicate>> gatesQueue = new ArrayList<>();
+        List<Object> cancelQueue = new ArrayList<>();
 
         public boolean attempt(Event e) {
+            if (active) throw new IllegalStateException("Event bus active");
+            active = true;
             for (Class i : getType(e)) {
-                WeakHashMap<Object, List<Predicate>> ps = gates.get(i);
-                if (ps != null && ps.values().stream().flatMap(Collection::stream)
-                        .anyMatch(j -> !j.test(e))) return false;
+                HashMap<Object, List<Predicate>> ps = gates.get(i);
+                boolean b = ps != null && ps.values().stream()
+                        .flatMap(Collection::stream)
+                        .anyMatch(j -> !j.test(e));
+                if (b) {
+                    active = false;
+                    clean();
+                    return false;
+                }
             }
+            active = false;
+            clean();
             return true;
         }
 
         public void post(Event e) {
+            if (active) throw new IllegalStateException("Event bus active");
+            active = true;
             for (Class i : getType(e)) {
-                WeakHashMap<Object, List<Consumer>> cs = subs.get(i);
+                HashMap<Object, List<Consumer>> cs = subs.get(i);
                 if (cs != null) cs.values().stream().flatMap(Collection::stream).forEach(j -> j.accept(e));
             }
+            active = false;
+            clean();
+        }
+
+        private void clean() {
+            for (Trio<Class, Object, Consumer> i : subsQueue) subscribe(i.a, i.b, i.c);
+            for (Trio<Class, Object, Predicate> i : gatesQueue) gate(i.a, i.b, i.c);
+            for (Object i : cancelQueue) cancel(i);
+            subsQueue.clear();
+            gatesQueue.clear();
+            cancelQueue.clear();
         }
 
         private List<Class<? extends Event>> getType(Event e) {
@@ -64,12 +90,34 @@ public class Event {
             return ret;
         }
 
+        @SuppressWarnings("Duplicates")
         public <T extends Event> void subscribe(Class<T> e, Object o, Consumer<T> c) {
-            subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
+            if (active) subsQueue.add(new Trio<>(e, o, c));
+            else {
+                subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
+                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
+            }
         }
 
+        @SuppressWarnings("Duplicates")
         public <T extends Event> void gate(Class<T> e, Object o, Predicate<T> p) {
-            gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
+            if (active) gatesQueue.add(new Trio<>(e, o, p));
+            else {
+                gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
+                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
+            }
+        }
+
+        public void cancel(Object o) {
+            if (active) cancelQueue.add(o);
+            else {
+                Set<Class> classes = record.remove(o);
+                if (classes == null) return;
+                classes.forEach(i -> {
+                    subs.get(i).remove(o);
+                    gates.get(i).remove(o);
+                });
+            }
         }
     }
 
@@ -149,6 +197,10 @@ public class Event {
         }
 
         public static class Finish extends EGame {
+        }
+
+        public static class Failed extends EGame {
+
         }
     }
 

@@ -112,13 +112,17 @@ public class WContainer implements Widget {
     }
 
     public WContainer clear() {
-        onRemove();
+        remove();
         widgets.clear();
         return this;
     }
 
     @Override
     public void onRemove() {
+        remove();
+    }
+
+    protected void remove() {
         widgets.forward((w, v) -> {
             w.onRemove();
             return false;

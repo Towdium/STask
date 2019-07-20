@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Painter;
 import org.joml.Vector2i;
 
@@ -26,8 +27,8 @@ public abstract class WButton extends WTooltip.Impl {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         int color;
-        if (listener == null) color = 0x333333;
-        else color = onTest(mouse) ? 0x444444 : 0x666666;
+        if (listener == null) color = Colour.DISABLED;
+        else color = onTest(mouse) ? Colour.HOVERED : Colour.INTERACT;
 
         try (Painter.State ignore = p.color(color)) {
             p.drawRect(0, 0, x, y);

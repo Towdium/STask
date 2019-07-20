@@ -116,7 +116,7 @@ public class Window extends Closeable implements Tickable {
         GL30C.glEnable(GL30C.GL_TEXTURE_2D);
         GL30C.glEnable(GL30C.GL_BLEND);
         GL30C.glBlendFunc(GL30C.GL_SRC_ALPHA, GL30C.GL_ONE_MINUS_SRC_ALPHA);
-        GL30C.glClearColor(22f / 255f, 22f / 255f, 22f / 255f, 0f);
+        GL30C.glClearColor(34f / 255f, 34f / 255f, 34f / 255f, 0f);
 
         GLFW.glfwSwapInterval(0);
         painter = new Painter(this);

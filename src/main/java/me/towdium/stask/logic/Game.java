@@ -39,6 +39,7 @@ public class Game implements Tickable {
     SortedMap<Integer, List<Graph>> graphs = new TreeMap<>();
     Set<Graph> unfinished;
     List<Integer> aims;
+    String desc;
     int count = 0;
     boolean statik;
     boolean running = false;
@@ -56,6 +57,7 @@ public class Game implements Tickable {
         statik = pojo.times == null;
         aims = new ArrayList<>(pojo.aims);
         name = id;
+        desc = pojo.desc;
         for (int i = 0; i < pojo.graphs.size(); i++)
             graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
                     j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
@@ -66,6 +68,10 @@ public class Game implements Tickable {
 
     public int getSpeed() {
         return speed;
+    }
+
+    public String getDesc() {
+        return desc;
     }
 
     public void setSpeed(int speed) {
@@ -170,7 +176,10 @@ public class Game implements Tickable {
             history.update();
             for (Status i : processors.values())
                 if (i.tickPost()) valid = true;
-            if (!valid && statik) running = false;
+            if (!valid && statik && running) {
+                running = false;
+                BUS.post(new EGame.Failed());
+            }
             count++;
         }
     }
@@ -264,8 +273,10 @@ public class Game implements Tickable {
                     if (complete) {
                         BUS.post(new EGraph.Complete(g));
                         unfinished.remove(g);
-                        if (unfinished.isEmpty())
+                        if (unfinished.isEmpty()) {
                             BUS.post(new EGame.Finish());
+                            running = false;
+                        }
                     }
                     working = null;
                     progress = 0;

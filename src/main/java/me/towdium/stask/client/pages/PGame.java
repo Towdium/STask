@@ -3,8 +3,9 @@ package me.towdium.stask.client.pages;
 import me.towdium.stask.client.*;
 import me.towdium.stask.client.widgets.*;
 import me.towdium.stask.logic.Cluster;
-import me.towdium.stask.logic.Event;
+import me.towdium.stask.logic.Event.EGame;
 import me.towdium.stask.logic.Event.EGame.*;
+import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Tutorial;
 import org.joml.Vector2i;
@@ -26,9 +27,11 @@ public class PGame extends Page.Impl {
     Page parent;
     Game game;
     WGraphs graphs;
-    Widget tutorial;
+    Widget floating;
     WText timer = new WText(0xFFFFFF, "");
     WText comm;
+    Tutorial tutorial;
+
 
     public PGame(PWrapper r, Page p, Game g) {
         root = r;
@@ -37,10 +40,23 @@ public class PGame extends Page.Impl {
         graphs = new WGraphs(game, 0, 0);
         Cluster cluster = game.getCluster();
         comm = new WText(0xFFFFFF, cluster.getComm() == 0 ? "" : "x" + cluster.getComm());
-        Tutorial t = game.getTutorial();
-        if (t != null) tutorial = t.widget();
-        BUS.subscribe(Event.EGame.Finish.class, this, i ->
-                Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT)));
+        tutorial = game.getTutorial();
+        if (tutorial != null) {
+            floating = tutorial.widget();
+            tutorial.activate();
+        }
+        BUS.gate(ETask.Pick.class, this, i -> !(game.isStatic() && game.getCount() == 0));
+        BUS.subscribe(EGame.Finish.class, this, i -> {
+            Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT));
+            game.pause();
+        });
+    }
+
+    @Override
+    public void onRemove() {
+        super.onRemove();
+        BUS.cancel(this);
+        if (tutorial != null) tutorial.deactivate();
     }
 
     @Override
@@ -57,7 +73,7 @@ public class PGame extends Page.Impl {
         clear();
         graphs.setX(x - 300);
         graphs.setY(y - WSchedule.HEIGHT - WHistory.HEIGHT - 10);
-        put(graphs, 300, 0);
+        put(graphs, WCluster.WIDTH + 45, 0);
         put(new WSchedule(x - CONTROL_WIDTH - 5, game), 0, y - WSchedule.HEIGHT - WHistory.HEIGHT - 5);
         put(new WCluster(game), 20, (y - WHistory.HEIGHT - WSchedule.HEIGHT - 92 - WCluster.HEIGHT) / 2 + 82);
         put(new WHistory(x - CONTROL_WIDTH - 5, game), 0, y - WHistory.HEIGHT);
@@ -67,14 +83,14 @@ public class PGame extends Page.Impl {
         put(comm, 35, 46);
         put(new WTooltip.Impl(WCluster.WIDTH + 40, 36, "Game timer"), 0, 0);
         put(new WTooltip.Impl(WCluster.WIDTH + 40, 36, "Comm. speed"), 0, 41);
-        put(new WRectangle(WCluster.WIDTH + 40, 5, 0xCCCCCC), 0, 36);
-        put(new WRectangle(WCluster.WIDTH + 40, 5, 0xCCCCCC), 0, 77);
-        put(new WRectangle(CONTROL_WIDTH, 5, 0xCCCCCC), x - CONTROL_WIDTH, y - 33);
-        put(new WRectangle(5, y - WSchedule.HEIGHT - WHistory.HEIGHT - 10, 0xCCCCCC), WCluster.WIDTH + 40, 0);
-        put(new WRectangle(x - CONTROL_WIDTH - 5, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - 5);
-        put(new WRectangle(x, 5, 0xCCCCCC), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
-        put(new WRectangle(5, WHistory.HEIGHT + WSchedule.HEIGHT + 10, 0xCCCCCC), x - CONTROL_WIDTH - 5, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
-        if (tutorial != null) put(tutorial, x - WTutorial.WIDTH - 20, 20);
+        put(new WRectangle(WCluster.WIDTH + 40, 5, Colour.SLICE), 0, 36);
+        put(new WRectangle(WCluster.WIDTH + 40, 5, Colour.SLICE), 0, 77);
+        put(new WRectangle(CONTROL_WIDTH, 5, Colour.SLICE), x - CONTROL_WIDTH, y - 33);
+        put(new WRectangle(5, y - WSchedule.HEIGHT - WHistory.HEIGHT - 10, Colour.SLICE), WCluster.WIDTH + 40, 0);
+        put(new WRectangle(x - CONTROL_WIDTH - 5, 5, Colour.SLICE), 0, y - WHistory.HEIGHT - 5);
+        put(new WRectangle(x, 5, Colour.SLICE), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
+        put(new WRectangle(5, WHistory.HEIGHT + WSchedule.HEIGHT + 10, Colour.SLICE), x - CONTROL_WIDTH - 5, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
+        if (floating != null) put(floating, x - WTutorial.WIDTH - 20, 20);
     }
 
     @Override
@@ -126,17 +142,21 @@ public class PGame extends Page.Impl {
     class Control extends WContainer {
         boolean step = false;
         WButton start = new WButtonIcon(48, 48, Resource.START, "Start");
-        WButton reset = new WButtonIcon(48, 48, Resource.RESET, "Reset").setListener(i -> {
-            if (!BUS.attempt(new Reset())) return;
-            game.reset();
-            BUS.post(new Reset());
-        });
         WButton pause = new WButtonIcon(48, 48, Resource.PAUSE, "Pause");
         WButton plus = new WButtonIcon(36, 36, Resource.PLUS, "Speed up").setListener(game.isStatic() ? this::plus : null);
         WButton minus = new WButtonIcon(36, 36, Resource.MINUS, "Speed down").setListener(game.isStatic() ? this::minus : null);
         WButton leave = new WButtonIcon(48, 48, Resource.CLOSE, "Quit").setListener(i -> {
             BUS.post(new Leave());
             root.display(() -> parent);
+        });
+        WButton reset = new WButtonIcon(48, 48, Resource.RESET, "Reset").setListener(i -> {
+            if (!BUS.attempt(new Reset())) return;
+            game.reset();
+            start.setListener(this::start);
+            if (game.isStatic()) pause.setListener(this::pause);
+            remove(pause);
+            put(start, 20, 50);
+            BUS.post(new Reset());
         });
 
         public Control() {
@@ -145,31 +165,13 @@ public class PGame extends Page.Impl {
             put(leave, 140, 50);
             put(plus, 100, 0);
             put(minus, 150, 0);
-            put(new WRectangle(65, 36, 0x333333), 20, 0);
+            put(new WRectangle(65, 36, Colour.DISABLED), 20, 0);
 
-            start.setListener(i -> {
-                if (step) {
-                    if (!BUS.attempt(new Step())) return;
-                    game.start();
-                    game.tick();
-                    game.pause();
-                    BUS.post(new Step());
-                } else {
-                    if (!BUS.attempt(new Start())) return;
-                    game.start();
-                    BUS.post(new Start());
-                    remove(i);
-                    put(pause, 20, 50);
-                }
-            });
+            BUS.subscribe(EGame.Finish.class, this, i -> finish());
+            BUS.subscribe(EGame.Failed.class, this, i -> finish());
 
-            if (!game.isStatic()) pause.setListener(i -> {
-                if (!BUS.attempt(new Pause())) return;
-                game.pause();
-                BUS.post(new Pause());
-                remove(i);
-                put(start, 20, 50);
-            });
+            start.setListener(this::start);
+            if (game.isStatic()) pause.setListener(this::pause);
         }
 
         @Override
@@ -195,6 +197,35 @@ public class PGame extends Page.Impl {
             BUS.post(new SpeedUp());
             if (game.getSpeed() >= 16) i.setListener(null);
             if (!step) minus.setListener(this::minus);
+        }
+
+        private void start(WButton i) {
+            if (step) {
+                if (!BUS.attempt(new Step())) return;
+                game.start();
+                game.tick();
+                game.pause();
+                BUS.post(new Step());
+            } else {
+                if (!BUS.attempt(new Start())) return;
+                game.start();
+                BUS.post(new Start());
+                remove(i);
+                put(pause, 20, 50);
+            }
+        }
+
+        private void pause(WButton i) {
+            if (!BUS.attempt(new Pause())) return;
+            game.pause();
+            BUS.post(new Pause());
+            remove(i);
+            put(start, 20, 50);
+        }
+
+        private void finish() {
+            start.setListener(null);
+            pause.setListener(null);
         }
     }
 }

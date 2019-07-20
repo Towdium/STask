@@ -20,11 +20,13 @@ public class Levels {
         for (Pojo.Section s : l.sections) {
             Section tmp = new Section();
             tmp.levels.addAll(s.levels);
+            tmp.desc = s.desc;
             sections.add(tmp);
         }
     }
 
     public static class Section {
         public List<String> levels = new ArrayList<>();
+        public String desc;
     }
 }

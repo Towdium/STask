@@ -4,8 +4,8 @@ import me.towdium.stask.client.Animator;
 import me.towdium.stask.client.Animator.FBezier;
 import me.towdium.stask.client.Animator.FLinear;
 import me.towdium.stask.client.Animator.FQuadratic;
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Painter;
-import me.towdium.stask.logic.Event;
 import me.towdium.stask.logic.Event.EGame;
 import me.towdium.stask.logic.Event.EGraph;
 import me.towdium.stask.logic.Game;
@@ -15,6 +15,8 @@ import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+
+import static me.towdium.stask.logic.Event.Bus.BUS;
 
 /**
  * Author: Towdium
@@ -36,15 +38,21 @@ public class WGraphs extends WContainer {
         this.y = y;
         game = g;
         reset();
-        Event.Bus.BUS.subscribe(EGraph.Append.class, this, i -> add.add(i.graph));
-        Event.Bus.BUS.subscribe(EGraph.Complete.class, this, i -> {
+        BUS.subscribe(EGraph.Append.class, this, i -> add.add(i.graph));
+        BUS.subscribe(EGraph.Complete.class, this, i -> {
             if (g.isStatic()) return;
             Pair<Float, Float> p = new Pair<>(1f, 1f);
             temp.put(graphs.get(i.graph), p);
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.a = j);
             animator.addFloat(1f, 0f, 800, new FLinear(), j -> p.b = j, () -> remove.add(i.graph));
         });
-        Event.Bus.BUS.subscribe(EGame.Reset.class, this, i -> reset());
+        BUS.subscribe(EGame.Reset.class, this, i -> reset());
+    }
+
+    @Override
+    public void onRemove() {
+        super.onRemove();
+        BUS.cancel(this);
     }
 
     public void setY(int y) {
@@ -68,13 +76,13 @@ public class WGraphs extends WContainer {
         super.onDraw(p, mouse);
         for (Map.Entry<WGraph, Pair<Float, Float>> i : temp.entrySet()) {
             try (Painter.State ignore1 = p.color(i.getValue().a);
-                 Painter.State ignore2 = p.color(0x228822)) {
+                 Painter.State ignore2 = p.color(0x55BB33)) {
                 p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), y);
             }
         }
         for (Map.Entry<WGraph, Pair<Float, Float>> i : temp.entrySet()) {
             try (Painter.State ignore1 = p.color(i.getValue().b);
-                 Painter.State ignore2 = p.color(0x161616)) {
+                 Painter.State ignore2 = p.color(Colour.BACKGROUND)) {
                 p.drawRect(find(i.getKey()).x, 0, i.getKey().getWidth(), y);
             }
         }

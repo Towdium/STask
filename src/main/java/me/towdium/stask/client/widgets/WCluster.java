@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Resource;
 import me.towdium.stask.client.Widget;
@@ -38,7 +39,7 @@ public class WCluster extends WContainer {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         int s = Node.SPACING + Node.HEIGHT;
-        try (Painter.State ignore = p.color(0x333333)) {
+        try (Painter.State ignore = p.color(Colour.DISABLED)) {
             for (int i = 0; i < 4; i++) p.drawRect(0, i * s, Node.WIDTH, Node.HEIGHT);
         }
         for (Cluster.Processor i : processors.keySet()) {
@@ -55,7 +56,7 @@ public class WCluster extends WContainer {
         int t = processors.get(to);
         int space = Node.HEIGHT + Node.SPACING;
         p.drawRect(Node.WIDTH, Node.HEIGHT / 2 - 1 + f * space, (f + 1) * 15 - 1, 2);
-        p.drawRect(Node.WIDTH + (f + 1) * 15 - 1, Node.HEIGHT / 2 - 1, 2, (t - f) * space + 2);
+        p.drawRect(Node.WIDTH + (f + 1) * 15 - 1, Node.HEIGHT / 2 - 1 + Math.min(f, t) * space, 2, Math.abs(t - f) * space + 2);
         p.drawRect(Node.WIDTH, Node.HEIGHT / 2 - 1 + t * space, (f + 1) * 15 - 1, 2);
         try (Painter.SMatrix matrix = p.matrix()) {
             matrix.translate(Node.WIDTH, Node.HEIGHT / 2 - 1 + t * space);
@@ -78,22 +79,22 @@ public class WCluster extends WContainer {
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            try (Painter.State ignore = p.color(0x444444)) {
-                p.drawRect(0, 0, WIDTH, HEIGHT);
+            try (Painter.State ignore = p.color(Colour.ACTIVE1)) {
+                p.drawRect(0, 0, 88, 28);
+            }
+            try (Painter.State ignore = p.color(Colour.ACTIVE2)) {
+                p.drawRect(88, 0, 44, 28);
+                p.drawRect(0, 28, 132, 28);
             }
             p.drawTextRight(status.getProcessor().getName(), 78, Painter.fontAscent + 1);
-            try (Painter.State ignore = p.color(0x44882200)) {
+            try (Painter.State ignore = p.color(0xDD4444)) {
                 p.drawRect(88, 0, 44, 28, 2);
                 p.drawRect(88, 0, (int) (44 * status.getProgress()), 28);
             }
-            try (Painter.State ignore = p.color(0x44226688)) {
+            try (Painter.State ignore = p.color(0x4499DD)) {
                 if (game.getCluster().getComm() == 0) {
                     p.drawRect(0, 28, 132, 28, 2);
-                    try (Painter.SMatrix matrix = p.matrix()) {
-                        matrix.translate(0, 28);
-                        matrix.rotate((float) Math.atan(28 / 132f));
-                        p.drawRect(1, 0, (int) Math.sqrt(132 * 132 + 28 * 28), 2);
-                    }
+                    p.drawRect(0, 41, 132, 2);
                 } else if (game.getCluster().getPolicy().multiple) {
                     Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
                     for (int i = 0; i < 3; i++) {

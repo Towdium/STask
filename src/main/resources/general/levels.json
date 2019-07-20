@@ -6,12 +6,14 @@
         "demo1",
         "demo2",
         "demo3"
-      ]
+      ],
+      "desc": "The first section"
     },
     {
       "levels": [
         "demo"
-      ]
+      ],
+      "desc": "The second section"
     }
   ]
 }

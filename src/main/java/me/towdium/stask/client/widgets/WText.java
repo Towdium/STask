@@ -14,16 +14,23 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class WText implements Widget {
     public int color;
     public String str;
+    public int width;
 
     public WText(int color, String str) {
+        this(color, str, -1);
+    }
+
+    public WText(int color, String str, int w) {
         this.color = color;
         this.str = str;
+        this.width = w;
     }
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         try (Painter.State ignore = p.color(color)) {
-            p.drawText(str, 0, Painter.fontAscent);
+            if (width == -1) p.drawText(str, 0, Painter.fontAscent);
+            else p.drawTextWrapped(str, 0, Painter.fontAscent, width);
         }
     }
 }

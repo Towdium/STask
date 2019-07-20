@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Painter;
 import org.joml.Vector2i;
 
@@ -19,7 +20,7 @@ public class WPanel extends WArea.Impl {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(0x222222)) {
+        try (Painter.State ignore = p.color(Colour.PANEL)) {
             p.drawRect(0, 0, x, y);
         }
     }

@@ -1,5 +1,6 @@
 package me.towdium.stask.client.widgets;
 
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
@@ -36,7 +37,7 @@ public class WHistory extends WContainer {
         List<Cluster.Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
             Cluster.Processor p = ps.get(i);
-            Rail r = new Rail(p, x, i % 2 + 1);
+            Rail r = new Rail(p, x, i % 2 == 0);
             put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
@@ -51,7 +52,7 @@ public class WHistory extends WContainer {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        try (Painter.State ignore = p.color(0x333333)) {
+        try (Painter.State ignore = p.color(Colour.DISABLED)) {
             p.drawRect(0, 0, Rail.MARGIN, 4 * Rail.HEIGHT);
         }
         super.onDraw(p, mouse);
@@ -133,16 +134,16 @@ public class WHistory extends WContainer {
 
     class Rail extends WContainer {
         static final int HEIGHT = 30;
-        static final int MARGIN = 48;
+        static final int MARGIN = 70;
         Cluster.Processor processor;
-        int multiplier;
+        boolean highlight;
         int x;
         int offset = 0;
         WContainer container = new WContainer();
 
-        public Rail(Cluster.Processor p, int x, int m) {
+        public Rail(Cluster.Processor p, int x, boolean h) {
             processor = p;
-            multiplier = m;
+            highlight = h;
             this.x = x;
             put(container, MARGIN, 0);
         }
@@ -157,7 +158,7 @@ public class WHistory extends WContainer {
             try (Painter.State ignore = p.mask(MARGIN, 0, x - MARGIN, HEIGHT)) {
                 super.onDraw(p, mouse);
             }
-            try (Painter.State ignore = p.color(multiplier * 0x444444)) {
+            try (Painter.State ignore = p.color(highlight ? Colour.ACTIVE2 : Colour.ACTIVE1)) {
                 p.drawRect(0, 0, MARGIN, HEIGHT);
             }
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
