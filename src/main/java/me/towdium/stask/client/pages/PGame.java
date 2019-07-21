@@ -45,7 +45,7 @@ public class PGame extends Page.Impl {
             floating = tutorial.widget();
             tutorial.activate();
         }
-        BUS.gate(ETask.Pick.class, this, i -> !(game.isStatic() && game.getCount() == 0));
+        BUS.gate(ETask.Pick.class, this, i -> !game.isStatic() || game.getCount() == 0);
         BUS.subscribe(EGame.Finish.class, this, i -> {
             Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT));
             game.pause();

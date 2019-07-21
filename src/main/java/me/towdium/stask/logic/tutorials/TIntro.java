@@ -75,9 +75,12 @@ public class TIntro extends Tutorial.Impl {
                 @Override
                 public void onDraw(Painter p, Vector2i mouse) {
                     super.onDraw(p, mouse);
-                    for (Graph.Task i : tasks.keySet()) {
-                        for (Map.Entry<Graph.Task, Graph.Comm> j : i.getSuccessor().entrySet()) {
-                            drawConnection(p, i, j.getKey(), true);
+                    try (Painter.SMatrix matrix = p.matrix()) {
+                        matrix.translate(0, offset);
+                        for (Graph.Task i : tasks.keySet()) {
+                            for (Map.Entry<Graph.Task, Graph.Comm> j : i.getSuccessor().entrySet()) {
+                                drawConnection(p, i, j.getKey(), true);
+                            }
                         }
                     }
                 }

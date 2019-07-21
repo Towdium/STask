@@ -30,7 +30,7 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  */
 @ParametersAreNonnullByDefault
 @SuppressWarnings("Duplicates")
-public class WSchedule extends WContainer {
+public class WSchedule extends WContainer {  // TODO prohibit allocation out boundary
     Game game;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
     public static final int HEIGHT = Rail.HEIGHT * 4;

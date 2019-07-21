@@ -25,7 +25,7 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  * Author: Towdium
  * Date: 10/06/19
  */
-public class Game implements Tickable {
+public class Game implements Tickable {  // TODO remove extra space and disable early fetch
     static final int RATE = 20;
     static final float SPEED = 1f / RATE;
     Tutorial tutorial;
@@ -162,8 +162,8 @@ public class Game implements Tickable {
     }
 
     private void update() {
-        if (!running) return;
         for (int j = 0; j < speed; j++) {
+            if (!running) return;
             if (count % RATE == 0 && !statik) {
                 int t = count / RATE;
                 SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
@@ -220,18 +220,12 @@ public class Game implements Tickable {
             List<Schedule.Node> ts = schedule.getTasks(processor);
             for (int i = 0; i < ts.size(); i++) {
                 Schedule.Node n = ts.get(i);
-                boolean ready = true;
-                for (Comm c : n.comms) {
-                    if (!attempt(c)) {
-                        ready = false;
-                        break;
-                    }
-                }
-                if (working == null && i == 0 && ready) {
+                for (Comm c : n.comms)
+                    if (!attempt(c)) return;
+                if (working == null && i == 0) {
                     working = n.task;
                     executing.put(working, processor);
                     schedule.remove(processor, 0);
-                    i--;
                 }
             }
         }

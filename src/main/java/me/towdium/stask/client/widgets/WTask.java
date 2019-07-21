@@ -59,13 +59,13 @@ public class WTask extends WCompose {
     }
 
     public static void drawTask(Painter p, Graph.Task t, int color, boolean highlight) {
-        try (Painter.State ignore = p.color(0x666666)) {
+        try (Painter.State ignore = p.color(Colour.ACTIVE2)) {
             p.drawRect(0, 0, WTask.WIDTH / 2, WTask.HEIGHT / 2);
         }
-        try (Painter.State ignore = p.color(0x777777)) {
+        try (Painter.State ignore = p.color(Colour.ACTIVE3)) {
             p.drawRect(WTask.WIDTH / 2, 0, WTask.WIDTH / 2, WTask.HEIGHT / 2);
         }
-        try (Painter.State ignore = p.color(0x555555)) {
+        try (Painter.State ignore = p.color(Colour.ACTIVE1)) {
             p.drawRect(0, WTask.HEIGHT / 2, WTask.WIDTH, WTask.HEIGHT / 2);
         }
         try (Painter.State ignore = p.color(color)) {

@@ -67,8 +67,8 @@ public class WCluster extends WContainer {
         }
     }
 
-    class Node implements Widget {
-        public static final int WIDTH = 132;
+    class Node implements Widget {  // TODO draw speedup
+        public static final int WIDTH = 192;
         public static final int HEIGHT = 56;
         public static final int SPACING = 20;
         Game.Status status;
@@ -79,35 +79,39 @@ public class WCluster extends WContainer {
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
-            try (Painter.State ignore = p.color(Colour.ACTIVE1)) {
-                p.drawRect(0, 0, 88, 28);
-            }
             try (Painter.State ignore = p.color(Colour.ACTIVE2)) {
-                p.drawRect(88, 0, 44, 28);
-                p.drawRect(0, 28, 132, 28);
+                p.drawRect(0, 0, 96, 28);
             }
-            p.drawTextRight(status.getProcessor().getName(), 78, Painter.fontAscent + 1);
+            try (Painter.State ignore = p.color(Colour.ACTIVE3)) {
+                p.drawRect(96, 0, 96, 28);
+            }
+            try (Painter.State ignore = p.color(Colour.ACTIVE1)) {
+                p.drawRect(0, 28, 192, 28);
+            }
+            p.drawTextRight(status.getProcessor().getName(), 85, Painter.fontAscent + 1);
+            p.drawTextRight(Float.toString(status.getProcessor().getSpeed()), 190, Painter.fontAscent + 1);
             try (Painter.State ignore = p.color(0xDD4444)) {
-                p.drawRect(88, 0, 44, 28, 2);
-                p.drawRect(88, 0, (int) (44 * status.getProgress()), 28);
+                p.drawRect(96, 28, 96, 28, 2);
+                p.drawRect(96, 28, (int) (96 * status.getProgress()), 28);
             }
             try (Painter.State ignore = p.color(0x4499DD)) {
                 if (game.getCluster().getComm() == 0) {
-                    p.drawRect(0, 28, 132, 28, 2);
-                    p.drawRect(0, 41, 132, 2);
+                    p.drawRect(0, 28, 96, 28, 2);
+                    p.drawRect(0, 41, 96, 2);
                 } else if (game.getCluster().getPolicy().multiple) {
                     Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
                     for (int i = 0; i < 3; i++) {
-                        p.drawRect(i * 44, 28, 44, 28, 2);
-                        if (it.hasNext()) p.drawRect(i * 44, 28, (int) (44 * it.next().a), 28);
+                        p.drawRect(i * 32, 28, 32, 28, 2);
+                        if (it.hasNext()) p.drawRect(i * 32, 28, (int) (32 * it.next().a), 28);
                     }
                 } else {
                     Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
-                    p.drawRect(0, 28, 132, 28, 2);
-                    if (it.hasNext()) p.drawRect(0, 28, (int) (132 * it.next().a), 28);
+                    p.drawRect(0, 28, 96, 28, 2);
+                    if (it.hasNext()) p.drawRect(0, 28, (int) (96 * it.next().a), 28);
                 }
             }
             p.drawResource(Resource.PROCESSOR, 0, 0);
+            p.drawResource(Resource.SPEED, 96, 0);
         }
     }
 }

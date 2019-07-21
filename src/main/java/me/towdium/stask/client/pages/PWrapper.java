@@ -1,11 +1,14 @@
 package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.Animator;
+import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.widgets.WContainer;
+import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.function.Supplier;
 
@@ -17,6 +20,7 @@ import java.util.function.Supplier;
 public class PWrapper extends WContainer implements Page {
     Animator animator = new Animator();
     Page page = null;
+    Animator.Entry entry = null;
     float transparency = 1;
     int x, y;
 
@@ -34,7 +38,7 @@ public class PWrapper extends WContainer implements Page {
         };
 
         if (page != null)
-            animator.addFloat(1, 0, 500, new Animator.FBezier(1, 0),
+            entry = animator.addFloat(1, 0, 500, new Animator.FBezier(1, 0),
                     i -> transparency = i, remove);
         else add.run();
     }
@@ -51,8 +55,14 @@ public class PWrapper extends WContainer implements Page {
         super.onDraw(p, mouse);
         animator.tick();
         try (Painter.State ignore1 = p.color(transparency);
-             Painter.State ignore2 = p.color(0x161616)) {
+             Painter.State ignore2 = p.color(Colour.BACKGROUND)) {
             p.drawRect(0, 0, x, y);
         }
+    }
+
+    @Override
+    public boolean onPress(@Nullable Vector2i mouse, boolean left) {
+        Log.client.info("Press, " + animator.isActive());
+        return (entry != null && !entry.finished()) || super.onPress(mouse, left);
     }
 }

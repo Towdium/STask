@@ -90,7 +90,6 @@ public class Animator implements Tickable {
     }
 
     public abstract class Entry<T> implements Tickable {
-
         long start, duration;
         boolean finished;
         Function<Float, Float> function;
@@ -118,6 +117,10 @@ public class Animator implements Tickable {
                 float progress = function.apply(diff / (float) duration);
                 call(progress);
             }
+        }
+
+        public boolean finished() {
+            return finished;
         }
 
         public void cancel() {
