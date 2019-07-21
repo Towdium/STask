@@ -5,7 +5,6 @@ import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.widgets.WContainer;
-import me.towdium.stask.utils.Log;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -62,7 +61,6 @@ public class PWrapper extends WContainer implements Page {
 
     @Override
     public boolean onPress(@Nullable Vector2i mouse, boolean left) {
-        Log.client.info("Press, " + animator.isActive());
         return (entry != null && !entry.finished()) || super.onPress(mouse, left);
     }
 }

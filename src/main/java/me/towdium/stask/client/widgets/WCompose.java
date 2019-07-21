@@ -29,6 +29,11 @@ public class WCompose extends WContainer implements WOwner {
     }
 
     @Override
+    public int size() {
+        return super.size() - pinned.size();
+    }
+
+    @Override
     public WContainer put(Widget widget, int x, int y) {
         building = false;
         return super.put(widget, x, y);

@@ -17,12 +17,21 @@ public class Schedule {
     Map<Task, Node> tasks = new HashMap<>();
 
     public void allocate(Task t, Processor p) {
+        Node old = tasks.get(t);
+        if (old != null) processors.get(old.processor).remove(old);
         Node n = new Node(t, p);
         processors.get(p).add(n);
         tasks.put(t, n);
     }
 
     public void allocate(Task t, Processor p, int pos) {
+        Node old = tasks.get(t);
+        if (old != null) {
+            List<Node> ns = processors.get(old.processor);
+            int idx = ns.indexOf(old);
+            if (idx < pos) pos--;
+            ns.remove(idx);
+        }
         Node n = new Node(t, p);
         processors.get(p).add(pos, n);
         tasks.put(t, n);
@@ -32,12 +41,11 @@ public class Schedule {
         return tasks.containsKey(t);
     }
 
-    public void remove(Task t) {
-        Processor p = tasks.get(t).processor;
-        if (p == null) return;
+    public Node remove(Task t) {
         Node n = tasks.remove(t);
-        if (n == null) throw new RuntimeException("Internal error");
-        processors.get(p).remove(n);
+        if (n == null) return null;
+        processors.get(n.processor).remove(n);
+        return n;
     }
 
     public void remove(Processor p, int idx) {
@@ -74,6 +82,10 @@ public class Schedule {
             task = t;
             processor = p;
             comms.addAll(task.predecessor.values());
+        }
+
+        public Processor getProcessor() {
+            return processor;
         }
 
         public Task getTask() {

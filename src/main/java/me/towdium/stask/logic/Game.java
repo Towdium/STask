@@ -25,7 +25,7 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  * Author: Towdium
  * Date: 10/06/19
  */
-public class Game implements Tickable {  // TODO remove extra space and disable early fetch
+public class Game implements Tickable {
     static final int RATE = 20;
     static final float SPEED = 1f / RATE;
     Tutorial tutorial;
@@ -226,6 +226,7 @@ public class Game implements Tickable {  // TODO remove extra space and disable 
                     working = n.task;
                     executing.put(working, processor);
                     schedule.remove(processor, 0);
+                    i--;
                 }
             }
         }

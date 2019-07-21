@@ -16,7 +16,6 @@
   ],
   "policy": {
     "background": true,
-    "multiple": false,
-    "immediate": false
+    "multiple": true
   }
 }

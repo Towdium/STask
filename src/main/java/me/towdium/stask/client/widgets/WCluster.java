@@ -1,9 +1,6 @@
 package me.towdium.stask.client.widgets;
 
-import me.towdium.stask.client.Colour;
-import me.towdium.stask.client.Painter;
-import me.towdium.stask.client.Resource;
-import me.towdium.stask.client.Widget;
+import me.towdium.stask.client.*;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.utils.wrap.Trio;
@@ -67,51 +64,79 @@ public class WCluster extends WContainer {
         }
     }
 
-    class Node implements Widget {  // TODO draw speedup
-        public static final int WIDTH = 192;
+    class Node extends WArea.Impl {
+        public static final int WIDTH = 133;
         public static final int HEIGHT = 56;
         public static final int SPACING = 20;
         Game.Status status;
 
         public Node(Game.Status status) {
+            super(WIDTH, HEIGHT);
             this.status = status;
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             try (Painter.State ignore = p.color(Colour.ACTIVE2)) {
-                p.drawRect(0, 0, 96, 28);
+                p.drawRect(0, 0, 50, 28);
             }
             try (Painter.State ignore = p.color(Colour.ACTIVE3)) {
-                p.drawRect(96, 0, 96, 28);
+                p.drawRect(50, 0, 83, 28);
             }
             try (Painter.State ignore = p.color(Colour.ACTIVE1)) {
-                p.drawRect(0, 28, 192, 28);
+                p.drawRect(0, 28, 133, 28);
             }
-            p.drawTextRight(status.getProcessor().getName(), 85, Painter.fontAscent + 1);
-            p.drawTextRight(Float.toString(status.getProcessor().getSpeed()), 190, Painter.fontAscent + 1);
+            p.drawTextRight(status.getProcessor().getName(), 44, Painter.fontAscent + 1);
+            p.drawTextRight(Float.toString(status.getProcessor().getSpeed()), 127, Painter.fontAscent + 1);
             try (Painter.State ignore = p.color(0xDD4444)) {
-                p.drawRect(96, 28, 96, 28, 2);
-                p.drawRect(96, 28, (int) (96 * status.getProgress()), 28);
+                p.drawRect(0, 28, 49, 28, 2);
+                p.drawRect(0, 28, (int) (50 * status.getProgress()), 28);
             }
             try (Painter.State ignore = p.color(0x4499DD)) {
                 if (game.getCluster().getComm() == 0) {
-                    p.drawRect(0, 28, 96, 28, 2);
-                    p.drawRect(0, 41, 96, 2);
+                    p.drawRect(51, 28, 82, 28, 2);
+                    p.drawRect(51, 41, 82, 2);
                 } else if (game.getCluster().getPolicy().multiple) {
                     Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
-                    for (int i = 0; i < 3; i++) {
-                        p.drawRect(i * 32, 28, 32, 28, 2);
-                        if (it.hasNext()) p.drawRect(i * 32, 28, (int) (32 * it.next().a), 28);
+                    for (int i = 0; i < 6; i++) {
+                        p.drawRect(i * 14 + 51, 28, 12, 28, 2);
+                        if (it.hasNext()) p.drawRect(i * 14 + 51, 55, 12, -(int) (28 * it.next().a));
                     }
                 } else {
                     Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
-                    p.drawRect(0, 28, 96, 28, 2);
-                    if (it.hasNext()) p.drawRect(0, 28, (int) (96 * it.next().a), 28);
+                    p.drawRect(51, 28, 82, 28, 2);
+                    if (it.hasNext()) p.drawRect(51, 28, (int) (82 * it.next().a), 28);
                 }
             }
             p.drawResource(Resource.PROCESSOR, 0, 0);
-            p.drawResource(Resource.SPEED, 96, 0);
+            p.drawResource(Resource.SPEED, 50, 0);
+            Map<String, Float> su = status.getProcessor().getSpeedup();
+            Vector2i global = Widget.page().mouse();
+            Vector2i pos = global.sub(mouse, new Vector2i()).add(WIDTH + 10, 0);
+            if (!su.isEmpty() && onTest(mouse) && Widget.page().overlay() == null) {
+                Widget.page().overlay(new Page.Once((a, m) -> {
+                    int i = 0;
+                    try (Painter.SMatrix matrix = p.matrix()) {
+                        matrix.translate(pos.x, pos.y);
+                        for (Map.Entry<String, Float> e : su.entrySet()) {
+                            int y = i * 28;
+                            int c1 = i % 2 == 0 ? Colour.ACTIVE1 : Colour.ACTIVE2;
+                            int c2 = i % 2 == 0 ? Colour.ACTIVE2 : Colour.ACTIVE3;
+                            try (Painter.State ignore = a.color(c1)) {
+                                p.drawRect(0, y, 50, 28);
+                            }
+                            try (Painter.State ignore = a.color(c2)) {
+                                p.drawRect(50, y, 96, 28);
+                            }
+                            p.drawResource(Resource.CLASS, 1, y);
+                            p.drawTextRight(e.getKey(), 46, y + 1 + Painter.fontAscent);
+                            p.drawResource(Resource.SPEED, 51, y);
+                            p.drawTextRight("x" + e.getValue(), 142, y + 1 + Painter.fontAscent);
+                            i++;
+                        }
+                    }
+                }));
+            }
         }
     }
 }

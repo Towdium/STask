@@ -30,7 +30,7 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  */
 @ParametersAreNonnullByDefault
 @SuppressWarnings("Duplicates")
-public class WSchedule extends WContainer {  // TODO prohibit allocation out boundary
+public class WSchedule extends WContainer {
     Game game;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
     public static final int HEIGHT = Rail.HEIGHT * 4;
@@ -66,7 +66,7 @@ public class WSchedule extends WContainer {  // TODO prohibit allocation out bou
     }
 
     class Rail extends WCompose {
-        static final int WIDTH = 80;
+        static final int WIDTH = 60;
         static final int HEIGHT = 30;
         static final int MARGIN = 70;
 
@@ -89,7 +89,7 @@ public class WSchedule extends WContainer {  // TODO prohibit allocation out bou
 
                 @Override
                 public boolean onAttempt(Object o, Vector2i mouse) {
-                    return o instanceof Task && BUS.attempt(new ETask.Schedule((Task) o, processor));
+                    return size() < 16 && o instanceof Task && BUS.attempt(new ETask.Schedule((Task) o, processor));
                 }
             });
             processor = p;
@@ -117,10 +117,7 @@ public class WSchedule extends WContainer {  // TODO prohibit allocation out bou
         @Override
         public void onMove(Vector2i mouse) {
             super.onMove(mouse);
-            int temp = getTemp();
-            int total = game.getSchedule().getTasks(processor).size();
-            int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
-            index = Math.max(Math.min(total, pos), temp) - temp;
+            index = getIndex(mouse);
         }
 
         private void sync() {
@@ -140,20 +137,21 @@ public class WSchedule extends WContainer {  // TODO prohibit allocation out bou
             return Math.max(Math.min(total + temp, pos), temp);
         }
 
+        // get amount of temp nodes showing executing tasks
         private int getTemp() {
             Wrapper<Integer> i = new Wrapper<>(0);
             widgets.forward((w, v) -> {
                 if (w instanceof Node) {
                     Node n = (Node) w;
                     Processor p = game.getSchedule().getProcessor(n.task);
-                    if (p == null) i.v++;
+                    if (p == null && w != ghost) i.v++;
                 }
                 return false;
             });
             return i.v;
         }
 
-        class Node extends WCompose implements WArea {  // TODO fix crash when picking
+        class Node extends WCompose implements WArea {
             Task task;
             int idx;
             boolean visible = true;

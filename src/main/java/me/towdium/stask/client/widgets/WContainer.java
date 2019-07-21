@@ -117,6 +117,10 @@ public class WContainer implements Widget {
         return this;
     }
 
+    public int size() {
+        return widgets.map.size();
+    }
+
     @Override
     public void onRemove() {
         remove();
