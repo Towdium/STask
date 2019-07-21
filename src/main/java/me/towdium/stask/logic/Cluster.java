@@ -24,7 +24,11 @@ public class Cluster {
         Gson gson = new Gson();
         Pojo.Cluster pojo = gson.fromJson(json, Pojo.Cluster.class);
         if (pojo.policy == null) policy = null;
-        else policy = new Policy(pojo.policy.multiple, pojo.policy.background);
+        else {
+            policy = new Policy(pojo.policy.multiple, pojo.policy.background);
+            if (policy.multiple && !policy.background)
+                throw new IllegalArgumentException("Multiple not allowed when not background");
+        }
         comm = pojo.comm;
         pojo.processors.forEach((s, p) -> {
             Processor tmp = new Processor();

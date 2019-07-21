@@ -294,6 +294,7 @@ public class Game implements Tickable {
             return processor;
         }
 
+        @Nullable
         public Task getWorking() {
             return working;
         }

@@ -15,6 +15,7 @@
     "b"
   ],
   "policy": {
-    "immediate": true
+    "background": false,
+    "multiple": false
   }
 }
