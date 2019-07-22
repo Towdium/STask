@@ -42,8 +42,8 @@ public class PGame extends Page.Impl {
         comm = new WText(0xFFFFFF, cluster.getComm() == 0 ? "" : "x" + cluster.getComm());
         tutorial = game.getTutorial();
         if (tutorial != null) {
-            floating = tutorial.widget();
             tutorial.activate();
+            floating = tutorial.widget();
         }
         BUS.gate(ETask.Pick.class, this, i -> !game.isStatic() || game.getCount() == 0);
         BUS.subscribe(EGame.Finish.class, this, i -> {

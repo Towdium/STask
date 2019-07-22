@@ -2,6 +2,7 @@ package me.towdium.stask.logic;
 
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.utils.Cache;
+import me.towdium.stask.utils.wrap.Pair;
 import me.towdium.stask.utils.wrap.Trio;
 
 import java.util.*;
@@ -37,9 +38,17 @@ public class Event {
         Cache<Class, HashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new HashMap<>());
         HashMap<Object, Set<Class>> record = new HashMap<>();
         boolean active = false;
-        List<Trio<Class, Object, Consumer>> subsQueue = new ArrayList<>();
-        List<Trio<Class, Object, Predicate>> gatesQueue = new ArrayList<>();
-        List<Object> cancelQueue = new ArrayList<>();
+        List<Pair<Inst, Trio<Class, Object, Object>>> cached = new ArrayList<>();
+
+        private void clean() {
+            for (Pair<Inst, Trio<Class, Object, Object>> i : cached) {
+                if (i.a == Inst.SUBS) subscribe(i.b.a, i.b.b, (Consumer) i.b.c);
+                else if (i.a == Inst.GATE) gate(i.b.a, i.b.b, (Predicate) i.b.c);
+                else cancel(i.b.b);
+            }
+            cached.clear();
+        }
+
 
         public boolean attempt(Event e) {
             if (active) throw new IllegalStateException("Event bus active");
@@ -71,13 +80,13 @@ public class Event {
             clean();
         }
 
-        private void clean() {
-            for (Trio<Class, Object, Consumer> i : subsQueue) subscribe(i.a, i.b, i.c);
-            for (Trio<Class, Object, Predicate> i : gatesQueue) gate(i.a, i.b, i.c);
-            for (Object i : cancelQueue) cancel(i);
-            subsQueue.clear();
-            gatesQueue.clear();
-            cancelQueue.clear();
+        @SuppressWarnings("Duplicates")
+        public <T extends Event> void subscribe(Class<T> e, Object o, Consumer<T> c) {
+            if (active) cached.add(new Pair<>(Inst.SUBS, new Trio<>(e, o, c)));
+            else {
+                subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
+                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
+            }
         }
 
         private List<Class<? extends Event>> getType(Event e) {
@@ -91,17 +100,8 @@ public class Event {
         }
 
         @SuppressWarnings("Duplicates")
-        public <T extends Event> void subscribe(Class<T> e, Object o, Consumer<T> c) {
-            if (active) subsQueue.add(new Trio<>(e, o, c));
-            else {
-                subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
-                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
-            }
-        }
-
-        @SuppressWarnings("Duplicates")
         public <T extends Event> void gate(Class<T> e, Object o, Predicate<T> p) {
-            if (active) gatesQueue.add(new Trio<>(e, o, p));
+            if (active) cached.add(new Pair<>(Inst.GATE, new Trio<>(e, o, p)));
             else {
                 gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
                 record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
@@ -109,7 +109,7 @@ public class Event {
         }
 
         public void cancel(Object o) {
-            if (active) cancelQueue.add(o);
+            if (active) cached.add(new Pair<>(Inst.CANCEL, new Trio<>(null, o, null)));
             else {
                 Set<Class> classes = record.remove(o);
                 if (classes == null) return;
@@ -119,6 +119,8 @@ public class Event {
                 });
             }
         }
+
+        enum Inst {SUBS, GATE, CANCEL}
     }
 
     public static abstract class ETask extends Event {
@@ -171,6 +173,14 @@ public class Event {
                 super(task);
                 this.processor = processor;
             }
+        }
+    }
+
+    public static class ETutorial extends Event {
+        public final String id;
+
+        public ETutorial(String id) {
+            this.id = id;
         }
     }
 

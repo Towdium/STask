@@ -1,11 +1,11 @@
 {
   "comm": 0,
   "processors": {
-    "a": {
+    "A": {
       "speed": 1,
       "speedup": {}
     },
-    "b": {
+    "B": {
       "speed": 1,
       "speedup": {}
     }
