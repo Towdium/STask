@@ -177,7 +177,9 @@ public class PGame extends Page.Impl {
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             super.onDraw(p, mouse);
-            p.drawText("x" + (step ? 0 : game.getSpeed()), 30, 5 + Painter.fontAscent);
+            int speed = game.getSpeed();
+            String str = speed >= 4 ? Integer.toString(speed / 4) : "1/" + (4 / speed);
+            p.drawText("x" + (step ? 0 : str), 27, 5 + Painter.fontAscent);
         }
 
         private void minus(WButton i) {

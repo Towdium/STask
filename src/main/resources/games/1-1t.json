@@ -1,8 +1,8 @@
 {
   "graphs": [
-    "tutorial"
+    "1-1t"
   ],
-  "cluster": "real",
+  "cluster": "1-1t",
   "aims": [],
   "desc": "tutorial"
 }

@@ -1,0 +1,12 @@
+{
+  "graphs": [
+    "1-2"
+  ],
+  "cluster": "1-2",
+  "tutorial": "1-2",
+  "aims": [
+    4,
+    3
+  ],
+  "desc": "Introduction to model with background communication and multiple channels."
+}

@@ -33,11 +33,15 @@ public class Cluster {
         pojo.processors.forEach((s, p) -> {
             Processor tmp = new Processor();
             tmp.speed = p.speed;
-            tmp.speedup = p.speedup;
+            tmp.speedup = p.speedup == null ? new HashMap<>() : p.speedup;
             tmp.name = s;
             processors.put(s, tmp);
         });
-        pojo.layout.forEach(s -> layout.add(processors.get(s)));
+        pojo.layout.forEach(s -> {
+            Processor p = processors.get(s);
+            Objects.requireNonNull(p, "Invalid processor in layout: " + s);
+            layout.add(p);
+        });
     }
 
     public int getComm() {

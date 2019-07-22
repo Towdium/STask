@@ -1,18 +1,16 @@
 {
   "comm": 1,
   "processors": {
-    "a": {
-      "speed": 1,
-      "speedup": {}
+    "A": {
+      "speed": 1
     },
-    "b": {
-      "speed": 1,
-      "speedup": {}
+    "B": {
+      "speed": 1
     }
   },
   "layout": [
-    "a",
-    "b"
+    "A",
+    "B"
   ],
   "policy": {
     "background": false,

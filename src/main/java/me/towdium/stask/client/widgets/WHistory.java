@@ -57,7 +57,7 @@ public class WHistory extends WContainer {
         }
         super.onDraw(p, mouse);
         try (Painter.State ignore = p.mask(Rail.MARGIN - 1, 0, width - Rail.MARGIN + 2, HEIGHT)) {
-            p.drawRect(Rail.MARGIN + game.getCount() - 1 - offset, 0, 2, 4 * Rail.HEIGHT);
+            p.drawRect(Rail.MARGIN + game.getCount() / 4 - 1 - offset, 0, 2, 4 * Rail.HEIGHT);
         }
     }
 
@@ -168,7 +168,7 @@ public class WHistory extends WContainer {
         public void onRefresh(Vector2i mouse) {
             container.clear();
             game.getHistory().getRecord(processor).forEach((w, p) ->
-                    container.put(new Node(w, p.y - p.x), p.x + MARGIN, 0));
+                    container.put(new Node(w, (p.y - p.x) / 4), p.x / 4 + MARGIN, 0));
             super.onRefresh(mouse);
         }
 

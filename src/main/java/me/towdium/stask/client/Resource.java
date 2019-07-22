@@ -20,6 +20,7 @@ public class Resource {
     public static final Resource RIGHT = new Resource("1", 420, 120, 60, 60, 0.5f);
     public static final Resource LEFT = new Resource("1", 480, 120, 60, 60, 0.5f);
     public static final Resource SPEED = new Resource("1", 540, 120, 60, 60, 0.5f);
+    public static final Resource SPECIAL = new Resource("1", 600, 120, 60, 60, 0.5f);
 
     public final String id;
     public final int xp, yp, xs, ys;

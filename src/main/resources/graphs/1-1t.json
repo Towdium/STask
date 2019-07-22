@@ -1,24 +1,24 @@
 {
   "tasks": {
-    "a": {
+    "A": {
       "time": 1,
       "type": "\u03b1",
       "after": {}
     },
-    "b": {
+    "B": {
       "time": 1,
       "type": "\u03b1",
       "after": {
-        "a": 1
+        "A": 1
       }
     }
   },
   "layout": [
     [
-      "a"
+      "A"
     ],
     [
-      "b"
+      "B"
     ]
   ]
 }

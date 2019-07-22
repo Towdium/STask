@@ -24,6 +24,9 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
 /**
  * Author: Towdium
  * Date: 10/06/19
+ *
+ * At speed = 1, it runs 1/4 actual speed, which is 20 ticks per actual second.
+ * For one simulation second, it takes RATE * 4 = 80 ticks.
  */
 public class Game implements Tickable {
     static final int RATE = 20;
@@ -43,7 +46,7 @@ public class Game implements Tickable {
     int count = 0;
     boolean statik;
     boolean running = false;
-    int speed = 1;
+    int speed = 4;
     String name;
     Timer timer = new Timer(SPEED, i -> update());
 
@@ -79,7 +82,7 @@ public class Game implements Tickable {
     }
 
     public int getSeconds() {
-        return count / RATE;
+        return count / RATE / 4;
     }
 
     public List<Integer> getAims() {
@@ -251,7 +254,7 @@ public class Game implements Tickable {
             boolean ret = false;
             if (working != null) {
                 ret = true;
-                progress += SPEED / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
+                progress += SPEED / 4 / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
                 if (progress > 1) {
                     BUS.post(new ETask.Completed(working, processor));
                     for (Comm i : working.getSuccessor().values()) output.put(i, processor);
@@ -281,7 +284,7 @@ public class Game implements Tickable {
             while (it.hasNext()) {
                 ret = true;
                 Map.Entry<Comm, Trio<Float, Boolean, Processor>> i = it.next();
-                float p = i.getValue().a + SPEED / i.getKey().size * cluster.comm;
+                float p = i.getValue().a + SPEED / 4 / i.getKey().size * cluster.comm;
                 if (p > 1) {
                     input.add(i.getKey());
                     it.remove();

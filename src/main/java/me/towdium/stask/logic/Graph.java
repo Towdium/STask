@@ -32,6 +32,7 @@ public class Graph {
             Task crr = tasks.get(s);
             t.after.forEach((i, j) -> {
                 Task pre = tasks.get(i);
+                if (pre == null) throw new IllegalArgumentException("Task dependency not found: " + i);
                 Comm c = new Comm(pre, crr, j);
                 crr.predecessor.put(pre, c);
                 pre.successor.put(crr, c);

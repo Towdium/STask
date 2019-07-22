@@ -134,7 +134,7 @@ public class WCluster extends WContainer {
                 }
             }
             p.drawResource(Resource.PROCESSOR, 0, 0);
-            p.drawResource(Resource.SPEED, 50, 0);
+            p.drawResource(status.getProcessor().getSpeedup().isEmpty() ? Resource.SPEED : Resource.SPECIAL, 50, 0);
             Map<String, Float> su = status.getProcessor().getSpeedup();
             Vector2i global = Widget.page().mouse();
             Vector2i pos = global.sub(mouse, new Vector2i()).add(WIDTH + 10, 0);

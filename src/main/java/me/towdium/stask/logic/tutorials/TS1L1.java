@@ -6,7 +6,6 @@ import me.towdium.stask.client.widgets.WTask;
 import me.towdium.stask.client.widgets.WTutorial;
 import me.towdium.stask.logic.Event;
 import me.towdium.stask.logic.Event.EGame;
-import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Tutorial;
@@ -22,17 +21,17 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  * Date: 11/07/19
  */
 @ParametersAreNonnullByDefault
-public class TIntro extends Tutorial.Impl {
-    public TIntro(Game g) {
+public class TS1L1 extends Tutorial.Impl {
+    public TS1L1(Game g) {
         super(g);
-        initialize(new Allocate1(),
-                new AllocateN("b", "a"),
-                new AllocateN("c", "b"),
-                new AllocateN("d", "b"),
-                new Start());
+        initialize(new Allocate(),
+                new SAllocate("B", "A", this),
+                new SAllocate("C", "B", this),
+                new SAllocate("D", "B", this),
+                new Start(), new Finish());
     }
 
-    class Allocate1 extends AllocateN {
+    class Allocate extends SAllocate {
         static final String S1 = "Welcome! This game aims to teach the " +
                 "concept of task graph scheduling, a problem in parallel " +
                 "systems.\n\n" +
@@ -46,25 +45,29 @@ public class TIntro extends Tutorial.Impl {
                 "over any task, all related communications will be highlighted " +
                 "with size of data.";
         static final String S4 = "Inside one task graph, if there is any connection between " +
-                "two tasks, there is dependency. In this case, top level task (predecessor) have to " +
-                "be finished before the start of low level task (successor).";
-        static final String S5 = "Communications happen between tasks if two related tasks " +
-                "are executed on different processors. In this example, " +
-                "communications are assumed to take no time (an ideal assumption), " +
-                "so we will talk about it later.\n\n";
-        static final String S6 = "On the left hand side you have several processors. " +
-                "You can assign tasks to processors by dragging tasks to the task queue. " +
-                "Let's get started by assigning task a to processor a.";
+                "two tasks, there is dependency. When dependency occurs, top level task " +
+                "(predecessor) and related communication have to be finished before " +
+                "the start of low level task (successor).\n\n" +
+                "In this case, execution of B will be postponed until A is finished.";
+        static final String S5 = "In the top left corner, it shows the game timer, counting the " +
+                "total time cost of one schedule. The second row shows the communication speed. " +
+                "In this case, the speed is infinity, meaning communication will take no time.";
+        static final String S6 = "On the left hand side it shows several processors. " +
+                "You can assign tasks to processors by dragging tasks to the task queue " +
+                "At the bottom of the interface.\n\n" +
+                "For each processor, it shows the name, speed and progress bars of execution " +
+                "and communication.";
+        static final String S7 = "Let's get started by assigning task a to processor a.";
 
-        public Allocate1() {
-            super("a", "a");
+        public Allocate() {
+            super("A", "A", TS1L1.this);
         }
 
         @Override
         protected void add() {
             widget.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
 
-            Game g = new Game("tutorial");
+            Game g = new Game("1-1t");
             Graph r = g.getGraphs().iterator().next();
             widget.update((p, m) -> {
                 p.drawTextWrapped(S2, 10, 140 + Painter.fontAscent, WTutorial.WIDTH - 20);
@@ -96,60 +99,43 @@ public class TIntro extends Tutorial.Impl {
             widget.update((p, m) -> p.drawTextWrapped(S4, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
             widget.update((p, m) -> p.drawTextWrapped(S5, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
             widget.update((p, m) -> p.drawTextWrapped(S6, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
-        }
-    }
-
-    class AllocateN implements Tutorial.Impl.Stage {
-        String task, processor;
-
-        public AllocateN(String task, String processor) {
-            this.task = task;
-            this.processor = processor;
-        }
-
-        @Override
-        public void activate() {
-            BUS.subscribe(ETask.Schedule.class, this, e -> {
-                if (e.task.getName().equals(task) && e.processor.getName().equals(processor)) pass();
-            });
-            BUS.gate(Event.class, this, e -> {
-                if (e instanceof ETask.Schedule) {
-                    ETask.Schedule s = (ETask.Schedule) e;
-                    return s.task.getName().equals(task) && s.processor.getName().equals(processor);
-                } else if (e instanceof ETask.Pick) {
-                    ETask.Pick p = (ETask.Pick) e;
-                    return p.source instanceof WTask;
-                } else return false;
-            });
-            add();
-        }
-
-        public void deactivate() {
-            BUS.cancel(this);
-        }
-
-        protected void add() {
-            String s = "Then allocate task " + task + " to processor " + processor + ".";
-            widget.update((p, m) -> p.drawTextWrapped(s, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+            widget.update((p, m) -> p.drawTextWrapped(S7, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
         }
     }
 
     class Start implements Tutorial.Impl.Stage {
         static final String S1 = "The appearance of tasks change according to the state. " +
                 "At default, they are grey. When assigned, they turn blue. When being executed, " +
-                "they turn yellow. When finished, they turn green. Therefore, one task graph is " +
-                "finished when all the tasks inside turn green";
-
-        static final String S2 = "The state of processors will be rendered in real time, " +
-                "and also recorded inside the history bar when tasks are executed.\n\n" +
+                "they turn yellow. When finished, they turn green.\n\n" +
                 "Now things are set up. Let's hit the start button to execute the schedule.";
 
         @Override
         public void activate() {
-            BUS.subscribe(EGame.Start.class, this, e -> pass());
             BUS.gate(Event.class, this, e -> e instanceof EGame.Start);
+            BUS.subscribe(EGame.Finish.class, this, e -> pass());
             widget.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
-            widget.update((p, m) -> p.drawTextWrapped(S2, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+        }
+
+        @Override
+        public void deactivate() {
+            BUS.cancel(this);
+        }
+    }
+
+    class Finish implements Tutorial.Impl.Stage {
+        static final String S1 = "Now the execution finishes. You can check the timeline " +
+                "at the bottom of the interface. When you hover over any record, the " +
+                "corresponding task will be highlighted.\n\n" +
+                "In this level, both processors have speed of 1 and all tasks have duration " +
+                "of 1, so the cost for each task is 1/1=1 second.";
+        static final String S2 = "You can reset the game using the control panel in the lower right corner. " +
+                "In future games, using the control panel, you can also adjust speed of simulation, " +
+                "or pause it.";
+
+        @Override
+        public void activate() {
+            widget.update((p, m) -> p.drawTextWrapped(S1, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), true);
+            widget.update((p, m) -> p.drawTextWrapped(S2, 10, 10 + Painter.fontAscent, WTutorial.WIDTH - 20), false);
         }
 
         @Override
