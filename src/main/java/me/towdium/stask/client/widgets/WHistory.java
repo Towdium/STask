@@ -33,15 +33,15 @@ public class WHistory extends WContainer {
 
     public WHistory(int x, Game g) {
         game = g;
-        width = x;
+        width = x - 2;
         List<Cluster.Processor> ps = game.getCluster().getLayout();
         for (int i = 0; i < ps.size(); i++) {
             Cluster.Processor p = ps.get(i);
-            Rail r = new Rail(p, x, i % 2 == 0);
+            Rail r = new Rail(p, width, i % 2 == 0);
             put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
-        bar = new WBar(x - Rail.MARGIN).setListener((w, o, n) -> {
+        bar = new WBar(width - Rail.MARGIN).setListener((w, o, n) -> {
             int count = game.getCount();
             if (count < width - Rail.MARGIN) offset = 0;
             else offset = (int) ((count - width + Rail.MARGIN) * n);
@@ -67,8 +67,9 @@ public class WHistory extends WContainer {
         if (c != latest) {
             latest = c;
             bar.setPos(1);
-            bar.setRatio(latest == 0 ? 1 : Math.min((width - Rail.MARGIN) / (float) latest, 1));
-            processors.values().forEach(i -> i.setOffset(Math.max(0, latest - (width - Rail.MARGIN))));
+            bar.setRatio(latest == 0 ? 1 : Math.min((width - Rail.MARGIN) / (float) (latest / 4), 1));
+            offset = Math.max(0, latest / 4 - (width - Rail.MARGIN));
+            processors.values().forEach(i -> i.setOffset(offset));
         }
         super.onRefresh(mouse);
     }
@@ -82,7 +83,7 @@ public class WHistory extends WContainer {
         p.overlay(s);
     }
 
-    class Overlay extends WContainer {
+    static class Overlay extends WContainer {
         static final int MARGIN = 10;
         int x, y;
 
@@ -93,7 +94,7 @@ public class WHistory extends WContainer {
             for (int i = 0; i < ws.size(); i++) put(new Node(ws.get(i)), MARGIN, MARGIN + i * Node.HEIGHT);
         }
 
-        class Node extends WFocus.Impl {
+        static class Node extends WFocus.Impl {
             public static final int WIDTH = 170;
             public static final int HEIGHT = 28;
             Graph.Work work;

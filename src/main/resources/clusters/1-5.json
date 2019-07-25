@@ -1,0 +1,23 @@
+{
+  "comm": 1,
+  "processors": {
+    "A": {
+      "speed": 1
+    },
+    "B": {
+      "speed": 1,
+      "speedup": {
+        "\u03b1": 2,
+        "\u03b2": 3
+      }
+    }
+  },
+  "layout": [
+    "A",
+    "B"
+  ],
+  "policy": {
+    "background": false,
+    "multiple": false
+  }
+}

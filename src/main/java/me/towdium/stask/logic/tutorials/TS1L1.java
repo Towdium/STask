@@ -125,11 +125,7 @@ public class TS1L1 extends Tutorial.Impl {
     }
 
     private void start() {
-        BUS.gate(Event.class, this, e -> e instanceof Event.EGame.Start);
-        BUS.subscribe(Event.EGame.Finish.class, this, e -> {
-            BUS.cancel(this);
-            finish();
-        });
+        BUS.gate(Event.class, this, e -> false);
         BUS.subscribe(Event.ETutorial.class, this, e -> {
             if (e.id.equals("S2S2")) {
                 Schedule schedule = game.getSchedule();
@@ -138,6 +134,8 @@ public class TS1L1 extends Tutorial.Impl {
                 schedule.allocate(graph.getTask("B"), cluster.getProcessor("A"));
                 schedule.allocate(graph.getTask("C"), cluster.getProcessor("B"));
                 schedule.allocate(graph.getTask("D"), cluster.getProcessor("B"));
+                BUS.cancel(this);
+                finish();
             }
         });
 
@@ -146,7 +144,11 @@ public class TS1L1 extends Tutorial.Impl {
     }
 
     private void finish() {
-        widget.update(S3S1, true);
-        widget.update(S3S2, false);
+        BUS.gate(Event.class, this, v -> v instanceof Event.EGame.Start);
+        BUS.subscribe(Event.EGame.Finish.class, this, v -> {
+            BUS.cancel(this);
+            widget.update(S3S1, true);
+            widget.update(S3S2, false);
+        });
     }
 }
