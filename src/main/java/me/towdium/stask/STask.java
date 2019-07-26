@@ -1,12 +1,8 @@
 package me.towdium.stask;
 
-import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Window;
-import me.towdium.stask.network.Network;
-import me.towdium.stask.network.Packet;
-import me.towdium.stask.network.packates.PConnect;
-import me.towdium.stask.network.packates.PString;
-import me.towdium.stask.utils.time.Timer;
+import me.towdium.stask.client.pages.PMain;
+import me.towdium.stask.client.pages.PWrapper;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,24 +13,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class STask {
     public static void main(String[] args) {
-        Packet.Registry.register(PString.IDENTIFIER, PString::new);
-        Packet.Registry.register(PConnect.IDENTIFIER, PConnect::new);
+        PWrapper wrapper = new PWrapper();
 
-        Timer ticker = new Timer(1 / 200f);
-        try (Window w = new Window("STask", new Page.Impl() {
-            @Override
-            protected void onLayout(int x, int y) {
-            }
-        });
-             Network n = new Network()) {
-            n.getClient().send(new PString("Hello"));
+        try (Window w = new Window("Test Graph", wrapper)) {
             w.display();
-            while (w.isFinished()) {
-                n.getClient().tick();
-                n.getServer().tick();
-                w.tick();
-                ticker.sync();
-            }
+            wrapper.display(() -> new PMain(wrapper, w));
+            while (!w.isFinished()) w.tick();
         }
     }
 }

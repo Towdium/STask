@@ -10,7 +10,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class Tests {
-
     @Test
     public void test() {
     }
