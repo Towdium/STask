@@ -177,13 +177,13 @@ public class Game implements Tickable {
             boolean valid = false;
             for (Status i : processors.values()) i.tickPre();
             history.update();
+            BUS.post(new EGame.Tick(count++));
             for (Status i : processors.values())
                 if (i.tickPost()) valid = true;
             if (!valid && statik && running) {
                 running = false;
                 BUS.post(new EGame.Failed());
             }
-            count++;
         }
     }
 

@@ -55,5 +55,11 @@ public interface Tutorial extends Toggleable {
         public void deactivate() {
             BUS.cancel(this);
         }
+
+        protected void schedule(String task, String processor) {
+            Graph.Task t = game.getGraphs().iterator().next().getTask(task);
+            Cluster.Processor p = game.cluster.getProcessor(processor);
+            game.schedule.allocate(t, p);
+        }
     }
 }

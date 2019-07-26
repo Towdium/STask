@@ -169,6 +169,7 @@ public class PGame extends Page.Impl {
 
             BUS.subscribe(EGame.Finish.class, this, i -> finish());
             BUS.subscribe(EGame.Failed.class, this, i -> finish());
+            BUS.subscribe(EGame.class, this, i -> refresh());
 
             start.setListener(this::start);
             if (game.isStatic()) pause.setListener(this::pause);
@@ -183,22 +184,19 @@ public class PGame extends Page.Impl {
         }
 
         private void minus(WButton i) {
-            if (!BUS.attempt(new SpeedDown())) return;
+            if (!BUS.attempt(new Speed())) return;
             int s = game.getSpeed();
             if (s != 1) game.setSpeed(s / 2);
             else step = true;
-            BUS.post(new SpeedDown());
-            if (step) i.setListener(null);
-            if (game.getSpeed() < 16) plus.setListener(this::plus);
+            BUS.post(new Speed());
         }
 
         private void plus(WButton i) {
-            if (!BUS.attempt(new SpeedUp())) return;
+            if (!BUS.attempt(new Speed())) return;
             if (step) step = false;
             else game.setSpeed(2 * game.getSpeed());
-            BUS.post(new SpeedUp());
-            if (game.getSpeed() >= 16) i.setListener(null);
-            if (!step) minus.setListener(this::minus);
+            BUS.post(new Speed());
+
         }
 
         private void start(WButton i) {
@@ -212,8 +210,6 @@ public class PGame extends Page.Impl {
                 if (!BUS.attempt(new Start())) return;
                 game.start();
                 BUS.post(new Start());
-                remove(i);
-                put(pause, 20, 50);
             }
         }
 
@@ -221,13 +217,23 @@ public class PGame extends Page.Impl {
             if (!BUS.attempt(new Pause())) return;
             game.pause();
             BUS.post(new Pause());
-            remove(i);
-            put(start, 20, 50);
         }
 
         private void finish() {
             start.setListener(null);
             pause.setListener(null);
+        }
+
+        private void refresh() {
+            plus.setListener(game.getSpeed() < 64 ? this::plus : null);
+            minus.setListener(step ? null : this::minus);
+            if (game.isRunning()) {
+                remove(start);
+                put(pause, 20, 50);
+            } else {
+                remove(pause);
+                put(start, 20, 50);
+            }
         }
     }
 }

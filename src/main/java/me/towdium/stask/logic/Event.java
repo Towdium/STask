@@ -2,12 +2,11 @@ package me.towdium.stask.logic;
 
 import me.towdium.stask.client.Widget;
 import me.towdium.stask.utils.Cache;
-import me.towdium.stask.utils.wrap.Pair;
-import me.towdium.stask.utils.wrap.Trio;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Author: Towdium
@@ -37,56 +36,27 @@ public class Event {
         Cache<Class, HashMap<Object, List<Consumer>>> subs = new Cache<>(i -> new HashMap<>());
         Cache<Class, HashMap<Object, List<Predicate>>> gates = new Cache<>(i -> new HashMap<>());
         HashMap<Object, Set<Class>> record = new HashMap<>();
-        boolean active = false;
-        List<Pair<Inst, Trio<Class, Object, Object>>> cached = new ArrayList<>();
-
-        private void clean() {
-            for (Pair<Inst, Trio<Class, Object, Object>> i : cached) {
-                if (i.a == Inst.SUBS) subscribe(i.b.a, i.b.b, (Consumer) i.b.c);
-                else if (i.a == Inst.GATE) gate(i.b.a, i.b.b, (Predicate) i.b.c);
-                else cancel(i.b.b);
-            }
-            cached.clear();
-        }
-
 
         public boolean attempt(Event e) {
-            if (active) throw new IllegalStateException("Event bus active");
-            active = true;
-            for (Class i : getType(e)) {
-                HashMap<Object, List<Predicate>> ps = gates.get(i);
-                boolean b = ps != null && ps.values().stream()
-                        .flatMap(Collection::stream)
-                        .anyMatch(j -> !j.test(e));
-                if (b) {
-                    active = false;
-                    clean();
-                    return false;
-                }
-            }
-            active = false;
-            clean();
-            return true;
+            List<Predicate> l = getType(e).stream()
+                    .flatMap(i -> gates.get(i).values().stream())
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            return l.stream().allMatch(i -> i.test(e));
         }
 
         public void post(Event e) {
-            if (active) throw new IllegalStateException("Event bus active");
-            active = true;
-            for (Class i : getType(e)) {
-                HashMap<Object, List<Consumer>> cs = subs.get(i);
-                if (cs != null) cs.values().stream().flatMap(Collection::stream).forEach(j -> j.accept(e));
-            }
-            active = false;
-            clean();
+            List<Consumer> l = getType(e).stream()
+                    .flatMap(i -> subs.get(i).values().stream())
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            l.forEach(i -> i.accept(e));
         }
 
         @SuppressWarnings("Duplicates")
         public <T extends Event> void subscribe(Class<T> e, Object o, Consumer<T> c) {
-            if (active) cached.add(new Pair<>(Inst.SUBS, new Trio<>(e, o, c)));
-            else {
-                subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
-                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
-            }
+            subs.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(c);
+            record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
         }
 
         private List<Class<? extends Event>> getType(Event e) {
@@ -101,26 +71,18 @@ public class Event {
 
         @SuppressWarnings("Duplicates")
         public <T extends Event> void gate(Class<T> e, Object o, Predicate<T> p) {
-            if (active) cached.add(new Pair<>(Inst.GATE, new Trio<>(e, o, p)));
-            else {
-                gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
-                record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
-            }
+            gates.get(e).computeIfAbsent(o, i -> new ArrayList<>()).add(p);
+            record.computeIfAbsent(o, i -> new HashSet<>()).add(e);
         }
 
         public void cancel(Object o) {
-            if (active) cached.add(new Pair<>(Inst.CANCEL, new Trio<>(null, o, null)));
-            else {
-                Set<Class> classes = record.remove(o);
-                if (classes == null) return;
-                classes.forEach(i -> {
-                    subs.get(i).remove(o);
-                    gates.get(i).remove(o);
-                });
-            }
+            Set<Class> classes = record.remove(o);
+            if (classes == null) return;
+            classes.forEach(i -> {
+                subs.get(i).remove(o);
+                gates.get(i).remove(o);
+            });
         }
-
-        enum Inst {SUBS, GATE, CANCEL}
     }
 
     public static abstract class ETask extends Event {
@@ -188,10 +150,7 @@ public class Event {
         public static class Reset extends EGame {
         }
 
-        public static class SpeedUp extends EGame {
-        }
-
-        public static class SpeedDown extends EGame {
+        public static class Speed extends EGame {
         }
 
         public static class Pause extends EGame {
@@ -210,7 +169,14 @@ public class Event {
         }
 
         public static class Failed extends EGame {
+        }
 
+        public static class Tick extends EGame {
+            public final int count;
+
+            public Tick(int count) {
+                this.count = count;
+            }
         }
     }
 

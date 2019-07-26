@@ -6,21 +6,21 @@
       "after": {}
     },
     "B": {
-      "time": 1,
+      "time": 2,
       "type": "\u03b1",
       "after": {
         "A": 1
       }
     },
     "C": {
-      "time": 1,
+      "time": 2,
       "type": "\u03b1",
       "after": {
         "A": 1
       }
     },
     "D": {
-      "time": 1,
+      "time": 2,
       "type": "\u03b1",
       "after": {
         "A": 1

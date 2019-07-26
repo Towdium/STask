@@ -48,7 +48,7 @@ public class TS1L1 extends Tutorial.Impl {
             "At default, they are grey. When assigned, they turn blue. When being executed, " +
             "they turn yellow. When finished, they turn green.";
     static final String S2S2 = "I have scheduled remaining tasks for you. " +
-            "Now the schedule it ready to execute. Let's hit the start button to execute the schedule.";
+            "Now the schedule is ready to execute. Let's hit the start button to execute the schedule.";
     static final String S3S1 = "Now the execution finishes. You can check the timeline " +
             "at the bottom of the interface. When you hover over any record, the " +
             "corresponding task will be highlighted.\n\n" +
