@@ -175,7 +175,8 @@ public class Game implements Tickable {
                         .forEach(i -> BUS.post(new EGraph.Append(i)));
             }
             boolean valid = false;
-            for (Status i : processors.values()) i.tickPre();
+            for (Status i : processors.values()) i.tickPre1();
+            for (Status i : processors.values()) i.tickPre2();
             history.update();
             BUS.post(new EGame.Tick(count++));
             for (Status i : processors.values())
@@ -191,6 +192,7 @@ public class Game implements Tickable {
         return history;
     }
 
+    // available for communication from s to d
     public boolean available(Game.Status s, Game.Status d) {
         if (cluster.comm == 0) return true;
         if (!cluster.policy.background && (s.working != null || d.working != null)) return false;
@@ -198,6 +200,11 @@ public class Game implements Tickable {
         for (Trio<Float, Boolean, Processor> i : s.comms.values())
             if (!i.b && i.c == d.processor) return false;
         return true;
+    }
+
+    // available for task execution
+    public boolean available(Game.Status s) {
+        return s.working == null && (cluster.comm == 0 || cluster.policy.background || s.comms.isEmpty());
     }
 
     public class Status {
@@ -219,27 +226,35 @@ public class Game implements Tickable {
             input.clear();
         }
 
-        public void tickPre() {
+        public void tickPre1() {
             List<Schedule.Node> ts = schedule.getTasks(processor);
-            for (int i = 0; i < ts.size(); i++) {
-                Schedule.Node n = ts.get(i);
-                for (Comm c : n.comms)
-                    if (!attempt(c)) return;
-                if (working == null && i == 0) {
-                    working = n.task;
-                    executing.put(working, processor);
-                    schedule.remove(processor, 0);
-                    i--;
-                }
+            if (ts.isEmpty()) return;
+            Schedule.Node node = ts.get(0);
+            for (Comm c : node.comms) if (!attempt(c)) return;
+        }
+
+        public void tickPre2() {
+            List<Schedule.Node> ts = schedule.getTasks(processor);
+            if (ts.isEmpty()) return;
+            Schedule.Node node = ts.get(0);
+            for (Comm c : node.comms) if (!ready(c)) return;
+            if (available(this)) {
+                working = node.task;
+                executing.put(working, processor);
+                schedule.remove(processor, 0);
             }
+        }
+
+        private boolean ready(Comm c) {
+            Processor src = output.get(c);
+            if (cluster.comm == 0 && src != null) return true;
+            return input.contains(c) || src == processor;
         }
 
         private boolean attempt(Comm c) {
             Processor src = output.get(c);
-            if (cluster.comm == 0 && src != null) return true;
-            if (input.contains(c) || src == processor) return true;
-
-            if (!comms.containsKey(c)) {
+            if (ready(c)) return true;
+            else if (!comms.containsKey(c)) {
                 if (src == null) return false;
                 Status s = processors.get(src);
                 if (available(s, this)) {

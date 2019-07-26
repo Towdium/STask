@@ -4,6 +4,8 @@ import me.towdium.stask.client.Widget;
 import me.towdium.stask.client.widgets.WTutorial;
 import me.towdium.stask.logic.tutorials.TS1L1;
 import me.towdium.stask.logic.tutorials.TS1L2;
+import me.towdium.stask.logic.tutorials.TS1L3;
+import me.towdium.stask.logic.tutorials.TS1L4;
 import me.towdium.stask.utils.Toggleable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,6 +32,8 @@ public interface Tutorial extends Toggleable {
         static {
             loaders.put("1-1", TS1L1::new);
             loaders.put("1-2", TS1L2::new);
+            loaders.put("1-3", TS1L3::new);
+            loaders.put("1-4", TS1L4::new);
         }
     }
 

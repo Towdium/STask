@@ -6,11 +6,15 @@
     },
     "B": {
       "speed": 1
+    },
+    "C": {
+      "speed": 1
     }
   },
   "layout": [
     "A",
-    "B"
+    "B",
+    "C"
   ],
   "policy": {
     "background": false,
