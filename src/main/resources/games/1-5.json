@@ -3,12 +3,10 @@
     "1-5"
   ],
   "cluster": "1-5",
+  "tutorial": "1-5",
   "aims": [
     4,
     3
   ],
-  "times": [
-    0
-  ],
-  "desc": "Demo."
+  "desc": "Advanced communication."
 }

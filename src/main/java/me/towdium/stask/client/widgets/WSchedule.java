@@ -4,6 +4,7 @@ import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
+import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
@@ -16,10 +17,7 @@ import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
 
@@ -232,8 +230,9 @@ public class WSchedule extends WContainer {  // TODO remove task
 
             @Override
             public boolean onClick(@Nullable Vector2i mouse, boolean left) {
+                Cluster c = game.getCluster();
                 if (super.onClick(mouse, left)) return true;
-                else if (mouse == null) return false;
+                else if (mouse == null || c.getComm() == 0 || c.getPolicy().multiple) return false;
                 else if (onTest(mouse)) {
                     overlay(this, mouse);
                     return true;
@@ -270,14 +269,18 @@ public class WSchedule extends WContainer {  // TODO remove task
 
                 @Override
                 public void onReceived(Object o) {
-                    Overlay.this.comms.add(index, (Graph.Comm) o);
+                    comms.add(index, (Graph.Comm) o);
+                    BUS.post(new ETask.Comm(node.getTask(), comms));
                     sync();
                     node.setComms(comms);
                 }
 
                 @Override
                 public boolean onAttempt(Object o, Vector2i mouse) {
-                    return o instanceof Graph.Comm;
+                    if (!(o instanceof Graph.Comm)) return false;
+                    List<Graph.Comm> l = new ArrayList<>(Overlay.this.comms);
+                    l.add(index, (Graph.Comm) o);
+                    return BUS.attempt(new ETask.Comm(node.getTask(), l));
                 }
             });
             compose(new WOverlay(x, y));
@@ -298,8 +301,8 @@ public class WSchedule extends WContainer {  // TODO remove task
 
         @Override
         public void onMove(Vector2i mouse) {
-            super.onMove(mouse);
             index = getIndex(mouse);
+            super.onMove(mouse);
         }
 
         @Override
@@ -324,6 +327,7 @@ public class WSchedule extends WContainer {  // TODO remove task
         class Node extends WCompose {
             Graph.Comm comm;
             boolean visible = true;
+            int restore = -1;
 
             public Node(Graph.Comm c) {
                 compose(new WDrag.Impl(WIDTH, HEIGHT) {
@@ -337,7 +341,8 @@ public class WSchedule extends WContainer {  // TODO remove task
                     public Object onStarting() {
                         visible = false;
                         ghost = Node.this;
-                        comms.remove(comm);
+                        restore = comms.indexOf(comm);
+                        comms.remove(restore);
                         sync();
                         return comm;
                     }
@@ -345,11 +350,16 @@ public class WSchedule extends WContainer {  // TODO remove task
                     @Override
                     public void onSucceeded() {
                         super.onSucceeded();
+                        restore = -1;
+                        ghost = null;
                     }
 
                     @Override
                     public void onRejected() {
-                        throw new RuntimeException("Internal error");
+                        comms.add(restore, comm);
+                        restore = -1;
+                        ghost = null;
+                        sync();
                     }
                 });
                 compose(new WFocus.Impl(WIDTH, HEIGHT) {

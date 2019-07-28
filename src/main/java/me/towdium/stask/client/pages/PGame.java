@@ -152,10 +152,6 @@ public class PGame extends Page.Impl {
         WButton reset = new WButtonIcon(48, 48, Resource.RESET, "Reset").setListener(i -> {
             if (!BUS.attempt(new Reset())) return;
             game.reset();
-            start.setListener(this::start);
-            if (game.isStatic()) pause.setListener(this::pause);
-            remove(pause);
-            put(start, 20, 50);
             BUS.post(new Reset());
         });
 
@@ -170,6 +166,12 @@ public class PGame extends Page.Impl {
             BUS.subscribe(EGame.Finish.class, this, i -> finish());
             BUS.subscribe(EGame.Failed.class, this, i -> finish());
             BUS.subscribe(EGame.class, this, i -> refresh());
+            BUS.subscribe(EGame.Reset.class, this, i -> {
+                start.setListener(this::start);
+                if (game.isStatic()) pause.setListener(this::pause);
+                remove(pause);
+                put(start, 20, 50);
+            });
 
             start.setListener(this::start);
             if (game.isStatic()) pause.setListener(this::pause);

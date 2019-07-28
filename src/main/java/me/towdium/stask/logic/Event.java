@@ -101,6 +101,15 @@ public class Event {
             }
         }
 
+        public static class Comm extends ETask {
+            public final List<Graph.Comm> order;
+
+            public Comm(Graph.Task task, List<Graph.Comm> order) {
+                super(task);
+                this.order = order;
+            }
+        }
+
         public static class Schedule extends ETask {
             public Cluster.Processor processor;
 

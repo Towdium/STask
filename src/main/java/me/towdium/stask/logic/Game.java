@@ -230,7 +230,7 @@ public class Game implements Tickable {
             List<Schedule.Node> ts = schedule.getTasks(processor);
             if (ts.isEmpty()) return;
             Schedule.Node node = ts.get(0);
-            for (Comm c : node.comms) if (!attempt(c)) return;
+            for (Comm c : node.comms) if (!attempt(c) && !getCluster().policy.multiple) return;
         }
 
         public void tickPre2() {
