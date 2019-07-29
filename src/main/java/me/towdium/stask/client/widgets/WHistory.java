@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @ParametersAreNonnullByDefault
 public class WHistory extends WContainer {
-    public static final int HEIGHT = WHistory.Rail.HEIGHT * 4 + WBar.HEIGHT;
+    public static final int HEIGHT = WHistory.Rail.HEIGHT * 4 + WBar.SIZE;
     Game game;
     Map<Cluster.Processor, Rail> processors = new HashMap<>();
     int latest = 0;
@@ -41,7 +41,7 @@ public class WHistory extends WContainer {
             put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
-        bar = new WBar(width - Rail.MARGIN).setListener((w, o, n) -> {
+        bar = new WBar(width - Rail.MARGIN, false).setListener((w, o, n) -> {
             int count = game.getCount();
             if (count < width - Rail.MARGIN) offset = 0;
             else offset = (int) ((count - width + Rail.MARGIN) * n);

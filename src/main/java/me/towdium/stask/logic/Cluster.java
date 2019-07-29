@@ -5,6 +5,7 @@ import me.towdium.stask.utils.Utilities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Author: Towdium
@@ -18,6 +19,12 @@ public class Cluster {
     public static final float MULTIPLIER = 100f;
 
     int comm;
+
+    public static List<String> list() {
+        return Arrays.stream(Utilities.list("/clusters/"))
+                .map(s -> s.substring(0, s.length() - 5))
+                .collect(Collectors.toList());
+    }
 
     public Cluster(String id) {
         String json = Utilities.readString("/clusters/" + id + ".json");

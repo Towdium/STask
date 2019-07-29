@@ -143,8 +143,8 @@ public class PGame extends Page.Impl {
         boolean step = false;
         WButton start = new WButtonIcon(48, 48, Resource.START, "Start");
         WButton pause = new WButtonIcon(48, 48, Resource.PAUSE, "Pause");
-        WButton plus = new WButtonIcon(36, 36, Resource.PLUS, "Speed up").setListener(game.isStatic() ? this::plus : null);
-        WButton minus = new WButtonIcon(36, 36, Resource.MINUS, "Speed down").setListener(game.isStatic() ? this::minus : null);
+        WButton plus = new WButtonIcon(36, 36, Resource.PLUS, "Speed up");
+        WButton minus = new WButtonIcon(36, 36, Resource.MINUS, "Speed down");
         WButton leave = new WButtonIcon(48, 48, Resource.CLOSE, "Quit").setListener(i -> {
             BUS.post(new Leave());
             root.display(() -> parent);
@@ -156,12 +156,12 @@ public class PGame extends Page.Impl {
         });
 
         public Control() {
-            put(start, 20, 50);
             put(reset, 80, 50);
             put(leave, 140, 50);
             put(plus, 100, 0);
             put(minus, 150, 0);
             put(new WRectangle(65, 36, Colour.DISABLED), 20, 0);
+            refresh();
 
             BUS.subscribe(EGame.Finish.class, this, i -> finish());
             BUS.subscribe(EGame.Failed.class, this, i -> finish());
@@ -227,8 +227,8 @@ public class PGame extends Page.Impl {
         }
 
         private void refresh() {
-            plus.setListener(game.getSpeed() < 64 ? this::plus : null);
-            minus.setListener(step ? null : this::minus);
+            plus.setListener(game.getSpeed() < 64 && game.isStatic() ? this::plus : null);
+            minus.setListener(!step && game.isStatic() ? this::minus : null);
             if (game.isRunning()) {
                 remove(start);
                 put(pause, 20, 50);

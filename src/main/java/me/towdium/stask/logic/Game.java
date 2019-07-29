@@ -167,8 +167,8 @@ public class Game implements Tickable {
     private void update() {
         for (int j = 0; j < speed; j++) {
             if (!running) return;
-            if (count % RATE == 0 && !statik) {
-                int t = count / RATE;
+            if (count % (RATE * 4) == 0 && !statik) {
+                int t = count / (RATE * 4);
                 SortedMap<Integer, List<Graph>> m = graphs.tailMap(t);
                 m = m.headMap(t + 1);
                 m.values().stream().flatMap(Collection::stream)

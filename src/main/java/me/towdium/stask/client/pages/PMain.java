@@ -16,8 +16,10 @@ public class PMain extends Page.Impl {
     WButton single = new WButtonText(250, 40, "Singleplayer").setListener(i ->
             root.display(() -> new PSingle(root, this)));
     WButton multi = new WButtonText(250, 40, "Multiplayer");
-    WButton sandbox = new WButtonText(250, 40, "Sandbox");
-    WButton about = new WButtonText(250, 40, "About");
+    WButton sandbox = new WButtonText(250, 40, "Sandbox").setListener(i ->
+            root.display(PTest::new));
+    WButton about = new WButtonText(250, 40, "About").setListener(i ->
+            root.display(() -> new PAbout(root, this)));
     WButton exit = new WButtonText(250, 40, "Exit").setListener(i -> window.terminate());
 
     public PMain(PWrapper r, Window w) {

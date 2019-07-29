@@ -1,0 +1,12 @@
+{
+  "graphs": [
+    "1-6"
+  ],
+  "cluster": "1-6",
+  "tutorial": "1-6",
+  "aims": [
+    4,
+    3
+  ],
+  "desc": "Advanced processing."
+}

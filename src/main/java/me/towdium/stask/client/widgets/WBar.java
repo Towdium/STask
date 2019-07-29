@@ -14,15 +14,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class WBar extends WContainer {
-    public static final int HEIGHT = 10;
+    public static final int SIZE = 10;
     ListenerValue<WBar, Float> listener;
     boolean drag = false;
-    int width;
+    boolean vertical;
+    int size;
     float pos = 0, ratio = 1;
 
-    public WBar(int width) {
-        this.width = width;
-        put(new Handle(width), 0, 0);
+    public WBar(int size, boolean vertical) {
+        this.size = size;
+        this.vertical = vertical;
+        put(new Handle(size), 0, 0);
     }
 
     public void setPos(float pos) {
@@ -37,16 +39,19 @@ public class WBar extends WContainer {
 
     private void refresh() {
         clear();
-        int w = (int) (width * ratio);
-        put(new Handle(w), (int) ((width - w) * pos), 0);
+        int w = (int) (size * ratio);
+        int p = (int) ((size - w) * pos);
+        if (vertical) put(new Handle(w), 0, p);
+        else put(new Handle(w), p, 0);
     }
 
     @Override
     public void onMove(Vector2i mouse) {
         super.onMove(mouse);
         if (drag) {
-            float w = width * ratio;
-            float p = (mouse.x - w / 2) / (width - w);
+            float w = size * ratio;
+            float m = vertical ? mouse.y : mouse.x;
+            float p = (m - w / 2) / (size - w);
             float n = Math.min(1, Math.max(0, p));
             float o = pos;
             setPos(n);
@@ -57,7 +62,8 @@ public class WBar extends WContainer {
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
         try (Painter.State ignore = p.color(Colour.DISABLED)) {
-            p.drawRect(0, 0, width, HEIGHT);
+            if (vertical) p.drawRect(0, 0, SIZE, size);
+            else p.drawRect(0, 0, size, SIZE);
         }
         super.onDraw(p, mouse);
     }
@@ -68,17 +74,18 @@ public class WBar extends WContainer {
     }
 
     class Handle implements WArea {
-        int x;
+        int s;
 
-        public Handle(int x) {
-            this.x = x;
+        public Handle(int s) {
+            this.s = s;
         }
 
         @Override
         public void onDraw(Painter p, Vector2i mouse) {
             int color = onTest(mouse) || drag ? Colour.HOVERED : Colour.INTERACT;
             try (Painter.State ignore = p.color(color)) {
-                p.drawRect(0, 0, x, HEIGHT);
+                if (vertical) p.drawRect(0, 0, SIZE, s);
+                else p.drawRect(0, 0, s, SIZE);
             }
         }
 
@@ -100,7 +107,7 @@ public class WBar extends WContainer {
 
         @Override
         public boolean onTest(@Nullable Vector2i mouse) {
-            return Quad.inside(mouse, x, HEIGHT);
+            return vertical ? Quad.inside(mouse, SIZE, s) : Quad.inside(mouse, s, SIZE);
         }
     }
 }
