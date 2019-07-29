@@ -1,7 +1,8 @@
 package me.towdium.stask.utils;
 
 
-import javax.annotation.Nullable;
+import org.apache.commons.io.IOUtils;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
@@ -23,51 +24,27 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
  */
 @ParametersAreNonnullByDefault
 public class Utilities {
-    @Nullable
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static ByteBuffer readBytes(String resource) {
+        byte[] read = readArray(resource);
+        ByteBuffer ret = createByteBuffer(read.length);
+        ret.put(read);
+        ret.flip();
+        return ret;
+    }
+
+    public static byte[] readArray(String resource) {
+        String error = "Resource not found: " + resource;
         try (InputStream is = Utilities.class.getResourceAsStream(resource)) {
-            Objects.requireNonNull(is, "Resource not found: " + resource);
-            byte[] buffer = new byte[is.available()];
-            Log.client.info("" + is.available());
-            is.read(buffer);
-            ByteBuffer ret = createByteBuffer(buffer.length);
-            ret.put(buffer);
-            ret.flip();
-            return ret;
+            Objects.requireNonNull(is, error);
+            return IOUtils.toByteArray(is);
         } catch (IOException e) {
-            return null;
+            throw new RuntimeException(error);
         }
     }
 
-//    public static ByteBuffer read(String path) {
-//        File f = new File(path);
-//        try (InputStream is = new FileInputStream(f)) {
-//            Objects.requireNonNull(is, "Resource not found: " + path);
-//            byte[] buffer = new byte[is.available()];
-//            Log.client.info("" + is.available());
-//            is.read(buffer);
-//            ByteBuffer ret = createByteBuffer(buffer.length);
-//            ret.put(buffer);
-//            ret.flip();
-//            return ret;
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
-
-    @Nullable
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static String readString(String resource) {
-        try (InputStream is = Utilities.class.getResourceAsStream(resource)) {
-            Objects.requireNonNull(is, "Resource not found: " + resource);
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            return new String(buffer, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            return null;
-        }
+        byte[] read = readArray(resource);
+        return new String(read, StandardCharsets.UTF_8);
     }
 
     public static String[] list(String path) {

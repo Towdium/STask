@@ -1,7 +1,6 @@
 package me.towdium.stask.client;
 
 import me.towdium.stask.utils.Cache;
-import me.towdium.stask.utils.Log;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.Utilities;
 import org.joml.Matrix4f;
@@ -97,13 +96,8 @@ public class Painter {
     }
 
     static {
-        // initialize font
-        // TODO crash in jar
-        fontData = Objects.requireNonNull(Utilities.readBytes("/wqymono.ttf"), "Failed to load font");
+        fontData = Utilities.readBytes("/wqymono.ttf");
         fontInfo = STBTTFontinfo.create();
-        Log.client.info("" + fontData.get(1));
-        Log.client.info(fontData.toString());
-        Log.client.info(fontInfo.toString());
         if (!STBTruetype.stbtt_InitFont(fontInfo, fontData))
             throw new IllegalStateException("Failed to initialize font information.");
         float scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, fontHeight);
@@ -484,8 +478,6 @@ public class Painter {
         public Texture(String s) {
             int c, x, y;
             ByteBuffer image = Utilities.readBytes("/textures/" + s + ".png");
-            if (image == null) throw new RuntimeException("Failed to load texture: " + s);
-
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 IntBuffer wb = stack.mallocInt(1);
                 IntBuffer hb = stack.mallocInt(1);

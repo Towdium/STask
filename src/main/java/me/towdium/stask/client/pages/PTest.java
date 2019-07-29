@@ -16,8 +16,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public class PTest extends Page.Impl {
-
-
     Content content = new Content();
 
     @Override

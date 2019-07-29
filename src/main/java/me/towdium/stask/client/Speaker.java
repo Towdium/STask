@@ -72,7 +72,6 @@ public class Speaker extends Closeable implements Tickable {
 
         public Audio(String s) {
             ByteBuffer audio = Utilities.readBytes("/audio/" + s);
-            if (audio == null) throw new RuntimeException("Failed to load audio: " + s);
             ShortBuffer raw;
 
             try (MemoryStack stack = MemoryStack.stackPush()) {

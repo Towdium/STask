@@ -3,7 +3,6 @@ package me.towdium.stask.logic;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Graph.Task;
 import me.towdium.stask.utils.Cache;
-import org.apache.commons.collections4.list.TreeList;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -13,7 +12,7 @@ import java.util.*;
  * Date: 09/06/19
  */
 public class Schedule {
-    Cache<Processor, List<Node>> processors = new Cache<>(i -> new TreeList<>());
+    Cache<Processor, List<Node>> processors = new Cache<>(i -> new ArrayList<>());
     Map<Task, Node> tasks = new HashMap<>();
 
     public void allocate(Task t, Processor p) {
