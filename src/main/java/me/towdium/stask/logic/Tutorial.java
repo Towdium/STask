@@ -60,7 +60,7 @@ public interface Tutorial extends Toggleable {
         }
 
         protected void schedule(String task, String processor) {
-            Graph.Task t = game.getGraphs().iterator().next().getTask(task);
+            Graph.Task t = game.getInitials().iterator().next().getTask(task);
             Cluster.Processor p = game.cluster.getProcessor(processor);
             game.schedule.allocate(t, p);
         }

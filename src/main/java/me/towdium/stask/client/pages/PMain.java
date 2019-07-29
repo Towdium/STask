@@ -15,9 +15,8 @@ public class PMain extends Page.Impl {
     Window window;
     WButton single = new WButtonText(250, 40, "Singleplayer").setListener(i ->
             root.display(() -> new PSingle(root, this)));
-    WButton multi = new WButtonText(250, 40, "Multiplayer");
     WButton sandbox = new WButtonText(250, 40, "Sandbox").setListener(i ->
-            root.display(PTest::new));
+            root.display(() -> new PTest(root, this)));
     WButton about = new WButtonText(250, 40, "About").setListener(i ->
             root.display(() -> new PAbout(root, this)));
     WButton exit = new WButtonText(250, 40, "Exit").setListener(i -> window.terminate());
@@ -32,8 +31,7 @@ public class PMain extends Page.Impl {
         clear();
         put(new WPanel(300, y + 20), -10, -10);
         put(single, 20, 20);
-        put(multi, 20, 80);
-        put(sandbox, 20, 140);
+        put(sandbox, 20, 80);
         put(about, 20, y - 120);
         put(exit, 20, y - 60);
     }

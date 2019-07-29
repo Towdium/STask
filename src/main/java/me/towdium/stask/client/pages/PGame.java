@@ -2,6 +2,7 @@ package me.towdium.stask.client.pages;
 
 import me.towdium.stask.client.*;
 import me.towdium.stask.client.widgets.*;
+import me.towdium.stask.logic.Algorithm;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Event.EGame;
 import me.towdium.stask.logic.Event.EGame.*;
@@ -12,6 +13,9 @@ import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
 
@@ -31,9 +35,13 @@ public class PGame extends Page.Impl {
     WText timer = new WText(0xFFFFFF, "");
     WText comm;
     Tutorial tutorial;
-
+    WList algorithms;
 
     public PGame(PWrapper r, Page p, Game g) {
+        this(r, p, g, false);
+    }
+
+    public PGame(PWrapper r, Page p, Game g, boolean algos) {
         root = r;
         parent = p;
         game = g;
@@ -45,10 +53,24 @@ public class PGame extends Page.Impl {
             tutorial.activate();
             floating = tutorial.widget();
         }
+        if (algos) {
+            Map<String, Algorithm> as = Algorithm.Registry.get();
+            List<String> ss = as.entrySet().stream()
+                    .filter(i -> i.getValue().accepts(game.getCluster(), game.getGraphs()))
+                    .map(Map.Entry::getKey).collect(Collectors.toList());
+            algorithms = new WList(ss, 200, 400);
+            algorithms.setListener((w, o, n) -> {
+                Algorithm a = Algorithm.Registry.get(w.get(n));
+                game.reset();
+                BUS.post(new EGame.Reset());
+                a.run(game.getGraphs(), game.getCluster(), game.getSchedule());
+            });
+        }
         BUS.gate(ETask.Pick.class, this, i -> !game.isStatic() || game.getCount() == 0);
         BUS.subscribe(EGame.Finish.class, this, i -> {
-            Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT));
             game.pause();
+            if (game.getAims() == null) return;
+            Widget.page().overlay(new Center(new Complete(), Complete.WIDTH, Complete.HEIGHT));
         });
     }
 
@@ -91,6 +113,7 @@ public class PGame extends Page.Impl {
         put(new WRectangle(x, 5, Colour.SLICE), 0, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
         put(new WRectangle(5, WHistory.HEIGHT + WSchedule.HEIGHT + 10, Colour.SLICE), x - CONTROL_WIDTH - 5, y - WHistory.HEIGHT - WSchedule.HEIGHT - 10);
         if (floating != null) put(floating, x - WTutorial.WIDTH - 20, 20);
+        if (algorithms != null) put(algorithms, x - 240, 30);
     }
 
     @Override
@@ -110,6 +133,7 @@ public class PGame extends Page.Impl {
         public Complete() {
             put(new WOverlay(WIDTH, HEIGHT), 0, 0);
             List<Integer> aims = game.getAims();
+            Objects.requireNonNull(aims, "Internal error");
             int len = aims.size() * 80 - 30;
             Runnable animate = () -> {
             };

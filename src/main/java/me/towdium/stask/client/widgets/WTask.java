@@ -9,6 +9,7 @@ import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.stream.Stream;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
 
@@ -99,12 +100,8 @@ public class WTask extends WCompose {
 
     @Override
     public void onDraw(Painter p, Vector2i mouse) {
-        boolean b = false;
-        for (Graph.Comm c : task.getPredecessor().values())
-            if (WFocus.isFocused(c)) b = true;
-        for (Graph.Comm c : task.getSuccessor().values())
-            if (WFocus.isFocused(c)) b = true;
-
+        boolean b = Stream.of(task.getPredecessor(), task.getSuccessor())
+                .flatMap(i -> i.values().stream()).anyMatch(WFocus::isFocused);
         drawTask(p, task, color, WFocus.isFocused(task) || b);
         if (WDrag.isSending(this) && !WDrag.isReceiving()) {
             Widget.page().overlay(new Page.Once((a, m) -> drawTask(a, task, m.x, m.y)));

@@ -1,5 +1,7 @@
 package me.towdium.stask.logic;
 
+import me.towdium.stask.logic.algorithms.AListHLEFT;
+
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -11,6 +13,10 @@ import java.util.stream.Collectors;
  * Date: 02/07/19
  */
 public interface Algorithm {
+    default boolean accepts(Cluster c, List<Graph> gs) {
+        return false;
+    }
+
     static List<Graph.Task> getAssignable(Graph g, Schedule s) {
         Predicate<Graph.Task> p = i -> i.getPredecessor().keySet().stream().allMatch(s::allocated);
         return g.getTasks().stream().filter(p).collect(Collectors.toList());
@@ -54,11 +60,31 @@ public interface Algorithm {
         }
     }
 
+    class Registry {
+        static final HashMap<String, Algorithm> ALGORITHM = new HashMap<>();
+
+        static {
+            ALGORITHM.put("HLEFT", new AListHLEFT());
+        }
+
+        public static HashMap<String, Algorithm> get() {
+            return ALGORITHM;
+        }
+
+        public static Algorithm get(String name) {
+            return ALGORITHM.get(name);
+        }
+    }
+
     void run(Collection<Graph> g, Cluster c, Schedule s);
 
     class Estimator {
         Map<Cluster.Processor, Integer> processors = new HashMap<>();
         Map<Graph.Task, Map<Cluster.Processor, Integer>> tasks = new HashMap<>();
+
+        public static boolean accepts(Cluster c) {
+            return c.getComm() == 0 || c.getPolicy().multiple;
+        }
 
         public Estimator(Cluster c) {
             for (Cluster.Processor p : c.getProcessors().values()) processors.put(p, 0);

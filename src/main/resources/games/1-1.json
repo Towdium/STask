@@ -4,9 +4,5 @@
   ],
   "cluster": "1-1",
   "tutorial": "1-1",
-  "aims": [
-    4,
-    3
-  ],
   "desc": "Introduction of task graph and basic interactions, based on ideal communication model."
 }

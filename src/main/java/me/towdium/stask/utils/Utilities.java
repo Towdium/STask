@@ -1,9 +1,7 @@
 package me.towdium.stask.utils;
 
-
-import org.apache.commons.io.IOUtils;
-
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +22,8 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
  */
 @ParametersAreNonnullByDefault
 public class Utilities {
+    static byte[] BUFFER = new byte[1048576];
+
     public static ByteBuffer readBytes(String resource) {
         byte[] read = readArray(resource);
         ByteBuffer ret = createByteBuffer(read.length);
@@ -36,7 +36,10 @@ public class Utilities {
         String error = "Resource not found: " + resource;
         try (InputStream is = Utilities.class.getResourceAsStream(resource)) {
             Objects.requireNonNull(is, error);
-            return IOUtils.toByteArray(is);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            int size;
+            while (-1 != (size = is.read(BUFFER))) os.write(BUFFER, 0, size);
+            return os.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(error);
         }

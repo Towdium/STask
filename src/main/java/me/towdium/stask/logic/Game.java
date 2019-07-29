@@ -50,6 +50,17 @@ public class Game implements Tickable {
     String name;
     Timer timer = new Timer(SPEED, i -> update());
 
+    public Game(Cluster c, List<Graph> gs) {
+        cluster = c;
+        schedule = new Schedule();
+        statik = true;
+        name = "Generated";
+        desc = "";
+        gs.forEach(i -> graphs.computeIfAbsent(0, j -> new ArrayList<>()).add(i));
+        for (Processor i : cluster.processors.values()) processors.put(i, new Status(i));
+        unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+    }
+
     public Game(String id) {
         String json = Utilities.readString("/games/" + id + ".json");
         Gson gson = new Gson();
@@ -58,14 +69,13 @@ public class Game implements Tickable {
         tutorial = pojo.tutorial == null ? null : Tutorial.get(pojo.tutorial, this);
         schedule = new Schedule();
         statik = pojo.times == null;
-        aims = new ArrayList<>(pojo.aims);
+        aims = pojo.aims == null ? null : new ArrayList<>(pojo.aims);
         name = id;
         desc = pojo.desc;
         for (int i = 0; i < pojo.graphs.size(); i++)
             graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
                     j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
-        for (Processor i : cluster.processors.values())
-            processors.put(i, new Status(i));
+        for (Processor i : cluster.processors.values()) processors.put(i, new Status(i));
         unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
     }
 
@@ -85,6 +95,7 @@ public class Game implements Tickable {
         return count / RATE / 4;
     }
 
+    @Nullable
     public List<Integer> getAims() {
         return aims;
     }
@@ -114,9 +125,13 @@ public class Game implements Tickable {
         return cluster;
     }
 
-    public Collection<Graph> getGraphs() {
+    public List<Graph> getInitials() {
         return statik ? graphs.values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toList()) : Collections.emptyList();
+    }
+
+    public List<Graph> getGraphs() {
+        return graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     public Schedule getSchedule() {

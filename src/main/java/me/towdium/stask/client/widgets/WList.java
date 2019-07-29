@@ -1,7 +1,9 @@
 package me.towdium.stask.client.widgets;
 
 import me.towdium.stask.client.Colour;
+import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
+import me.towdium.stask.client.Widget;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -20,11 +22,17 @@ public class WList extends WCompose {
     WContainer mask = new WContainer();
     WBar bar;
     ListenerValue<WList, Integer> listener = null;
+    boolean drag;
 
     public WList(List<String> strs, int x, int y) {
+        this(strs, x, y, false);
+    }
+
+    public WList(List<String> strs, int x, int y, boolean drag) {
         this.strs = strs;
         this.x = x;
         this.y = y;
+        this.drag = drag;
         put(new WPanel(x, y), 0, 0);
         put(mask, 0, 0);
         put(bar = new WBar(y, true), x, 0);
@@ -36,6 +44,14 @@ public class WList extends WCompose {
             pos = (int) (Math.max(h - y, 0) * n);
             mask.put(nodes, 0, -pos);
         });
+    }
+
+    public String get(int idx) {
+        return strs.get(idx);
+    }
+
+    public void setListener(ListenerValue<WList, Integer> listener) {
+        this.listener = listener;
     }
 
     public int getSelect() {
@@ -63,7 +79,7 @@ public class WList extends WCompose {
         refresh();
     }
 
-    class Node extends WArea.Impl {
+    class Node extends WDrag.Impl {
         static final int HEIGHT = 28;
         int color, index;
         String text;
@@ -73,6 +89,12 @@ public class WList extends WCompose {
             this.color = color;
             this.index = index;
             this.text = text;
+        }
+
+        @Nullable
+        @Override
+        public Object onStarting() {
+            return drag ? text : super.onStarting();
         }
 
         @Override
@@ -92,6 +114,17 @@ public class WList extends WCompose {
                 p.drawRect(0, 0, x, HEIGHT);
             }
             p.drawText(text, 4, Painter.fontAscent);
+            if (WDrag.isSending(this)) {
+                Widget.page().overlay(new Page.Once((a, m) -> {
+                    try (Painter.SMatrix matrix = a.matrix()) {
+                        matrix.translate(m.x - x / 2, m.y - HEIGHT / 2);
+                        try (Painter.State ignore = a.color(color)) {
+                            a.drawRect(0, 0, x, HEIGHT);
+                        }
+                        a.drawText(text, 4, Painter.fontAscent);
+                    }
+                }));
+            }
         }
     }
 }

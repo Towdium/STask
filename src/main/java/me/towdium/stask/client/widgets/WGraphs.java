@@ -63,7 +63,7 @@ public class WGraphs extends WContainer {
     private void reset() {
         clear();
         int offset = 0;
-        for (Graph i : game.getGraphs()) {
+        for (Graph i : game.getInitials()) {
             WGraph w = new WGraph(y, game, i);
             put(w, offset, 0);
             graphs.put(i, w);

@@ -39,5 +39,10 @@ public abstract class AList implements Algorithm {
         }
     }
 
+    @Override
+    public boolean accepts(Cluster c, List<Graph> gs) {
+        return Estimator.accepts(c);
+    }
+
     public abstract int priority(Task t);
 }

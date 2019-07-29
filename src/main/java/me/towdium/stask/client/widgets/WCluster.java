@@ -168,12 +168,7 @@ public class WCluster extends WContainer {
             Vector2i global = Widget.page().mouse();
             Vector2i pos = global.sub(mouse, new Vector2i()).add(WIDTH + 10, 0);
             if (onTest(mouse) && Widget.page().overlay() == null) {
-                Widget.page().overlay(new Page.Once((a, m) -> {
-                    try (Painter.SMatrix matrix = p.matrix()) {
-                        matrix.translate(pos.x, pos.y);
-                        drawSpeedup(p, processor);
-                    }
-                }));
+                Widget.page().overlay(new Page.Once((a, m) -> drawSpeedup(p, processor), pos.x, pos.y));
             }
         }
     }

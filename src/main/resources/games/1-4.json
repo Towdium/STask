@@ -4,9 +4,5 @@
   ],
   "cluster": "1-4",
   "tutorial": "1-4",
-  "aims": [
-    4,
-    3
-  ],
   "desc": "Introduction to model with synchronous communication."
 }

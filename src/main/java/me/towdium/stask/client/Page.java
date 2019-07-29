@@ -166,7 +166,11 @@ public interface Page extends Widget {
 
     class Once extends Impl {
         public Once(BiConsumer<Painter, Vector2i> c) {
-            put(c::accept, 0, 0);
+            this(c, 0, 0);
+        }
+
+        public Once(BiConsumer<Painter, Vector2i> c, int x, int y) {
+            put(c::accept, x, y);
         }
 
         @Override
