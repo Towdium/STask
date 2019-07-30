@@ -3,6 +3,7 @@ package me.towdium.stask.client.widgets;
 import me.towdium.stask.client.*;
 import me.towdium.stask.logic.Cluster;
 import me.towdium.stask.logic.Game;
+import me.towdium.stask.logic.Graph;
 import me.towdium.stask.utils.wrap.Trio;
 import org.joml.Vector2i;
 
@@ -95,6 +96,12 @@ public class WCluster extends WContainer {
         }
         p.drawResource(Resource.PROCESSOR, 0, 0);
         p.drawResource(status.getProcessor().getSpeedup().isEmpty() ? Resource.SPEED : Resource.SPECIAL, 50, 0);
+
+        Map<Graph.Work, Vector2i> ws = g.getHistory().getRecord(r);
+        if (ws.keySet().stream().anyMatch(WFocus::isFocused))
+            try (Painter.State ignore = p.color(0xAAFFFFFF)) {
+                p.drawRect(0, 0, 133, 56);
+            }
     }
 
     public static void drawSpeedup(Painter p, Cluster.Processor r) {
