@@ -207,7 +207,7 @@ public class WHistory extends WContainer {
 
             @Override
             public void onDraw(Painter p, Vector2i mouse) {
-                int color = work instanceof Graph.Task ? 0x88CC8888 : 0x888888CC;
+                int color = work instanceof Graph.Task ? 0x88DD6666 : 0x8866BBDD;
                 try (Painter.State ignore = p.color(color)) {
                     p.drawRect(0, 0, width, HEIGHT);
                 }

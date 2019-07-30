@@ -43,7 +43,7 @@ public class PSection extends Page.Impl {
             put(w, 20, 20 + 60 * i);
             desc.put(w, g.getDesc());
         }
-        put(new WButtonText(250, 40, "back").setListener(i -> root.display(() -> parent)), 20, y - 60);
+        put(new WButtonText(250, 40, "Back").setListener(i -> root.display(() -> parent)), 20, y - 60);
         put(text = new WText(0xFFFFFF, "", x - 400), 350, 50);
     }
 

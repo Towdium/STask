@@ -9,6 +9,7 @@ import me.towdium.stask.logic.Event.EGame;
 import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Collections;
 import java.util.Map;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
@@ -90,8 +91,8 @@ public class TS1L1 extends Tutorial.Impl {
 
         widget.update(S1, true);
 
-        Game g = new Game("1-1t");
-        Graph r = g.getInitials().iterator().next();
+        Graph r = new Graph(".1-1");
+        Game g = new Game(new Cluster("1-1"), Collections.singletonList(r));
         widget.update((p, m) -> {
             p.drawTextWrapped(S2, 10, 140 + Painter.fontAscent, WTutorial.WIDTH - 20);
             WTask.drawTask(p, r.getTask("A"), 200, 70);
@@ -130,7 +131,7 @@ public class TS1L1 extends Tutorial.Impl {
         BUS.subscribe(Event.ETutorial.class, this, e -> {
             if (e.id.equals("S2S2")) {
                 Schedule schedule = game.getSchedule();
-                Graph graph = game.getInitials().iterator().next();
+                Graph graph = game.getGraphs().get(0);
                 Cluster cluster = game.getCluster();
                 schedule.allocate(graph.getTask("B"), cluster.getProcessor("A"));
                 schedule.allocate(graph.getTask("C"), cluster.getProcessor("B"));

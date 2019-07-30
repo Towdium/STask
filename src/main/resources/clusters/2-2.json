@@ -1,0 +1,19 @@
+{
+  "comm": 1,
+  "processors": {
+    "A": {
+      "speed": 1
+    },
+    "B": {
+      "speed": 1
+    }
+  },
+  "layout": [
+    "A",
+    "B"
+  ],
+  "policy": {
+    "background": true,
+    "multiple": true
+  }
+}

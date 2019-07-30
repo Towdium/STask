@@ -12,10 +12,7 @@ import me.towdium.stask.logic.Tutorial;
 import org.joml.Vector2i;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
 
@@ -55,9 +52,8 @@ public class PGame extends Page.Impl {
         }
         if (algos) {
             Map<String, Algorithm> as = Algorithm.Registry.get();
-            List<String> ss = as.entrySet().stream()
-                    .filter(i -> i.getValue().accepts(game.getCluster(), game.getGraphs()))
-                    .map(Map.Entry::getKey).collect(Collectors.toList());
+            List<String> ss = new ArrayList<>(as.keySet());
+            Collections.sort(ss);
             algorithms = new WList(ss, 200, 400);
             algorithms.setListener((w, o, n) -> {
                 Algorithm a = Algorithm.Registry.get(w.get(n));

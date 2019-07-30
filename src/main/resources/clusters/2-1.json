@@ -2,12 +2,10 @@
   "comm": 0,
   "processors": {
     "A": {
-      "speed": 1,
-      "speedup": {}
+      "speed": 1
     },
     "B": {
-      "speed": 1,
-      "speedup": {}
+      "speed": 1
     }
   },
   "layout": [

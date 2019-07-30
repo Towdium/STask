@@ -4,13 +4,10 @@ import me.towdium.stask.client.Colour;
 import me.towdium.stask.client.Page;
 import me.towdium.stask.client.Painter;
 import me.towdium.stask.client.Widget;
-import me.towdium.stask.logic.Cluster;
+import me.towdium.stask.logic.*;
 import me.towdium.stask.logic.Cluster.Processor;
 import me.towdium.stask.logic.Event.ETask;
-import me.towdium.stask.logic.Game;
-import me.towdium.stask.logic.Graph;
 import me.towdium.stask.logic.Graph.Task;
-import me.towdium.stask.logic.Schedule;
 import me.towdium.stask.utils.Quad;
 import me.towdium.stask.utils.wrap.Wrapper;
 import org.joml.Vector2i;
@@ -32,6 +29,7 @@ public class WSchedule extends WContainer {  // TODO remove task
     Game game;
     Map<Processor, Rail> processors = new IdentityHashMap<>();
     public static final int HEIGHT = Rail.HEIGHT * 4;
+    boolean locked = false;
 
     public WSchedule(int x, Game g) {
         game = g;
@@ -42,6 +40,14 @@ public class WSchedule extends WContainer {  // TODO remove task
             put(r, 0, Rail.HEIGHT * i);
             processors.put(p, r);
         }
+        BUS.subscribe(Event.EGame.Start.class, this, e -> locked = true);
+        BUS.subscribe(Event.EGame.Reset.class, this, e -> locked = false);
+    }
+
+    @Override
+    public void onRemove() {
+        super.onRemove();
+        BUS.cancel(this);
     }
 
     @Override
@@ -96,7 +102,7 @@ public class WSchedule extends WContainer {  // TODO remove task
 
         @Override
         public void onRefresh(Vector2i mouse) {
-            if (!WDrag.isSending()) sync();
+            if (!(WDrag.isSending() || (game.isStatic() && locked))) sync();
             super.onRefresh(mouse);
         }
 

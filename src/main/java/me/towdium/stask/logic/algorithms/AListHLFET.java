@@ -7,8 +7,16 @@ import me.towdium.stask.utils.wrap.Wrapper;
 /**
  * Author: Towdium
  * Date: 02/07/19
+ * Highest Level First with Estimated Times
+ *
+ * when start == true and comm == false
+ * it works the same as standard algorithm
  */
-public class AListHLEFT extends AList {
+public class AListHLFET extends AList {
+    public AListHLFET(boolean start, boolean comm) {
+        super(start, comm);
+    }
+
     @Override
     public int priority(Graph.Task t) {
         Wrapper<Integer> max = new Wrapper<>(0);

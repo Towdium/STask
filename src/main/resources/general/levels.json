@@ -10,6 +10,14 @@
         "1-6"
       ],
       "desc": "Introduction to basics of task graph scheduling and the game."
+    },
+    {
+      "levels": [
+        "2-1",
+        "2-2",
+        "2-3"
+      ],
+      "desc": "Introduction to HLFET."
     }
   ]
 }

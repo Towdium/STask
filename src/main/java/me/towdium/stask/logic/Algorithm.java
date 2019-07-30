@@ -1,6 +1,7 @@
 package me.towdium.stask.logic;
 
-import me.towdium.stask.logic.algorithms.AListHLEFT;
+import me.towdium.stask.logic.algorithms.AListHLFET;
+import me.towdium.stask.utils.wrap.Pair;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -13,10 +14,6 @@ import java.util.stream.Collectors;
  * Date: 02/07/19
  */
 public interface Algorithm {
-    default boolean accepts(Cluster c, List<Graph> gs) {
-        return false;
-    }
-
     static List<Graph.Task> getAssignable(Graph g, Schedule s) {
         Predicate<Graph.Task> p = i -> i.getPredecessor().keySet().stream().allMatch(s::allocated);
         return g.getTasks().stream().filter(p).collect(Collectors.toList());
@@ -60,11 +57,15 @@ public interface Algorithm {
         }
     }
 
+    void run(List<Graph> g, Cluster c, Schedule s);
+
     class Registry {
         static final HashMap<String, Algorithm> ALGORITHM = new HashMap<>();
 
         static {
-            ALGORITHM.put("HLEFT", new AListHLEFT());
+            ALGORITHM.put("HLEFT1", new AListHLFET(true, false));
+            ALGORITHM.put("HLEFT2", new AListHLFET(true, true));
+            ALGORITHM.put("HLEFT3", new AListHLFET(false, true));
         }
 
         public static HashMap<String, Algorithm> get() {
@@ -76,22 +77,24 @@ public interface Algorithm {
         }
     }
 
-    void run(Collection<Graph> g, Cluster c, Schedule s);
-
     class Estimator {
+        boolean comm;
         Map<Cluster.Processor, Integer> processors = new HashMap<>();
         Map<Graph.Task, Map<Cluster.Processor, Integer>> tasks = new HashMap<>();
 
-        public static boolean accepts(Cluster c) {
-            return c.getComm() == 0 || c.getPolicy().multiple;
-        }
-
-        public Estimator(Cluster c) {
+        public Estimator(Cluster c, boolean comm) {
+            this.comm = comm;
             for (Cluster.Processor p : c.getProcessors().values()) processors.put(p, 0);
         }
 
         public void assign(Graph.Task t, Cluster.Processor p) {
-            int earliest = processors.get(p);
+            int end = earliest(t, p) + p.cost(t);
+            tasks.computeIfAbsent(t, i -> new HashMap<>()).put(p, end);
+            processors.put(p, end);
+        }
+
+        private int earliest(Graph.Task t, Cluster.Processor p) {
+            int ret = processors.get(p);
             for (Map.Entry<Graph.Task, Graph.Comm> i : t.getPredecessor().entrySet()) {
                 Map<Cluster.Processor, Integer> task = tasks.get(i.getValue().getSrc());
                 Objects.requireNonNull(task, "Predecessor not assigned");
@@ -100,20 +103,27 @@ public interface Algorithm {
                     Iterator<Map.Entry<Cluster.Processor, Integer>> it = task.entrySet().iterator();
                     if (it.hasNext()) {
                         Map.Entry<Cluster.Processor, Integer> e = it.next();
-                        earliest = Math.max(earliest, e.getValue() + e.getKey().comm(i.getValue().size, p));
+                        int in = e.getValue();
+                        if (comm) in += e.getKey().comm(i.getValue().size, p);
+                        ret = Math.max(ret, in);
                     } else throw new RuntimeException("Internal error");
-                } else earliest = Math.max(earliest, self);
+                } else ret = Math.max(ret, self);
             }
-            int end = earliest + p.cost(t);
-            tasks.computeIfAbsent(t, i -> new HashMap<>()).put(p, end);
-            processors.put(p, end);
+            return ret;
         }
 
-        public Cluster.Processor earliest() {
-            return processors.entrySet().stream()
-                    .min(Comparator.comparingInt(Map.Entry::getValue))
-                    .orElseThrow(() -> new RuntimeException("Cluster empty"))
-                    .getKey();
+        public Cluster.Processor earliestStart(Graph.Task t) {
+            return processors.keySet().stream()
+                    .map(p -> new Pair<>(p, earliest(t, p)))
+                    .min(Comparator.comparingInt(i -> i.b))
+                    .orElseThrow(() -> new RuntimeException("Cluster empty")).a;
+        }
+
+        public Cluster.Processor earliestFinish(Graph.Task t) {
+            return processors.keySet().stream()
+                    .map(p -> new Pair<>(p, earliest(t, p) + p.cost(t)))
+                    .min(Comparator.comparingInt(i -> i.b))
+                    .orElseThrow(() -> new RuntimeException("Cluster empty")).a;
         }
     }
 }

@@ -33,6 +33,9 @@ public interface Tutorial extends Toggleable {
             loaders.put("1-4", TS1L4::new);
             loaders.put("1-5", TS1L5::new);
             loaders.put("1-6", TS1L6::new);
+            loaders.put("2-1", TS2L1::new);
+            loaders.put("2-2", TS2L2::new);
+            loaders.put("2-3", TS2L3::new);
         }
     }
 
@@ -60,7 +63,7 @@ public interface Tutorial extends Toggleable {
         }
 
         protected void schedule(String task, String processor) {
-            Graph.Task t = game.getInitials().iterator().next().getTask(task);
+            Graph.Task t = game.getGraphs().get(0).getTask(task);
             Cluster.Processor p = game.cluster.getProcessor(processor);
             game.schedule.allocate(t, p);
         }

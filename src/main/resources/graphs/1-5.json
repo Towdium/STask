@@ -2,13 +2,11 @@
   "tasks": {
     "A": {
       "time": 2,
-      "type": "\u03b1",
-      "after": {}
+      "type": "\u03b1"
     },
     "B": {
       "time": 1,
-      "type": "\u03b1",
-      "after": {}
+      "type": "\u03b1"
     },
     "C": {
       "time": 1,

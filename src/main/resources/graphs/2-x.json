@@ -1,42 +1,53 @@
 {
   "tasks": {
     "A": {
-      "time": 1,
+      "time": 2,
       "type": "\u03b1"
     },
     "B": {
-      "time": 1,
-      "type": "\u03b1",
-      "after": {
-        "A": 1
-      }
+      "time": 3,
+      "type": "\u03b1"
     },
     "C": {
-      "time": 1,
-      "type": "\u03b1",
-      "after": {
-        "A": 1
-      }
+      "time": 3,
+      "type": "\u03b2"
     },
     "D": {
+      "time": 3,
+      "type": "\u03b1",
+      "after": {
+        "A": 6,
+        "B": 1
+      }
+    },
+    "E": {
       "time": 1,
       "type": "\u03b1",
       "after": {
-        "B": 1,
         "C": 1
+      }
+    },
+    "F": {
+      "time": 1,
+      "type": "\u03b1",
+      "after": {
+        "D": 1,
+        "E": 1
       }
     }
   },
   "layout": [
     [
-      "A"
-    ],
-    [
+      "A",
       "B",
       "C"
     ],
     [
-      "D"
+      "D",
+      "E"
+    ],
+    [
+      "F"
     ]
   ]
 }

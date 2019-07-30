@@ -10,7 +10,10 @@ import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -75,7 +78,7 @@ public class PTest extends Page.Impl {
             put(new WCluster(null), 20, y);
             put(cluster, 20, y);
             put(graph, 430, 0);
-            graphs = Arrays.asList(Graph.list());
+            graphs = Graph.list();
             graphs.forEach(i -> states.put(i, false));
             put(available, 845, 0);
             put(selected, 1030, 0);

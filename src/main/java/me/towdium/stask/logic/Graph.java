@@ -5,6 +5,7 @@ import me.towdium.stask.utils.Utilities;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Author: Towdium
@@ -16,11 +17,6 @@ public class Graph {
     List<List<Task>> layout = new ArrayList<>();
     List<Task> entries = new ArrayList<>();
     List<Task> exits = new ArrayList<>();
-
-    public static String[] list() {
-        return Arrays.stream(Utilities.list("/graphs/"))
-                .map(i -> i.substring(0, i.length() - 5)).toArray(String[]::new);
-    }
 
     public Graph(String id) {
         String json = Utilities.readString("/graphs/" + id + ".json");
@@ -35,6 +31,7 @@ public class Graph {
         });
         pojo.tasks.forEach((s, t) -> {
             Task crr = tasks.get(s);
+            if (t.after == null) return;
             t.after.forEach((i, j) -> {
                 Task pre = tasks.get(i);
                 if (pre == null) throw new IllegalArgumentException("Task dependency not found: " + i);
@@ -52,6 +49,13 @@ public class Graph {
             if (t.successor.isEmpty()) exits.add(t);
             if (t.predecessor.isEmpty()) entries.add(t);
         }
+    }
+
+    public static List<String> list() {
+        return Arrays.stream(Utilities.list("/graphs/"))
+                .filter(s -> !s.startsWith("."))
+                .map(i -> i.substring(0, i.length() - 5))
+                .collect(Collectors.toList());
     }
 
     public List<List<Task>> getLayout() {

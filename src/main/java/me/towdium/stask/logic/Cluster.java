@@ -16,12 +16,13 @@ public class Cluster {
     Map<String, Processor> processors = new HashMap<>();
     List<Processor> layout = new ArrayList<>();
     Policy policy;
-    public static final float MULTIPLIER = 100f;
+    public static final float MULTIPLIER = 80f;
 
     int comm;
 
     public static List<String> list() {
         return Arrays.stream(Utilities.list("/clusters/"))
+                .filter(s -> !s.startsWith("."))
                 .map(s -> s.substring(0, s.length() - 5))
                 .collect(Collectors.toList());
     }
@@ -77,9 +78,9 @@ public class Cluster {
         Map<String, Float> speedup;
 
         public int cost(Graph.Task task) {
-            float ret = task.time * speed;
+            float ret = task.time / speed;
             Float k = speedup.get(task.type);
-            if (k != null) ret *= k;
+            if (k != null) ret /= k;
             return (int) Math.ceil(ret * MULTIPLIER);
         }
 
