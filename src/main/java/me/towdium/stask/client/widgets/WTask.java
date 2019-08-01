@@ -4,7 +4,6 @@ import me.towdium.stask.client.*;
 import me.towdium.stask.logic.Event.ETask;
 import me.towdium.stask.logic.Game;
 import me.towdium.stask.logic.Graph;
-import me.towdium.stask.logic.Schedule;
 import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
@@ -22,7 +21,6 @@ public class WTask extends WCompose {
     public static final int WIDTH = 100;
     public static final int HEIGHT = 56;
     Graph.Task task;
-    Schedule schedule;
     Animator animator = new Animator();
     Animator.Entry entry = null;
     Game game;
@@ -53,7 +51,6 @@ public class WTask extends WCompose {
             }
         });
         task = t;
-        schedule = g.getSchedule();
         game = g;
         state = State.DEFAULT;
         color = state.color;
@@ -123,7 +120,7 @@ public class WTask extends WCompose {
     private State state() {
         if (game.finished(task)) return State.FINISHED;
         else if (game.executing(task)) return State.EXECUTING;
-        else if (schedule.allocated(task)) return State.ALLOCATED;
+        else if (game.getSchedule().allocated(task)) return State.ALLOCATED;
         else return State.DEFAULT;
     }
 

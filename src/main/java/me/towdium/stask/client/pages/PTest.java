@@ -114,6 +114,7 @@ public class PTest extends Page.Impl {
                 Cluster c = new Cluster(w.get(n));
                 Game g = new Game(c, new ArrayList<>());
                 cluster.put(new WCluster(g), 0, 0);
+                refresh();
             });
             available.setListener((w, o, n) -> {
                 graph.clear();

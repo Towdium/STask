@@ -103,6 +103,7 @@ public class WSchedule extends WContainer {  // TODO remove task
         @Override
         public void onRefresh(Vector2i mouse) {
             if (!(WDrag.isSending() || (game.isStatic() && locked))) sync();
+            index = getIndex(mouse, false);
             super.onRefresh(mouse);
         }
 
@@ -115,13 +116,7 @@ public class WSchedule extends WContainer {  // TODO remove task
             p.drawTextRight(processor.getName(), MARGIN - 4, 2 + Painter.fontAscent);
 
             if (!WDrag.isReceiving(this)) return;
-            p.drawRect(MARGIN + getIndex(mouse) * WIDTH - 1, 0, 2, HEIGHT);
-        }
-
-        @Override
-        public void onMove(Vector2i mouse) {
-            super.onMove(mouse);
-            index = getIndex(mouse);
+            p.drawRect(MARGIN + getIndex(mouse, true) * WIDTH - 1, 0, 2, HEIGHT);
         }
 
         private void sync() {
@@ -134,11 +129,12 @@ public class WSchedule extends WContainer {  // TODO remove task
             if (ghost != null) put(ghost, 0, 0);
         }
 
-        private int getIndex(Vector2i mouse) {
+        private int getIndex(Vector2i mouse, boolean render) {
             int temp = getTemp();
             int total = game.getSchedule().getTasks(processor).size();
             int pos = (mouse.x - MARGIN + WIDTH / 2) / WIDTH;
-            return Math.max(Math.min(total + temp, pos), temp);
+            int ret = Math.max(Math.min(total + temp, pos), temp);
+            return render ? ret : ret - temp;
         }
 
         // get amount of temp nodes showing executing tasks
@@ -205,16 +201,10 @@ public class WSchedule extends WContainer {  // TODO remove task
             }
 
             @Override
-            public void onMove(Vector2i mouse) {
-                super.onMove(mouse);
-                index = getIndex(mouse);
-            }
-
-            @Override
             public void onDraw(Painter p, Vector2i mouse) {
                 super.onDraw(p, mouse);
                 if (visible) {
-                    float progress;
+                    double progress;
                     Game.Status s = game.getProcessor(processor);
                     if (task == s.getWorking()) progress = s.getProgress();
                     else if (game.getSchedule().allocated(task)) progress = 0;

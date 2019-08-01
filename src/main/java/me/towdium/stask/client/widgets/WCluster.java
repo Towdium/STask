@@ -38,7 +38,7 @@ public class WCluster extends WContainer {
 
     public static void drawProcessor(Painter p, Game g, Cluster.Processor r) {
         Game.Status status = g.getProcessor(r);
-        Iterator<Trio<Float, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
+        Iterator<Trio<Double, Boolean, Cluster.Processor>> it = status.getComms().values().iterator();
         try (Painter.State ignore = p.color(Colour.ACTIVE2)) {
             p.drawRect(0, 0, 50, 28);
         }

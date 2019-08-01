@@ -36,6 +36,8 @@ public interface Tutorial extends Toggleable {
             loaders.put("2-1", TS2L1::new);
             loaders.put("2-2", TS2L2::new);
             loaders.put("2-3", TS2L3::new);
+            loaders.put("3-1", TS3L1::new);
+            loaders.put("3-2", TS3L2::new);
         }
     }
 

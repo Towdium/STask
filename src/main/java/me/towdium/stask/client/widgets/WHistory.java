@@ -168,8 +168,11 @@ public class WHistory extends WContainer {
         @Override
         public void onRefresh(Vector2i mouse) {
             container.clear();
-            game.getHistory().getRecord(processor).forEach((w, p) ->
-                    container.put(new Node(w, (p.y - p.x) / 4), p.x / 4 + MARGIN, 0));
+            game.getHistory().getRecord(processor).forEach((w, p) -> {
+                int x2 = p.y / 4;
+                int x1 = p.x / 4;
+                container.put(new Node(w, x2 - x1), x1 + MARGIN, 0);
+            });
             super.onRefresh(mouse);
         }
 

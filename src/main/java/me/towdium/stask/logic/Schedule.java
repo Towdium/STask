@@ -15,6 +15,14 @@ public class Schedule {
     Cache<Processor, List<Node>> processors = new Cache<>(i -> new ArrayList<>());
     Map<Task, Node> tasks = new HashMap<>();
 
+    public Schedule(Schedule schedule) {
+        schedule.processors.foreach((p, ns) -> processors.get(p).addAll(ns));
+        tasks.putAll(schedule.tasks);
+    }
+
+    public Schedule() {
+    }
+
     public void allocate(Task t, Processor p) {
         Node old = tasks.get(t);
         if (old != null) processors.get(old.processor).remove(old);

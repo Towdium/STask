@@ -210,6 +210,10 @@ public class PGame extends Page.Impl {
             int s = game.getSpeed();
             if (s != 1) game.setSpeed(s / 2);
             else step = true;
+            if (step) {
+                game.pause();
+                BUS.post(new Pause());
+            }
             BUS.post(new Speed());
         }
 
@@ -247,8 +251,8 @@ public class PGame extends Page.Impl {
         }
 
         private void refresh() {
-            plus.setListener(game.getSpeed() < 64 && game.isStatic() ? this::plus : null);
-            minus.setListener(!step && game.isStatic() ? this::minus : null);
+            plus.setListener(game.getSpeed() < 64 ? this::plus : null);
+            minus.setListener((game.isStatic() ? !step : game.getSpeed() > 1) ? this::minus : null);
             if (game.isRunning()) {
                 remove(start);
                 put(pause, 20, 50);

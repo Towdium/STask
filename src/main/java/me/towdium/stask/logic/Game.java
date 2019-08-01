@@ -24,16 +24,16 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
 /**
  * Author: Towdium
  * Date: 10/06/19
- *
+ * <p>
  * At speed = 1, it runs 1/4 actual speed, which is 20 ticks per actual second.
  * For one simulation second, it takes RATE * 4 = 80 ticks.
  */
 public class Game implements Tickable {
     static final int RATE = 20;
-    static final float SPEED = 1f / RATE;
+    static final double SPEED = 1f / RATE;
     Tutorial tutorial;
     Cluster cluster;
-    Schedule schedule;
+    Schedule schedule, backup;
     History history = new History();
     Map<Processor, Status> processors = new HashMap<>();
     Map<Comm, Processor> output = new HashMap<>();
@@ -46,7 +46,7 @@ public class Game implements Tickable {
     int count = 0;
     boolean statik;
     boolean running = false;
-    int speed = 4;
+    int speed;
     String name;
     Timer timer = new Timer(SPEED, i -> update());
 
@@ -56,6 +56,7 @@ public class Game implements Tickable {
         statik = true;
         name = "Generated";
         desc = "";
+        speed = 4;
         gs.forEach(i -> graphs.computeIfAbsent(0, j -> new ArrayList<>()).add(i));
         for (Processor i : cluster.processors.values()) processors.put(i, new Status(i));
         unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
@@ -72,6 +73,7 @@ public class Game implements Tickable {
         aims = pojo.aims == null ? null : new ArrayList<>(pojo.aims);
         name = id;
         desc = pojo.desc;
+        speed = statik ? 4 : 1;
         for (int i = 0; i < pojo.graphs.size(); i++)
             graphs.computeIfAbsent(statik ? 0 : pojo.times.get(i),
                     j -> new ArrayList<>()).add(new Graph(pojo.graphs.get(i)));
@@ -156,6 +158,7 @@ public class Game implements Tickable {
 
     public void start() {
         running = true;
+        if (statik && count == 0) backup = new Schedule(schedule);
     }
 
     public void reset() {
@@ -165,7 +168,9 @@ public class Game implements Tickable {
         finished.clear();
         executing.clear();
         history.reset();
-        schedule.reset();
+        if (statik && count != 0) schedule = backup;
+        else schedule.reset();
+        count = 0;
         unfinished = graphs.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         BUS.post(new EGame.Reset());
     }
@@ -212,7 +217,7 @@ public class Game implements Tickable {
         if (cluster.comm == 0) return true;
         if (!cluster.policy.background && (s.working != null || d.working != null)) return false;
         if (!cluster.policy.multiple && (!s.comms.isEmpty() || !d.comms.isEmpty())) return false;
-        for (Trio<Float, Boolean, Processor> i : s.comms.values())
+        for (Trio<Double, Boolean, Processor> i : s.comms.values())
             if (!i.b && i.c == d.processor) return false;
         return true;
     }
@@ -225,8 +230,8 @@ public class Game implements Tickable {
     public class Status {
         Processor processor;
         Task working;
-        float progress;
-        Map<Comm, Trio<Float, Boolean, Processor>> comms = new HashMap<>();  // progress, input(true), companion
+        double progress;
+        Map<Comm, Trio<Double, Boolean, Processor>> comms = new HashMap<>();  // progress, input(true), companion
         Set<Comm> input = new HashSet<>();
 
         public Status(Processor processor) {
@@ -236,7 +241,6 @@ public class Game implements Tickable {
         public void reset() {
             working = null;
             progress = 0;
-            count = 0;
             comms.clear();
             input.clear();
         }
@@ -274,8 +278,8 @@ public class Game implements Tickable {
                 if (src == null) return false;
                 Status s = processors.get(src);
                 if (available(s, this)) {
-                    s.comms.put(c, new Trio<>(0f, false, processor));
-                    comms.put(c, new Trio<>(0f, true, s.processor));
+                    s.comms.put(c, new Trio<>(.0, false, processor));
+                    comms.put(c, new Trio<>(.0, true, s.processor));
                 }
             }
             return false;
@@ -286,7 +290,7 @@ public class Game implements Tickable {
             if (working != null) {
                 ret = true;
                 progress += SPEED / 4 / working.time * processor.getSpeed() * processor.getSpeedup(working.type);
-                if (progress > 1) {
+                if (progress + 1e-8 > 1) {
                     BUS.post(new ETask.Completed(working, processor));
                     for (Comm i : working.getSuccessor().values()) output.put(i, processor);
                     finished.add(working);
@@ -311,11 +315,11 @@ public class Game implements Tickable {
                     progress = 0;
                 }
             }
-            Iterator<Map.Entry<Comm, Trio<Float, Boolean, Processor>>> it = comms.entrySet().iterator();
+            Iterator<Map.Entry<Comm, Trio<Double, Boolean, Processor>>> it = comms.entrySet().iterator();
             while (it.hasNext()) {
                 ret = true;
-                Map.Entry<Comm, Trio<Float, Boolean, Processor>> i = it.next();
-                float p = i.getValue().a + SPEED / 4 / i.getKey().size * cluster.comm;
+                Map.Entry<Comm, Trio<Double, Boolean, Processor>> i = it.next();
+                double p = i.getValue().a + SPEED / 4 / i.getKey().size * cluster.comm;
                 if (p > 1) {
                     input.add(i.getKey());
                     it.remove();
@@ -333,11 +337,11 @@ public class Game implements Tickable {
             return working;
         }
 
-        public float getProgress() {
+        public double getProgress() {
             return progress;
         }
 
-        public Map<Comm, Trio<Float, Boolean, Processor>> getComms() {
+        public Map<Comm, Trio<Double, Boolean, Processor>> getComms() {
             return comms;
         }
     }
