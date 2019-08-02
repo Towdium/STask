@@ -19,11 +19,13 @@ public class TS2L1 extends Tutorial.Impl {
             "of list scheduling algorithms is to sort the tasks using priority, then " +
             "execute high priority tasks as early as possible. The main difference " +
             "between list scheduling algorithms is how they compute the priority.";
-    static final String S3 = "In HLFET, the priority is defined as the length of longest " +
-            "path to exit. Let's take this graph for example:\n\n" +
+    static final String S3 = "In HLFET, the priority is defined as the length (sum of durations) " +
+            "of longest path to exit. Let's take this graph for example:\n\n" +
             "P(F) = 1\nP(D) = 1 + 3 = 4\nP(E) = 1 + 1 = 2\nP(A) = 1 + 3 + 2 = 6\n" +
             "P(B) = 1 + 3 + 3 = 7\nP(C) = 1 + 1 + 3 = 5";
-    static final String S4 = "According to the priorities, we sort the tasks as: B A C D E F. " +
+    static final String S4 = "Don't get confused, since we are now working on ideal " +
+            "communication model, you don't need to consider communication cost.\n\n" +
+            "According to the priorities, we sort the tasks as: B A C D E F. " +
             "When there are tasks with same priority, some algorithms can have rules to break " +
             "the tie, but we just do it randomly in HLFET.";
     static final String S5 = "Now we need to schedule the tasks to processors. The top of " +

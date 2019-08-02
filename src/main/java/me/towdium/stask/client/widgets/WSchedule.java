@@ -93,7 +93,11 @@ public class WSchedule extends WContainer {  // TODO remove task
 
                 @Override
                 public boolean onAttempt(Object o, Vector2i mouse) {
-                    return size() < 16 && o instanceof Task && BUS.attempt(new ETask.Schedule((Task) o, processor));
+                    if (size() < 16 && o instanceof Task) {
+                        Task t = (Task) o;
+                        return !game.finished(t) && !game.executing(t)
+                                && BUS.attempt(new ETask.Schedule(t, processor));
+                    } else return false;
                 }
             });
             processor = p;
@@ -161,7 +165,7 @@ public class WSchedule extends WContainer {  // TODO remove task
                     @Nullable
                     @Override
                     public Object onStarting() {
-                        if (BUS.attempt(new ETask.Pick(task, WSchedule.this))) {
+                        if (game.getSchedule().getProcessor(task) != null && BUS.attempt(new ETask.Pick(task, WSchedule.this))) {
                             game.getSchedule().remove(processor, idx);
                             ghost = Node.this;
                             sync();

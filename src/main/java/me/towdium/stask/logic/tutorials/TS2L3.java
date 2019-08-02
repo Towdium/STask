@@ -22,7 +22,7 @@ public class TS2L3 extends Tutorial.Impl {
     static final String S3 = "For task A and B, we follow the same procedure as previous levels " +
             "to schedule them to processor A and B.";
     static final String S4 = "For task C, since processor A has high speedup for type \u03b2, " +
-            "it actually finishes earlier on processor A compared processor B, although processor " +
+            "it actually finishes earlier on processor A compared to processor B, although processor B" +
             "is available earlier. So we schedule task C to processor A";
     static final String S5 = "Then we can finish remaining schedule by repeating the process.";
     static final String S6 = "Now the schedule is finished, let's run it to see the result.\n\n" +

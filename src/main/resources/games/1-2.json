@@ -4,5 +4,5 @@
   ],
   "cluster": "1-2",
   "tutorial": "1-2",
-  "desc": "Introduction to model with background communication and multiple channels."
+  "desc": "Introduction of the second communication model: background communication and multiple channels."
 }

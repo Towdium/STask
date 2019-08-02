@@ -79,8 +79,8 @@ public class PGame extends Page.Impl {
 
     @Override
     public void onRefresh(Vector2i mouse) {
-        super.onRefresh(mouse);
         game.tick();
+        super.onRefresh(mouse);
         int sec = game.getSeconds();
         timer.str = String.format("%02d:%02d", sec / 60, sec % 60);
     }
