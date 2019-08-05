@@ -3,6 +3,7 @@
 \documentclass[msc,deptreport, cs]{infthesis}
 \usepackage{subfig} 
 \graphicspath{{figures/}}
+\tolerance=500
 
 \begin{document}
 \begin{preliminary}
@@ -48,11 +49,11 @@ This project aims to develop an game-like application to help the students learn
   \centering
   \subfloat[task graph]{ 
       \label{fig:graph}
-      \includegraphics[width=0.3\columnwidth]{graph.pdf}
+      \includegraphics[width=0.3\columnwidth]{graph1.pdf}
   } \hspace{2em}
   \subfloat[schedule]{
       \label{fig:schedule}
-      \includegraphics[width=0.45\columnwidth]{schedule.pdf}
+      \includegraphics[width=0.45\columnwidth]{schedule1.pdf}
   }
   \caption{Example of task graph and one possible schedule}
   \label{fig:example}
@@ -60,17 +61,151 @@ This project aims to develop an game-like application to help the students learn
 
 The topic of this project is task graph scheduling. Figure \ref{fig:graph} shows an example task graph.
 
-\subsection{Different Models}
+\subsection{Communication Models} \label{sec:comm}
 
 \subsection{HLEFT Algorithm}
 
 \section{Educational Software}
 
-\chapter{Methodology}
+\chapter{Design}
 
 \section{Learning Experience}
 
-\section{Design of Interface}
+\subsection{Game modes}
+
+Similar to games, this application is divided into many levels. Each level can have different game mode for different purposes:
+
+\begin{itemize}
+  \item \textbf{Static mode:} In this mode, students are given several task graphs and a cluster. Students can create schedules by scheduling tasks in task graphs to processors in the cluster. When one schedule is created, it can be executed to generate the timeline, so that the student can improve the schedule according to the execution timeline. Each level can have several target times. When all the tasks are finished, the performance of the schedule will be evaluated according to the targets.
+  \item \textbf{Dynamic mode:} Different from static mode, the state of the cluster will be simulated in real time. After the start of game, several task graphs will be revealed at certain time point. The student is required to schedule the tasks to processors when the simulation is running. This mode requires the student to analyze task graphs quickly and make schedules immediately. Similar to static mode, the time cost to finish all the tasks will be recorded and the performance will be evaluated based on target times.
+  \item \textbf{Tutorial mode:} Levels in this mode are usually developed based on static mode. For tutorial levels, some help text will be displayed to help the student learn concepts, operations and algorithms. A tutorial can operate on the game engine freely. By listening to operations made by the student, tutorials can be made into an interactive process to help students learn faster.
+  \item \textbf{Sandbox mode:} This mode is developed based on static mode for testing purposes. The user can create games by selecting clusters and task graphs, then play the the created game freely. This mode also provides several standard algorithms, so that the user can try these algorithms to check the result, making it good for demonstrations.
+\end{itemize}
+
+\subsection{Design of Interface}
+
+\section{Execution Logic}
+
+\subsection{Communication Models}
+
+As is described in section \ref{sec:comm}, one difficulty in task graph scheduling is variety of communication models. To reflect the variety, four different communication models are selected as follows:
+
+\begin{enumerate}
+  \item \textbf{Ideal (immediate) communication (IC):} Communication do not cost any time. Tasks will only be delayed if any of its dependency is not finished.
+  \item \textbf{Background communication with multiple channels (BCMC):} One processor can communicate with unlimited amount of processors in both directions. The only limit is one processor can only have one channel sending to another processor, meaning no more than one communication block can be sent from one processor to another at any time. The limit is made since bandwidth of one connection is always limited in real life, although there could be multiple connections.
+  \item \label{sec:bcsc} \textbf{Background communication with single channel (BCSC):} One processor can send to or receive from only one processor at any time. Instead of having multiple connections, this model describes processors with single connection, and the total bandwidth is limited. Therefore, one communication in progress can occupy the entire bandwidth, making other communications blocked.
+  \item \textbf{Synchronous (blocked) communication (SC):} One processor cannot execute tasks and communicate with other processors at the same time. Also, it allows only one channel in one direction like described in mode \ref{sec:bcsc}. This model describes the scenario when using synchronous communication libraries like Java IO or MPI synchronous mode in single thread.
+\end{enumerate}
+
+\subsection{First Conflict and Rule 1}
+
+With more strict communication models, there can be more conflicts. One option is to let the student decide how to solve the conflicts, but sometimes it makes the learning experience too detailed and annoying, so the program have to add more rules as tie breaking strategies to simplify the process in such cases.
+
+\begin{figure}[htpb]
+  \centering
+  \vspace{1em}
+  \hspace{3em}
+  \subfloat[task graph]{ 
+      \label{fig:conflict1-1}
+      \includegraphics[width=0.25\columnwidth]{graph2.pdf}
+  } \hspace{4em}
+  \subfloat[timeline 1]{
+      \label{fig:conflict1-2}
+      \includegraphics[width=0.48\columnwidth]{schedule2-1.pdf}
+  } \\
+  \subfloat[timeline 2]{
+      \label{fig:conflict1-3}
+      \includegraphics[width=0.44\columnwidth]{schedule2-2.pdf}
+  } \hspace{1em}
+  \subfloat[timeline 3]{
+      \label{fig:conflict1-4}
+      \includegraphics[width=0.48\columnwidth]{schedule2-3.pdf}
+  }
+  \caption{One task graph and possible timelines to demonstrate effect of communication order in non-ideal models}
+  \label{fig:conflict1}
+\end{figure}
+
+In all non-ideal modes, one conflict is when two tasks scheduled on one processor relies on data from another processor, because two data packages have to be sent in certain order. The strategy used is to allow communication required by one task only when it is the first task in the schedule (rule 1). In other words, communication required by one task will be delayed if there is any task ahead of it in the schedule. Figure \ref{fig:conflict1} shows one example task graph and three possible execution timelines if T1 is scheduled to processor 1 (P1) and remaining tasks are scheduled to processor 2 (P2). For the task graph, tasks are labeled as ``Tn(Duration)'' and communications are labeled as ``Cn(Duration)''.
+
+As shown in the timelines, for one given schedule, there could be many results if the order and time of tasks are not explicitly specified. However, according to "rule 1", the execution result will always be timeline 1. Although other strategies can provide better performance like in timeline 2, this rule is chosen for its reliability, simplicity, and less uncertainty. Another option is to leave the decision to students. However, there are two problems: 1) It have to be decided based on very precise estimation of execution, which might be too challenging for a student, even for many algorithms; 2) It will make the interface very complex because it requires precise control of time.
+
+\subsection{Second Conflict}
+
+Another conflict happens only for single channel models, which is the order of communication for one task. Figure \ref{fig:conflict2} shows an example of the conflict. For task graph given in \ref{fig:conflict2-1}, by scheduling T1 to P1, T2 to P2 and T3 to P3, even when rule 1 is applied, there are still multiple possible execution results, which are shown in figure \ref{fig:conflict2-2} and \ref{fig:conflict2-3}. 
+
+\begin{figure}[htpb]
+  \centering
+  \vspace{1em}
+  \hspace{3em}
+  \subfloat[task graph]{ 
+      \label{fig:conflict2-1}
+      \includegraphics[width=0.18\columnwidth]{graph3.pdf}
+  } \hspace{4em}
+  \subfloat[timeline 1]{
+      \label{fig:conflict2-2}
+      \includegraphics[width=0.4\columnwidth]{schedule3-1.pdf}
+  } \\
+  \subfloat[timeline 2]{
+      \label{fig:conflict2-3}
+      \includegraphics[width=0.4\columnwidth]{schedule3-2.pdf}
+  } \hspace{1em}
+  \subfloat[timeline 3]{
+      \label{fig:conflict2-4}
+      \includegraphics[width=0.4\columnwidth]{schedule3-3.pdf}
+  }
+  \caption{One task graph and possible timelines to demonstrate effect of communication order in single channel models}
+  \label{fig:conflict2}
+\end{figure}
+
+The main problem is the order of communications that T3 depends on. When C1 is executed first, the result is figure \ref{fig:conflict2-2} and when C2 is executed first, it generates figure \ref{fig:conflict2-3}. A straight forward solution is to always attempt to receive the data that is available earlier, which is C1 in this case, similar to greedy strategies. According to the figure, it provides better performance indeed. However, in some other cases, when another task Tx is assigned to P2, assuming synchronous communication model, C2 can be terribly delayed.
+
+According to the timelines, it seems changing the order of communication can have significant effect over execution of other tasks, especially when the resources are limited. Therefore, the decision is left to the student. In multiple communication models, since there is no such conflict, the system will handle communication automatically, while in single communication models, the student have to decide the order manually.
+
+\subsection{Third Conflict and Rule 2}
+
+In synchronous communication model, there is also conflict between execution of tasks and communication. Figure \ref{fig:conflict3} shows an example of the conflict when T2 is scheduled to P2, and remaining tasks are scheduled to P1. When T1 finishes, there are two options: communicate with P1 first (figure \ref{fig:conflict3-2}), or execute T3 first (figure \ref{fig:conflict3-3}).
+
+\begin{figure}[htpb]
+  \centering
+  \subfloat[task graph]{ 
+      \label{fig:conflict3-1}
+      \includegraphics[width=0.22\columnwidth]{graph4.pdf}
+  } \hspace{1em}
+  \subfloat[timeline 1]{
+      \label{fig:conflict3-2}
+      \includegraphics[width=0.3\columnwidth]{schedule4-1.pdf}
+  } \hspace{1em}
+  \subfloat[timeline 2]{
+      \label{fig:conflict3-3}
+      \includegraphics[width=0.3\columnwidth]{schedule4-2.pdf}
+  }
+  \caption{One task graph and possible timelines to demonstrate conflict between execution and communication in synchronous communication model}
+  \label{fig:conflict3}
+\end{figure}
+
+As can be observed in figures, if processors are allowed to execute next task before communication, it is possible to block other processors for a long time, when there are many connected tasks. To remove unnecessary delay caused by this conflict, the choice is to force processors communicate before executing tasks (rule 2). Under this rule, the result execution will always be figure \ref{fig:conflict3-2}.
+
+\subsection{Other Conflicts and Behavior}
+
+There are still many conflicts that are not mentioned. For example, figure \ref{fig:conflict4} shows two possible execution results when scheduling T1 to P1, T2 to P2 and T3 to P3. However, since such conflicts do not happen as frequent as previously described ones, and the effect to general performance is negligible in most of cases, the behavior is not explicitly defined. Also, defining too much rules for details also brings more complexity for students to learn. Instead, the behavior when such conflicts happen depends on the implementation of simulation engine.
+
+\begin{figure}[htpb]
+  \centering
+  \subfloat[task graph]{ 
+      \label{fig:conflict4-1}
+      \includegraphics[width=0.18\columnwidth]{graph5.pdf}
+  } \hspace{0.5em}
+  \subfloat[timeline 1]{
+      \label{fig:conflict4-2}
+      \includegraphics[width=0.34\columnwidth]{schedule5-1.pdf}
+  } \hspace{0.5em}
+  \subfloat[timeline 2]{
+      \label{fig:conflict4-3}
+      \includegraphics[width=0.34\columnwidth]{schedule5-2.pdf}
+  }
+  \caption{One task graph and possible timelines to demonstrate effect of different output order in single communication models}
+  \label{fig:conflict4}
+\end{figure}
 
 \section{Platform and Libraries}
 
@@ -96,7 +231,6 @@ OpenGL is chosen as the rendering library for its cross-platform availability an
   \vspace{-1em}\item It provides full exposure of OpenGL APIs.
   \vspace{-1em}\item It it up-to-date.
 \end{itemize}
-
 
 \chapter{Implementation}
 
@@ -126,11 +260,13 @@ OpenGL is chosen as the rendering library for its cross-platform availability an
 
 \section{Game Flow}
 
+\subsection{Appearance and Components}
+
 \subsection{Tutorial Levels}
 
 \subsection{Game Levels}
 
-\section{Sandbox Mode}
+\subsection{Sandbox Mode}
 
 \chapter{Evaluation}
 
