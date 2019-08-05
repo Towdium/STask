@@ -15,8 +15,5 @@
     "A",
     "B"
   ],
-  "policy": {
-    "background": true,
-    "multiple": false
-  }
+  "model": "bcsc"
 }

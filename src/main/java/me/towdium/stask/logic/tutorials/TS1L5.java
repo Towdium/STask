@@ -26,7 +26,7 @@ public class TS1L5 extends Tutorial.Impl {
             "until communication from processor A is finished.";
     static final String S5 = "I have reset the schedule for you. Now let's change the order " +
             "to make it run faster. First click on task C in the schedule, then drag the " +
-            "button to put task B at the top of the queue.";
+            "buttons in the pop up menu to put task B at the top of the queue.";
     static final String S6 = "Well done. Now let's run it again.";
     static final String S7 = "Of course there are better schedules for this task graph." +
             "This is just to demonstrate how it works. When playing with single communication " +

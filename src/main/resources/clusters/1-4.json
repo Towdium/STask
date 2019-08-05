@@ -16,8 +16,5 @@
     "B",
     "C"
   ],
-  "policy": {
-    "background": false,
-    "multiple": false
-  }
+  "model": "sc"
 }

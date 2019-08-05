@@ -1,5 +1,4 @@
 {
-  "comm": 0,
   "processors": {
     "A": {
       "speed": 1
@@ -11,5 +10,6 @@
   "layout": [
     "A",
     "B"
-  ]
+  ],
+  "model": "ic"
 }

@@ -31,11 +31,17 @@ public class Cluster {
         String json = Utilities.readString("/clusters/" + id + ".json");
         Gson gson = new Gson();
         Pojo.Cluster pojo = gson.fromJson(json, Pojo.Cluster.class);
-        if (pojo.policy == null) policy = null;
-        else {
-            policy = new Policy(pojo.policy.multiple, pojo.policy.background);
-            if (policy.multiple && !policy.background)
-                throw new IllegalArgumentException("Multiple not allowed when not background");
+        switch (pojo.model) {
+            case IC:
+            case BCMC:
+                policy = new Policy(true, true);
+                break;
+            case BCSC:
+                policy = new Policy(false, true);
+                break;
+            case SC:
+                policy = new Policy(false, false);
+                break;
         }
         comm = pojo.comm;
         pojo.processors.forEach((s, p) -> {

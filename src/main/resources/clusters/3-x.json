@@ -19,8 +19,5 @@
     "B",
     "C"
   ],
-  "policy": {
-    "background": true,
-    "multiple": true
-  }
+  "model": "bcmc"
 }

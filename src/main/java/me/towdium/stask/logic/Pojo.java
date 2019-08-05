@@ -1,5 +1,7 @@
 package me.towdium.stask.logic;
 
+import com.google.gson.annotations.SerializedName;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
@@ -21,15 +23,22 @@ public class Pojo {
         Map<String, Integer> after;
     }
 
+    public enum Model {
+        @SerializedName(value = "IC", alternate = {"ic"})
+        IC,
+        @SerializedName(value = "BCMC", alternate = {"bcmc"})
+        BCMC,
+        @SerializedName(value = "BCSC", alternate = {"bcsc"})
+        BCSC,
+        @SerializedName(value = "SC", alternate = {"sc"})
+        SC
+    }
+
     public static class Cluster {
         Map<String, Processor> processors;
         List<String> layout;
         int comm;
-        Policy policy;
-    }
-
-    public static class Policy {
-        boolean multiple, background;
+        Model model;
     }
 
     public static class Processor {

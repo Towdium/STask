@@ -224,7 +224,7 @@ public class Game implements Tickable {
 
     // available for task execution
     public boolean available(Game.Status s) {
-        return s.working == null && (cluster.comm == 0 || cluster.policy.background || s.comms.isEmpty());
+        return s.working == null && (cluster.policy.background || s.comms.isEmpty());
     }
 
     public class Status {
@@ -249,8 +249,7 @@ public class Game implements Tickable {
             List<Schedule.Node> ts = schedule.getTasks(processor);
             if (ts.isEmpty()) return;
             Schedule.Node node = ts.get(0);
-            boolean mul = getCluster().getComm() == 0 || getCluster().policy.multiple;
-            for (Comm c : node.comms) if (!attempt(c) && !mul) return;
+            for (Comm c : node.comms) if (!attempt(c) && !getCluster().policy.multiple) return;
         }
 
         public void tickPre2() {

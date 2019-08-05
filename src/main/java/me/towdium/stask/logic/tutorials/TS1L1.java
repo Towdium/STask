@@ -45,7 +45,7 @@ public class TS1L1 extends Tutorial.Impl {
             "At the bottom of the interface.\n\n" +
             "For each processor, it shows the name, speed and progress bars of execution " +
             "and communication.";
-    static final String S7 = "Let's get started by assigning task a to processor a.";
+    static final String S7 = "Let's get started by assigning task A to processor A.";
     static final String S8 = "The appearance of tasks change according to the state. " +
             "At default, they are grey. When assigned, they turn blue. When being executed, " +
             "they turn yellow. When finished, they turn green.";

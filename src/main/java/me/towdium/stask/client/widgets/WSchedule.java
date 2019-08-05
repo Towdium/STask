@@ -232,7 +232,7 @@ public class WSchedule extends WContainer {  // TODO remove task
             public boolean onClick(@Nullable Vector2i mouse, boolean left) {
                 Cluster c = game.getCluster();
                 if (super.onClick(mouse, left)) return true;
-                else if (mouse == null || c.getComm() == 0 || c.getPolicy().multiple) return false;
+                else if (mouse == null || c.getPolicy().multiple) return false;
                 else if (onTest(mouse)) {
                     overlay(this, mouse);
                     return true;
