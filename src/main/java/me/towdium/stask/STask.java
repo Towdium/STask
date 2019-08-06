@@ -15,7 +15,7 @@ public class STask {
     public static void main(String[] args) {
         PWrapper wrapper = new PWrapper();
 
-        try (Window w = new Window("Test Graph", wrapper)) {
+        try (Window w = new Window("STask", wrapper)) {
             w.display();
             wrapper.display(() -> new PMain(wrapper, w));
             while (!w.isFinished()) w.tick();

@@ -14,7 +14,10 @@ import org.joml.Vector2i;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static me.towdium.stask.logic.Event.Bus.BUS;
 
@@ -58,9 +61,8 @@ public class WSchedule extends WContainer {  // TODO remove task
         super.onDraw(p, mouse);
     }
 
-    private void overlay(Rail.Node n, Vector2i m) {
-        Schedule.Node d = game.getSchedule().getNode(n.task);
-        Overlay o = new Overlay(Objects.requireNonNull(d, "Internal error"));
+    private void overlay(Schedule.Node d, Vector2i m) {
+        Overlay o = new Overlay(d);
         if (d.getComms().size() <= 1) return;
         Page r = Widget.page();
         Vector2i v = r.mouse().sub(m).add(Rail.WIDTH / 2 - o.x / 2, -o.y);
@@ -231,10 +233,11 @@ public class WSchedule extends WContainer {  // TODO remove task
             @Override
             public boolean onClick(@Nullable Vector2i mouse, boolean left) {
                 Cluster c = game.getCluster();
+                Schedule.Node n = game.getSchedule().getNode(this.task);
                 if (super.onClick(mouse, left)) return true;
                 else if (mouse == null || c.getPolicy().multiple) return false;
-                else if (onTest(mouse)) {
-                    overlay(this, mouse);
+                else if (onTest(mouse) && n != null) {
+                    overlay(n, mouse);
                     return true;
                 } else return false;
             }
