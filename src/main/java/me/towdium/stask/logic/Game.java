@@ -195,12 +195,12 @@ public class Game implements Tickable {
                         .forEach(i -> BUS.post(new EGraph.Append(i)));
             }
             boolean valid = false;
-            for (Status i : processors.values()) i.tickPre1();
-            for (Status i : processors.values()) i.tickPre2();
+            for (Processor i: cluster.layout) processors.get(i).tickPre1();
+            for (Processor i: cluster.layout) processors.get(i).tickPre2();
             history.update();
             BUS.post(new EGame.Tick(count++));
-            for (Status i : processors.values())
-                if (i.tickPost()) valid = true;
+            for (Processor i: cluster.layout)
+                if (processors.get(i).tickPost()) valid = true;
             if (!valid && statik && running) {
                 running = false;
                 BUS.post(new EGame.Failed());
