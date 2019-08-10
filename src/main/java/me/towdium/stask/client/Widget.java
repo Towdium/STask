@@ -14,10 +14,6 @@ import java.util.List;
 public interface Widget {
     void onDraw(Painter p, Vector2i mouse);
 
-    default boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
-        return false;
-    }
-
     default boolean onKey(int code) {
         return false;
     }
@@ -32,10 +28,6 @@ public interface Widget {
     }
 
     default boolean onClick(@Nullable Vector2i mouse, boolean left) {
-        return false;
-    }
-
-    default boolean onScroll(@Nullable Vector2i mouse, int diff) {
         return false;
     }
 

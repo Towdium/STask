@@ -1,0 +1,12 @@
+{
+  "sections": [
+    {
+      "levels": ["level1", "level2"],
+      "desc": "Some description for the first level."
+    },
+    {
+      "levels": ["level3", "level4"],
+      "desc": "Some description for the first level."
+    }
+  ]
+}

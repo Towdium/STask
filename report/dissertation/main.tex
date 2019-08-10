@@ -3,10 +3,19 @@
 \documentclass[msc,deptreport, cs]{infthesis}
 \usepackage{subfig, amsmath}
 \usepackage{couriers}
+\usepackage{float}
+\usepackage{listings}
 \usepackage[hyphens]{url}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{figures/}}
 \tolerance=500
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}
+
+\lstset{ 
+  basicstyle=\linespread{1}\ttfamily, 
+  frame=single,
+}
 
 \begin{document}
 \begin{preliminary}
@@ -120,7 +129,7 @@ Similar to games, this application is divided into many levels. Each level can h
   \item \textbf{Sandbox mode:} This mode is also developed based on static mode. The user can create games by selecting clusters and task graphs, then play the the created game freely. This mode also provides several standard algorithms, so that the user can try these algorithms to check the scheduling result. This mode can be helpful for demonstration and testing because the user can build any scenarios according to requirements, in addition to check and compare the behavior of algorithms in such scenarios.
 \end{itemize}
 
-\subsection{Design of Interface}
+\subsection{Design of Interface} \label{sec:interface}
 
 The design of game interface is given in figure \ref{fig:layout}. The main aim of the design is to make it clear and simple. Therefore, most of information related to the game is given inside one window. The layout is separated to two main areas. The top area shows the current state of the game, including the cluster and the task graphs. On the left hand side, it shows the state of processors inside the cluster. On the right hand side, the space is taken by task graphs. A high proportion of the window is given to task graphs because there are many detailed information for each task graph and there could be even multiple task graphs within one game. The bottom area, consisting of two rails, handles most of interactions with the user. The first rail shows the queue of tasks scheduled to processors, while the second rail shows the execution timeline when the game is running.
 
@@ -281,7 +290,7 @@ The biggest difficulty of using C++ is compilation on different platforms. For e
 
 Oppositely, compilation of Java file is much easier. With help of virtual machine, compiled binary files can be executed on different platforms without any extra step. Since Java executable files are usually packed in Jar files, distribution is also convenient.
 
-\subsection{GUI Library}
+\subsection{GUI Library} \label{sec:opengl}
 
 As is said in previous sections, the interface is designed to be interactive, which means the application will heavily rely on operations like hovering and drag \& drop. Also, it requires rendering overlays and transparency frequently. For widgets based traditional GUI frameworks, these operations usually requires usage of complex or low level APIs, which brings difficulty in development and potential compatibility issues. Therefore, games are usually developed based on dedicated GUI frameworks.
 
@@ -359,13 +368,84 @@ The solution is to have an acceptable margin of error. For example, consider $1 
 
 There is no ideal value for the margin. For longer tasks that takes more iterations to finish, the difference in one iteration is smaller, while the accumulated error is larger. The typical value of error $\epsilon$ is about $10^{-16} \sim 10^{-15}$ when using double-precision floats. For a task that requires n iterations, the difference of one iteration is $1/n$ and the accumulated error is $n\epsilon$. To achieve a balance, $\epsilon_0 = \sqrt{\epsilon} \approx 10^{-8}$ is used as the margin of error. In this case, the simulation will have error of 1 iteration for tasks taking over $10^7$ ticks, which is equivalent to over 30 hours, assuming 80 tick per second. Since tasks in this program usually takes only several seconds, the accuracy seems acceptable.
 
-\section{GUI Framework}
+\section{GUI Framework and Interfaces}
+
+The design of interface discussed in section \ref{sec:interface} requires the GUI framework to be very flexible. However, most of traditional GUI frameworks, when implementing advanced user interactions, introduces extra difficulty, since they are designed for traditional interfaces. Also, a high proportion of the design uses customized widgets. In this case, although traditional GUI frameworks usually provides a variety of built-in widget types, it doesn't provide much help. Therefore, the final choice is to implement a dedicated GUI framework based on OpenGL, as described in section \ref{sec:opengl}.
+
+Development based on low level GUI frameworks is different from the experience using traditional GUI frameworks. For every widgets, the developer have to handle mouse events, check the bounding box and render the elements manually. It seems unnecessarily complex when implementing traditional interfaces, but when creating customized widgets, it provides very detailed control and exposure of low level APIs.
+
+In addition to widgets, the implement of framework also takes much effort. In this project, GLFW is used to create windows and handle user inputs. From the developer's perspective, it provides only OpenGL contexts that can be rendered to, and global user inputs, like keyboard button state, mouse movement and mouse button state, based on coordinate system corresponding to the window's position. Therefore, for a framework, it have to work as a compatibility layer to provide decent abstraction of such APIs. For example, it have to align the rendering space to pixel based coordination, and to translate mouse events into interactions like click or drag. However, since this is not the focus of this project, many details will be skipped.
 
 \subsection{Rendering Method}
 
+Most of rendering in this project uses the painting system, based on OpenGL. Compared to hardware related APIs provided by OpenGL, this system provides much convenient operations like rendering shapes, characters and textures, using coordinates aligned to pixels.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{matrix.pdf}
+  \caption{Transformation matrixes and spaces}
+  \label{fig:matrix}
+\end{figure}
+
+When developing 2D interfaces, the most intuitive coordination system is pixels. However, since OpenGL is designed for 3D rendering, all rendering instructions are positioned by a special coordinate system. In traditional 3D rendering, several matrixes are used to control the position of rendering. All the matrixes are modified for rendering in 2D space, as is shown in figure \ref{fig:matrix}. In this example, one rectangle with size of 640x360 is rendered to a window with size of 1280x720, shifted by 640 pixels in x direction and 360 pixels in y direction. In other words, by painting a 640x360 rectangle at point (0, 0), one square $x\in[0, 1]$, $y\in[-1, 0]$ should be actually rendered in clip space, since the entire window is equivalent to $x\in[-1, 1]$, $y\in[-1, 1]$ in clip space.
+
+The coordination of rectangle is first transformed by model matrix to shift the rendering. Afterwards, it is transformed by view matrix into view space. In this step, view matrix describes the camera in this scene, then transfer the world coordination into relative coordination corresponding to the camera. Finally, projection matrix is used to transform the view space into clip space according to OpenGL specifications. In this program, view matrix will always describe a camera looking into the plane in the opposite direction of z-axis, and projection matrix will always transform $x\in[0, width]$, $y\in[-height, 0]$ into $x\in[-1, 1]$, $y\in[-1, 1]$. The model matrix is more flexible. Since model matrix can be used to shift all the rendering instructions, most of widgets relies on it to move inside the window.
+
+To provide better control of shifting, model matrixes are kept as a stack, similar to \verb+glPushMatrix+ and \verb+glPopMatrix+ in fixed pipeline used in older versions of OpelGL(ref). Based on this system, shifting can be applied and restored multiple times. When the painting is shifted twice to (1, 1), it actually results in a shift to (2, 2). This is very helpful when rendering widgets inside containers because widget containers are required to provide shifting of child widgets and to be suitable for nested design.
+
+To render in 2D space, another modification to OpenGL is that depth test is disabled. The design of OpenGL focuses on rendering in 3D space, where surfaces in the front will cover surfaces in the back, where depth test is used to ensure this behavior. When depth test is disabled, shapes rendered later will always cover shapes rendered earlier, which is more intuitive in 2D rendering.
+
 \subsection{Widgets and Layout}
 
+Widgets are most basic components in the interface. Since many customized widgets will be developed in this project, the interface of widgets are kept very simple. For all the widgets, they only need to implement these functions: 
+\begin{itemize}
+  \item Handle basic user input like mouse move, click, drag, drop and keyboard press.
+  \vspace{-1em}\item Draw the content to the screen.
+  \vspace{-1em}\item Refresh before rendering of every frame.
+  \vspace{-1em}\item Clean up (for example, listeners) when it is removed.
+\end{itemize}
+
+Not every widget need to refresh the content or clean up the resources, but to implement advanced widgets, such functions can be helpful. For example, the widget rendering history of execution need to refresh the content whenever the engine is running. Also, for the widgets listening to events, it is convenient if they are allowed to cancel the listeners registered to the event bus when they are removed, otherwise there might be unexpected event handling and memory leak.
+
+The layout is mainly controlled by widget containers (\verb+WContainer+) and pages. Widgets are uniquely positioned by its upper left corner and widget containers are used for the control, as is described in previous section. Figure \ref{fig:container} shows an example of nested containers. In this example, W2 and W3 are containers. W2 is a child of W3 and W1 is a chile of W2.
+For children inside containers, vector V1 and V2 are used to describe the offset. When W2 is moved by modifying V1, V2 do not change, making W2 and all its children integrated when moved around.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.26\columnwidth]{container.pdf}
+  \caption{An example of nested widget containers}
+  \label{fig:container}
+\end{figure}
+
+Pages are advanced version of widget containers, with an extra function to refresh the layout. Whenever the window is resized, this function will be called so the widgets inside the page will be moved according to the new size. There is no dynamic layout in this project, all the widgets are positioned by calculating the offset manually. Since there are not many pages in this project, creating layout manually seems acceptable. 
+
 \section{Data Driven Format} \label{sec:format}
+
+All the graphs, clusters and levels are data driven in this project, to provide convenience when creating games. Using JSON files, everyone can add extra levels without modifying the code.
+
+\begin{lstfloat}
+  \lstinputlisting{listings/cluster.json}
+  \caption{Example of cluster in JSON}
+  \vspace{-1em}
+\end{lstfloat}
+
+\begin{lstfloat}
+  \lstinputlisting{listings/game.json}
+  \caption{Example of game in JSON}
+  \vspace{-1em}
+\end{lstfloat}
+
+\begin{lstfloat}
+  \lstinputlisting{listings/graph.json}
+  \caption{Example of graph in JSON}
+  \vspace{-1em}
+\end{lstfloat}
+
+\begin{lstfloat}
+  \lstinputlisting{listings/levels.json}
+  \caption{Example of levels in JSON}
+  \vspace{-1em}
+\end{lstfloat}
 
 \section{Algorithms and Estimator}
 

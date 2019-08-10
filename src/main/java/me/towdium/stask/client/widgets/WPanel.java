@@ -26,11 +26,6 @@ public class WPanel extends WArea.Impl {
     }
 
     @Override
-    public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
-        return true;
-    }
-
-    @Override
     public void onRefresh(Vector2i mouse) {
         if (onTest(mouse)) WFocus.clear();
     }

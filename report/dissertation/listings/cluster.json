@@ -1,0 +1,15 @@
+{
+  "processors": {
+    "A": {
+      "speed": 2
+    },
+    "B": {
+      "speed": 1,
+      "speedup": {
+        "B": 2.5
+      }
+    }
+  },
+  "layout": ["A","B"],
+  "model": "ic"
+}

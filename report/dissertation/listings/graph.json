@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "A": {
+      "time": 1,
+      "type": "A"
+    },
+    "B": {
+      "time": 5,
+      "type": "B"
+    },
+    "C": {
+      "time": 1,
+      "type": "A",
+      "after": {
+        "A": 1,
+        "B": 2
+      }
+    }
+  },
+  "layout": [
+    ["A", null, "B"],
+    ["C"]
+  ]
+}

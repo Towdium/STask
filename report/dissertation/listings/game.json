@@ -1,0 +1,6 @@
+{
+  "graphs": ["graph1", "graph2"],
+  "cluster": "cluster1",
+  "tutorial": "tutorial1",
+  "desc": "Some description."
+}

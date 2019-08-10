@@ -132,28 +132,12 @@ public interface Page extends Widget {
         }
 
         @Override
-        public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
-            this.mouse = mouse;
-            if (update()) Ref.page = this;
-            Vector2i m = convert(mouse);
-            return (overlay != null && overlay.onTooltip(m, tooltip)) || super.onTooltip(m, tooltip);
-        }
-
-        @Override
         public void onMove(Vector2i mouse) {
             this.mouse = mouse;
             if (update()) Ref.page = this;
             Vector2i m = convert(mouse);
             super.onMove(m);
             if (overlay != null) overlay.onMove(m);
-        }
-
-        @Override
-        public boolean onScroll(@Nullable Vector2i mouse, int diff) {
-            this.mouse = mouse;
-            if (update()) Ref.page = this;
-            Vector2i m = convert(mouse);
-            return (overlay != null && overlay.onScroll(m, diff)) || super.onScroll(m, diff);
         }
 
         private Vector2i convert(@Nullable Vector2i in) {

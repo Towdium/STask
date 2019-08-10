@@ -36,12 +36,6 @@ public class WContainer implements Widget {
     }
 
     @Override
-    public boolean onTooltip(@Nullable Vector2i mouse, List<String> tooltip) {
-        Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
-        return widgets.backward((w, v) -> w.onTooltip(m == null ? null : m.sub(v, new Vector2i()), tooltip));
-    }
-
-    @Override
     public boolean onClick(@Nullable Vector2i mouse, boolean left) {
         Vector2i m = (mask != null && !mask.inside(mouse)) ? null : mouse;
         return widgets.backward((w, v) -> w.onClick(m == null ? null : m.sub(v, new Vector2i()), left));
@@ -66,12 +60,6 @@ public class WContainer implements Widget {
             w.onRefresh(mouse.sub(v, new Vector2i()));
             return false;
         });
-    }
-
-    @Override
-    public boolean onScroll(@Nullable Vector2i mouse, int diff) {
-        if (mask != null && !mask.inside(mouse)) return false;
-        return widgets.backward((w, v) -> w.onScroll(mouse, diff));
     }
 
     @Override

@@ -91,8 +91,8 @@ public class Painter {
     void onResize(int width, int height) {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         GL30C.glUniformMatrix4fv(shaderMProj, false, new Matrix4f()
-                .ortho(0, width, height, 0, 0, 4096)
-                .lookAlong(0, 0, -1, 0, 1, 0).get(fb));
+                .ortho(0, width, -height, 0, 0, 4096)
+                .lookAlong(0, 0, 1, 0, -1, 0).get(fb));
     }
 
     static {
