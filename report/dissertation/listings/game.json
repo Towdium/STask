@@ -1,6 +1,8 @@
 {
   "graphs": ["graph1", "graph2"],
   "cluster": "cluster1",
+  "desc": "Some description.",
   "tutorial": "tutorial1",
-  "desc": "Some description."
+  "aims": [15, 12, 9],
+  "times": [0, 4]
 }

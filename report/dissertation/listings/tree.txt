@@ -1,0 +1,12 @@
+.
++-- clusters
+|   +-- cluster1.json
+|   +-- cluster2.json
++-- graphs
+|   +-- graph1.json
+|   +-- graph2.json
++-- games
+|   +-- game1.json
+|   +-- game2.json
++-- general
+    +-- levels.json

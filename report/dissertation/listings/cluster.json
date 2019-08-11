@@ -11,5 +11,6 @@
     }
   },
   "layout": ["A","B"],
-  "model": "ic"
+  "model": "bcmc",
+  "comm": 1
 }
