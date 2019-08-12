@@ -16,8 +16,5 @@ import static java.lang.System.out;
 public class Tests {
     @Test
     public void test() {
-        Matrix4f m = new Matrix4f()
-                .lookAlong(0, 0, 1, 0, -1, 0);
-        out.println(m.transform(new Vector4f(1, 1, 1, 1)));
     }
 }

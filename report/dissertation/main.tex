@@ -40,7 +40,7 @@ Any acknowledgements go here.
 
 Computing resource is in high demand both in industry and for academic research. In industry, companies are collecting terabytes or even petabytes of user data to provide customized services. Also, machine learning algorithms are widely used to provide suggestions and to extract information from media files. Processing these files and executing these algorithms all requires a huge amount of computing resource. In academic research, many researchers in subjects like hydromechanics and electrics rely on simulation to predict the performance of models. In this case, more computing resource is consumed for better resolution.
 
-However, researchers said Moore's Law will not be effective in the near future (ref), meaning speed of improvement in single core performance may be far behind the increasing demand. Therefore, the typical way to utilize more computing resource is to use multiple processors to work on the same task in parallel. Traditional code for single core execution cannot be used directly for parallel execution. They have to be modified. One common solution to parallelize a big task is to divide it into small tasks that can be executed separately on multiple processors. However, in most of cases, the small tasks cannot be independent because they might require data produced by other tasks. The dependency can be usually represented by a DAG (directed acyclic graph) called task graph.
+However, researchers said Moore's Law will not be effective in the near future \cite{Waldrop2016}, meaning speed of improvement in single core performance may be far behind the increasing demand. Therefore, the typical way to utilize more computing resource is to use multiple processors to work on the same task in parallel. Traditional code for single core execution cannot be used directly for parallel execution. They have to be modified. One common solution to parallelize a big task is to divide it into small tasks that can be executed separately on multiple processors. However, in most of cases, the small tasks cannot be independent because they might require data produced by other tasks. The dependency can be usually represented by a DAG (directed acyclic graph) called task graph.
 
 In large-scaled systems, tasks in a task graph are managed and scheduled to processors by a scheduler dynamically based on certain scheduling algorithm. To have better understanding of task graph scheduling, students need to learn the algorithms. However, learning such algorithms are not easy for many students for several reasons:
 
@@ -78,8 +78,8 @@ When one task depends on another task, it usually means the successor requires d
 
 The execution of schedules can be described by many different models. A very simplified model can totally ignore the communication cost, which is used in in figure \ref{fig:example}. For such models, execution time of tasks can be easily described and estimated by mathematical expressions, by sacrificing accuracy of prediction. There are also models providing very detailed description of the behavior, based on clusters in real life. For these models, the mathematical expressions could be very complex, especially when considering competition of resources. Here are several well-developed variances of models:
 \begin{itemize}
-    \item \textbf{Heterogeneous vs.\ homogeneous performance:} For simplified models, processors in the cluster is usually assumed to be equally powerful. Such models are considered to describe homogeneous clusters. In real life, difference in processors is also common. Clusters consisting of different types of processors are called heterogeneous clusters (ref Topcuoglu). 
-    \item \textbf{Practical vs.\ ideal (immediate) communication:} As described previously, communication cost can be totally ignored in ideal models. However, there are also many models used to describe the behavior of communication in real life. For example, the communication cost might depend on the size of messages (ref), or even state of shared resources in the cluster (ref Kwok1998).
+    \item \textbf{Heterogeneous vs.\ homogeneous performance:} For simplified models, processors in the cluster is usually assumed to be equally powerful. Such models are considered to describe homogeneous clusters. In real life, difference in processors is also common. Clusters consisting of different types of processors are called heterogeneous clusters \cite{Topcuoglu}. 
+    \item \textbf{Practical vs.\ ideal (immediate) communication:} As described previously, communication cost can be totally ignored in ideal models. However, there are also many models used to describe the behavior of communication in real life. For example, the communication cost might depend on the size of messages \cite{Robert2011}, or even state of shared resources in the cluster \cite{Kwok1999}.
     \item \textbf{Single vs.\ multiple communication channels:} The amount of communication channels is one of main difference when describing the communication behavior. For most devices connected the Internet, the primary limit is usually the total bandwidth. But for dedicated clusters, they are usually built on infrastructures with special optimizations for inter-cluster communications. In this case, processors might not suffer from performance loss when communicating with multiple processors.
 \end{itemize}
 
@@ -126,7 +126,7 @@ Similar to games, this application is divided into many levels. Each level can h
 
   \item \textbf{Tutorial mode:} Levels in this mode are usually developed based on static mode. For tutorial levels, some help text will be displayed describe concepts, operations and algorithms. A tutorial can operate on the game engine freely. By listening to operations made by the student, tutorials can be made into an interactive process to help students learn faster. Levels in this mode are usually made educational only. Students can find detailed description of techniques that are required when playing other levels.
 
-  \item \textbf{Sandbox mode:} This mode is also developed based on static mode. The user can create games by selecting clusters and task graphs, then play the the created game freely. This mode also provides several standard algorithms, so that the user can try these algorithms to check the scheduling result. This mode can be helpful for demonstration and testing because the user can build any scenarios according to requirements, in addition to check and compare the behavior of algorithms in such scenarios.
+  \item \textbf{Testing mode:} This mode is also developed based on static mode. In static mode, the user have to use a pre-defined scenario, but in testing mode, the user can create games by selecting clusters and task graphs, then play the the created game freely. This mode also provides several standard algorithms, so that the user can try these algorithms to check the scheduling result. This mode can be helpful for demonstration and testing because the user can build any scenarios according to requirements, in addition to check and compare the behavior of algorithms in such scenarios.
 \end{itemize}
 
 \subsection{Design of Interface} \label{sec:interface}
@@ -162,7 +162,7 @@ The difference is usually related to competition of resource: when some workload
 As is described in section \ref{sec:tgs}, one difficulty in task graph scheduling is variety of communication models. To reflect the variety, four different communication models are selected as follows:
 
 \begin{enumerate}
-  \item \textbf{Ideal (immediate) communication (IC):} Communication does not cost any time. Tasks will only be delayed if any of its dependency is not finished.
+  \item \textbf{Ideal (immediate) communication (IC):} Communication does not cost any time. Tasks will only be delayed if any of its dependency is not finished or the processor it is scheduled to is busy.
   \item \textbf{Background communication with multiple channels (BCMC):} One processor can communicate with unlimited amount of processors in both directions. The only limit is one processor can only have one channel sending to another processor, meaning no more than one communication block can be sent from one processor to another at any time. The limit is made since bandwidth of one connection is always limited in real life, although there could be multiple connections.
   \item \label{sec:bcsc} \textbf{Background communication with single channel (BCSC):} One processor can send to or receive from only one processor at any time. Instead of having multiple connections, this model describes processors with single connection, and the total bandwidth is limited. Therefore, one communication in progress can occupy the entire bandwidth, making other communications blocked.
   \item \textbf{Synchronous (blocked) communication (SC):} One processor cannot execute tasks and communicate with other processors at the same time. Also, it allows only one channel in one direction like described in mode \ref{sec:bcsc}. This model describes the scenario when using synchronous communication libraries like Java IO or MPI synchronous mode in single thread.
@@ -196,7 +196,7 @@ With more strict communication models, there can be more conflicts. One option i
   \label{fig:conflict1}
 \end{figure}
 
-In all non-ideal modes, one conflict is when two tasks scheduled on one processor relies on data from another processor, because two data packages have to be sent in certain order. The strategy used is to allow communication required by one task only when it is the first task in the schedule (rule 1). In other words, communication required by one task will be delayed if there is any task ahead of it in the schedule. Figure \ref{fig:conflict1} shows one example task graph and three possible execution timelines if T1 is scheduled to processor 1 (P1) and remaining tasks are scheduled to processor 2 (P2). For the task graph, tasks are labeled as ``Tn(Duration)'' and communications are labeled as ``Cn(Duration)''.
+In all non-ideal modes, one conflict is when two tasks scheduled on one processor relies on data from another processor, because two data packages have to be sent in certain order. The strategy used is to allow communication required by one task only when it is the first task in the for its scheduled processor (rule 1). In other words, communication required by one task will be delayed if there is any task ahead of it in the schedule. Figure \ref{fig:conflict1} shows one example task graph and three possible execution timelines if T1 is scheduled to processor 1 (P1) and remaining tasks are scheduled to processor 2 (P2). For the task graph, tasks are labeled as ``Tn(Duration)'' and communications are labeled as ``Cn(Duration)''.
 
 As shown in the timelines, for one given schedule, there could be many results if the order and time of tasks are not explicitly specified. However, according to "rule 1", the execution result will always be timeline 1. Although other strategies can provide better performance like in timeline 2 (also known as early fetch), this rule is chosen for its reliability, simplicity, and less uncertainty. Another option is to leave the decision to students. However, there are two problems: 1) It have to be decided based on very precise estimation of execution, which might be too challenging for a student, even for many algorithms; 2) It will make the interface very complex because it requires precise control of time.
 
@@ -280,7 +280,7 @@ There are still many conflicts that are not mentioned. For example, figure \ref{
 
 To summarize, for conflicts stated in previous sections, when any of them exists in one model, the related rule will always be applied, otherwise the student will be required to decide the behavior. More precisely, the first conflict appears in BCMC, BCSC and SC models, so rule 1 will be applied. The second conflict appears in BCSC and SC models, so the student have to decide the behavior manually. The third conflict happens in SC models, so rule 2 will be applied. For other unstated conflicts, the behavior will depend on the implementation.
 
-\section{Platform and Libraries}
+\section{Implementation Platform and Libraries}
 
 \subsection{Programming Language}
 
@@ -334,7 +334,7 @@ There are mainly two ways to predict the execution results: calculate the timeli
 It seems calculation methods are much simpler and efficient, but the simulation method is used for several reasons:
 
 \begin{itemize}
-  \item It's hard to find a generic expression for different scenarios in calculation methods. For example, in ideal communication model, for one task, the earliest start time is maximum of the finish times of all its dependencies and processor's earliest available time. While for BCMC model, the finish times of dependencies will be changed to finish time added by communication time, if the tasks are executed on different processors. For similar reasons, the expression will be very complex for some communication models. However for simulation, the developer only need to describe the actual behavior of one processor, according to requirements of the communication model, which is usually called transition functions. Therefore, changing in communication models is equivalent to changing the transition function, which is significantly easier to implement and validate.
+  \item It's hard to find a generic expression for different scenarios in calculation methods. For example, in ideal communication model, for one task, the earliest start time is maximum of the finish times of all its dependencies and processor's earliest available time. While for BCMC model, the finish times of dependencies will be changed to finish time added by communication time, if the tasks are executed on different processors. For similar reasons, the expression will be very complex for some communication models. However for simulation, the developer only need to describe the actual behavior of each processor, according to requirements of the communication model, which is usually called transition functions. Therefore, changing in communication models is equivalent to changing the transition function, which is significantly easier to implement and validate.
   \item The execution uses tasks as unit, rather than time in calculation models. In other words, the tasks are atomic. For example, when one task is executed by calculation, it takes the entire period in the timeline immediately. Because of this nature, the developer have to check the states of all related processors in the entire period for conflicts. Also, the execution order of tasks have to be carefully arranged for correct behavior. Although this problem can be resolved by always executing tasks scheduled to the earliest available processor, for tasks with communications, it will become very complicated because workloads are tightly coupled and shared by processors.
   \item Simulation models are more suitable for animations. This application is required to ``run'' a schedule. When cursor on the timeline moves, simulation models are actually running the tick under the cursor. Therefore, the animated execution is actually rendering the history of simulation engine in real time. However for calculation modes, extra steps are required to "make up" the animated execution.
 \end{itemize}
@@ -366,7 +366,7 @@ The progresses of all communications and executions of tasks are stored as doubl
 
 The solution is to have an acceptable margin of error. For example, consider $1 - 10^{-5}$ to be finished. However, the margin have to be decided carefully. If the margin too small, the value could easily fall outside the range. While if the margin is too large, which is larger than the difference generated by one iteration, the value can be considered finished before reaching the theoretical amount of iterations.
 
-There is no ideal value for the margin. For longer tasks that takes more iterations to finish, the difference in one iteration is smaller, while the accumulated error is larger. The typical value of error $\epsilon$ is about $10^{-16} \sim 10^{-15}$ when using double-precision floats. For a task that requires n iterations, the difference of one iteration is $1/n$ and the accumulated error is $n\epsilon$. To achieve a balance, $\epsilon_0 = \sqrt{\epsilon} \approx 10^{-8}$ is used as the margin of error. In this case, the simulation will have error of 1 iteration for tasks taking over $10^7$ ticks, which is equivalent to over 30 hours, assuming 80 tick per second. Since tasks in this program usually takes only several seconds, the accuracy seems acceptable.
+There is no ideal value for the margin. For longer tasks that takes more iterations to finish, the difference in one iteration is smaller, while the accumulated error is larger. The typical value of error $\epsilon$ is about $10^{-16} \sim 10^{-15}$ when using double-precision floats. For a task that requires n iterations, the difference of one iteration is $1/n$ and the accumulated error is $n\epsilon$. To achieve a balance, $\epsilon_0 = \sqrt{\epsilon} \approx 10^{-8}$ is used as the margin of error. In this case, the simulation will have error of 1 tick for tasks taking over $10^7$ ticks, which is equivalent to over 30 hours, assuming 80 tick per second. Since this project is developed for teaching rather than for evaluation of large systems, tasks in this program usually takes only several seconds. In this case, the error should not cause any inaccuracy in the results. 
 
 \section{GUI Framework and Interfaces}
 
@@ -438,21 +438,25 @@ Tutorials in this project are also built based on the event system. In addition 
 
 All the graphs, clusters and levels are data driven in this project, to provide convenience when creating games. Using JSON files, everyone can add extra levels without modifying the code.
 
+\vspace{0.5em}
 \begin{lstfloat}
   \lstinputlisting{listings/tree.txt}
   \caption{Directory structure of resource files}
   \label{lst:tree}
   \vspace{-1em}
 \end{lstfloat}
+\vspace{-0.5em}
 
 Listing \ref{lst:tree} shows the directory structure of resource files in this project. Clusters, graphs and games are stored in different folders. When the program starts, all these files will loaded automatically.
 
+\vspace{0.5em}
 \begin{lstfloat}[!htb]
   \lstinputlisting{listings/graph.json}
   \caption{Example of graph in JSON}
   \label{lst:graph}
   \vspace{-1em}
 \end{lstfloat}
+\vspace{-0.5em}
 
 \begin{figure}[!htb]
   \centering
@@ -470,21 +474,25 @@ Listing \ref{lst:tree} shows the directory structure of resource files in this p
 
 Listing \ref{lst:graph} shows an example of task graph in JSON and figure \ref{fig:json-2} shows an example of render result. The format consists two parts: one JSON object called \verb+tasks+ as a dictionary of tasks, and one JSON array called \verb+layout+ to control the layout when rendering. There can be many tasks in one task graph, uniquely identified by a string. For each task, there are two compulsory fields: \verb+time+, describing duration in seconds this task takes when executed on a processor with x1 speed, and \verb+type+ to identify the type of task when some tasks are given speedups on processors. One optional field \verb+after+ is used to describe dependency: for every tasks it depends on, it should also provide the size of data. The structure described in \verb+layout+ will be directly transformed into the layout when rendering. It is required to be an 2D array consisting of task identifiers, with null elements allowed. When null elements are used in the layout, an extra space will be inserted. By inserting one empty slot into the first row of figure \ref{fig:json-1}, it results in the layout in figure \ref{fig:json-2}. 
 
+\vspace{0.5em}
 \begin{lstfloat}
   \lstinputlisting{listings/cluster.json}
   \caption{Example of cluster in JSON}
   \label{lst:cluster}
   \vspace{-1em}
 \end{lstfloat}
+\vspace{-0.5em}
 
 Listing \ref{lst:cluster} shows an example of cluster in JSON. For each processor, there are three compulsory fields: \verb+processors+ and \verb+layout+, similar to \verb+tasks+ and \verb+layout+ in the syntax of task graphs, and \verb+model+, describing the communication model used in this cluster. When communication model is not ideal (IC), another field \verb+comm+ is compulsory to describe the global communication speed. Each processor has one compulsory field, \verb+speed+, to describe the base speed of the processor, and one optional field, \verb+speedup+, to describe speedup of the processor for different types of tasks. When speedup is not given, the default value is always x1. \verb+layout+ is an array consisting of processor identifiers, in addition to controlling the order when rendering in the interface, it also controls the priority for resource consumption as described in section \ref{sec:simulation}. For the communication model, abbreviations given in section \ref{sec:comm} are used, accepting strings in full uppercase or full lowercase.
 
+\vspace{0.5em}
 \begin{lstfloat}
   \lstinputlisting{listings/game.json}
   \caption{Example of game in JSON}
   \label{lst:game}
   \vspace{-1em}
 \end{lstfloat}
+\vspace{-0.5em}
 
 Listing \ref{lst:game} shows an example of game in JSON. A "game" or "level" in this project is a scenario or a problem, usually consisting of several task graphs and a cluster. One game object have three compulsory fields: \verb+graphs+, an array of graphs, \verb+cluster+ and \verb+desc+. The graphs and clusters used in games are identified and linked by filenames, as is shown in listing \ref{lst:tree}. \verb+desc+ is a short string to describe this level, which will be displayed in related interfaces. Game objects have three optional fields:
 \begin{itemize}
@@ -493,23 +501,25 @@ Listing \ref{lst:game} shows an example of game in JSON. A "game" or "level" in 
   \item \verb+times+: Using this field can convert a static level into a dynamic level, by giving entrance times to every graphs. This field have to be an array of integers with the same length as \verb+graphs+. When the game runs to the second specified by the integer, the corresponding task graph will be allowed to enter. When this field exists, since the game mode is actually changed, the game engine will operate according to behavior specified for dynamic levels described in section \ref{sec:modes}.
 \end{itemize}
 
+\vspace{0.5em}
 \begin{lstfloat}
   \lstinputlisting{listings/levels.json}
   \caption{Example of levels in JSON}
   \label{lst:levels}
   \vspace{-1em}
 \end{lstfloat}
+\vspace{-0.5em}
 
 Listing \ref{lst:levels} defines all the levels in the application. The levels are split into sections. Similar to levels, each section can have a short description, which will be displayed in related interfaces. In each section there can be multiple levels (games). The levels are specified by an array of identifiers, linked to game objects according to filenames base on the directory structure given in listing \ref{lst:tree}.
 
 \section{Algorithms and Estimator}
 
-In sandbox mode described in section \ref{sec:modes}, users are allowed to use standard algorithms to create schedules based on any combination of clusters and task graphs. Therefore, there should be an API for developers to implement algorithms and to interact with the game engine. Listing \ref{lst:algorithm} shows the interface of algorithms. One algorithm should be instantiated as one object, with function \verb+run+. Every time the algorithm is invoked, this function will be called with a list of task graphs, a cluster and an empty \verb+Schedule+ object that the algorithm can operate on. One thing to be noticed is execution of this function should not rely on any state stored inside the algorithm object because it is not determined when and how many times this function will be called.
+In testing mode described in section \ref{sec:modes}, users are allowed to use standard algorithms to create schedules based on any combination of clusters and task graphs. Therefore, there should be an API for developers to implement algorithms and to interact with the game engine. Listing \ref{lst:algorithm} shows the interface of algorithms. One algorithm should be instantiated as one object, with function \verb+run+. Every time the algorithm is invoked, this function will be called with a list of task graphs, a cluster and an empty \verb+Schedule+ object that the algorithm can operate on. One thing to be noticed is execution of this function should not rely on any state stored inside the algorithm object because it is not determined when and how many times this function will be called.
 
 \vspace{0.5em}
 \begin{lstfloat}
   \begin{lstlisting}
-void run(List<Graph> g, Cluster c, Schedule s)
+void run(List<Graph> g, Cluster c, Schedule s);
   \end{lstlisting}
   \caption{Interface of algorithms}
   \label{lst:algorithm}
@@ -534,15 +544,76 @@ In this equation, $e$ represents edges, or dependencies mentioned previously. T 
 
 \section{Compilation and Distribution}
 
+The expected format for distribution in this project is Jar file, which is the typical format for Java executables. Jar format a variant of ZIP format, a widely used archive file format. Base on this format, all the resources, platform-specific binaries and Java binaries (classes) can be compressed into one file, making it nice for distribution, especially for cross-platform applications. However, some projects, although they are developed in Java, choose not to use Jar files for distribution for several reasons:
+\begin{itemize}
+  \item Jar files relies on JRE to execute. If JRE is not pre-installed to the user's device, the user have to download and install it separately. Also, since this project is developed based on Java 8, if the installed JRE is for older versions of Java, it will also fail to execute, making things more confusing.
+  \item Running Jar files is not always simple. For Windows, if the file handlers are not configured correctly, double clicking the Jar file might not start the application. For Linux, Jar executables are usually not recognized. In such cases, the user have to use commands to execute it.
+\end{itemize}
+
+Since this project mainly aims at computer science students, they should be able to solve the problems, or to find the solution with little help.
+
+This project is built based on many dependencies and managing the dependencies is sometimes troublesome. The developer need to download all the libraries and configure them in environment variables or inside the IDE. When compiling the project, the developer also need to put all the dependencies into the Jar file, otherwise the user have to download all the dependencies and configure themselves, which can be terrible even for experienced users. 
+
+This project uses Gradle, a widely used build system to automate these steps. All the dependencies are configured in the file \verb+build.gradle+. If the project is cloned to local directory, by executing \verb+gradlew build+, the system will automatically fetch all the libraries from Maven repositories online and configure them correctly. Then the developer can find the output Jar file inside \verb+build/libs+. When configured to, the system can also merge all the dependencies into the output file. More conveniently, most of IDEs have support for Gradle. If someone wants to further develop this project, they can easily set up the development environment by downloading all the source files and importing the Gradle project.
+
 \section{Game Flow}
+
+Due to the limit of length, the game flow will not be introduced in details. For the completed user experience, please refer to the online video \footnote{Available at: WIP}. The entire game is split into 3 sections. The first section introduces basic concepts and interactions. The second section introduces HLFET algorithm and several variants. Two game levels are given in section 2 with one in static mode and another in dynamic mode.
 
 \subsection{Appearance and Components}
 
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play2.png}
+  \caption{The interface for level selection}
+  \label{fig:container}
+\end{figure}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play1.png}
+  \caption{An example of game interface}
+  \label{fig:container}
+\end{figure}
+
+
+
 \subsection{Tutorial Levels}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play4.png}
+  \caption{An example of tutorial with advanced rendering}
+  \label{fig:container}
+\end{figure}
+
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play5.png}
+  \caption{An example of tutorial with paused game}
+  \label{fig:container}
+\end{figure}
+
 
 \subsection{Game Levels}
 
-\subsection{Sandbox Mode}
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play6.png}
+  \caption{Pop up dialog for performance evaluation}
+  \label{fig:container}
+\end{figure}
+
+\subsection{Testing Mode}
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\columnwidth]{play3.png}
+  \caption{Construction of scenario in testing mode}
+  \label{fig:container}
+\end{figure}
+
 
 \chapter{Evaluation}
 
@@ -558,7 +629,7 @@ In this equation, $e$ represents edges, or dependencies mentioned previously. T 
 
 \section{Final Comments}
 
-\bibliographystyle{plain}
+\bibliographystyle{myunsrt}
 \bibliography{main}
 
 \end{document}

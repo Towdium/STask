@@ -15,7 +15,7 @@ public class PMain extends Page.Impl {
     Window window;
     WButton single = new WButtonText(250, 40, "Singleplayer").setListener(i ->
             root.display(() -> new PSingle(root, this)));
-    WButton sandbox = new WButtonText(250, 40, "Sandbox").setListener(i ->
+    WButton testing = new WButtonText(250, 40, "Testing").setListener(i ->
             root.display(() -> new PTest(root, this)));
     WButton about = new WButtonText(250, 40, "About").setListener(i ->
             root.display(() -> new PAbout(root, this)));
@@ -31,7 +31,7 @@ public class PMain extends Page.Impl {
         clear();
         put(new WPanel(300, y + 20), -10, -10);
         put(single, 20, 20);
-        put(sandbox, 20, 80);
+        put(testing, 20, 80);
         put(about, 20, y - 120);
         put(exit, 20, y - 60);
     }
