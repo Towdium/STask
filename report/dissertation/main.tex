@@ -5,6 +5,7 @@
 \usepackage{couriers}
 \usepackage{float}
 \usepackage{listings}
+\usepackage{pdfpages}
 \usepackage[hyphens]{url}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{figures/}}
@@ -635,5 +636,11 @@ Figure \ref{fig:play3} shows the interface for scenario construction in testing 
 
 \bibliographystyle{myunsrt}
 \bibliography{main}
+
+\appendix
+
+\chapter{User Testing Questionnaire}
+
+\includepdf[pages=-]{questionnaire.pdf}
 
 \end{document}

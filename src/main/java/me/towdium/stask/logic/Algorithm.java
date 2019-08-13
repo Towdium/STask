@@ -63,9 +63,9 @@ public interface Algorithm {
         static final HashMap<String, Algorithm> ALGORITHM = new HashMap<>();
 
         static {
-            ALGORITHM.put("HLEFT1", new AListHLFET(true, false));
-            ALGORITHM.put("HLEFT2", new AListHLFET(true, true));
-            ALGORITHM.put("HLEFT3", new AListHLFET(false, true));
+            ALGORITHM.put("HLFET1", new AListHLFET(true, false));
+            ALGORITHM.put("HLFET2", new AListHLFET(true, true));
+            ALGORITHM.put("HLFET3", new AListHLFET(false, true));
         }
 
         public static HashMap<String, Algorithm> get() {
