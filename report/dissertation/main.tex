@@ -149,7 +149,7 @@ Two main interactions in this application is hovering and drag \& drop. Hovering
 
 Drag \& drop is used mainly to edit the schedule. The user can schedule one task to one processor by dragging the task from task graph, then drop it inside the task queue. In addition, tasks inside the task queue can also be moved to edit the schedule.
 
-The base resolution of the window is decided to be 1440x720, to make it suitable for most of screens. For a window with limited resolution, number of processors and size of task graphs have to be limited, if they are required to be always visible. After changing the layout several times, the clusters are limited to have no more than 4 processors and the task graphs are required to be no larger than 4x4. According to experience in design of levels, clusters and task graphs in such size is sufficient to construct very complex scenarios, if the purpose of the scenarios is to let humans to make the schedule manually.
+The base resolution of the window is decided to be 1440x720, to make it suitable for most of screens. For a window with limited resolution, number of processors and size of task graphs have to be limited, if they are required to be always visible. After changing the layout several times, the clusters are limited to have no more than 4 processors and the task graphs are required to be no larger than 4x3. According to experience in design of levels, clusters and task graphs in such size is sufficient to construct very complex scenarios, if the purpose of the scenarios is to let humans to make the schedule manually.
 
 \section{Execution Logic} \label{sec:execution}
 
@@ -374,7 +374,7 @@ The design of interface discussed in section \ref{sec:interface} requires the GU
 
 Development based on low level GUI frameworks is different from the experience using traditional GUI frameworks. For every widgets, the developer have to handle mouse events, check the bounding box and render the elements manually. It seems unnecessarily complex when implementing traditional interfaces, but when creating customized widgets, it provides very detailed control and exposure of low level APIs.
 
-In addition to widgets, the implement of framework also takes much effort. In this project, GLFW is used to create windows and handle user inputs. From the developer's perspective, it provides only OpenGL contexts that can be rendered to, and global user inputs, like keyboard button state, mouse movement and mouse button state, based on coordinate system corresponding to the window's position. Therefore, for a framework, it have to work as a compatibility layer to provide decent abstraction of such APIs. For example, it have to align the rendering space to pixel based coordination, and to translate mouse events into interactions like click or drag. However, since this is not the focus of this project, many details will be skipped.
+In addition to widgets, the implementation of framework also takes much effort. In this project, GLFW is used to create windows and to handle user inputs. From the developer's perspective, it provides only OpenGL contexts that can be rendered to, and global user inputs, like keyboard button state, mouse movement and mouse button state, based on coordination system corresponding to the window's position. Therefore, for a framework, it have to work as a compatibility layer to provide decent abstraction of such APIs. For example, it have to align the rendering space to pixel based coordination, and to translate mouse events into interactions like click or drag. However, since this is not the focus of this project, many details will be skipped.
 
 \subsection{Rendering Method}
 
@@ -387,13 +387,13 @@ Most of rendering in this project uses the painting system, based on OpenGL. Com
   \label{fig:matrix}
 \end{figure}
 
-When developing 2D interfaces, the most intuitive coordination system is pixels. However, since OpenGL is designed for 3D rendering, all rendering instructions are positioned by a special coordinate system. In traditional 3D rendering, several matrixes are used to control the position of rendering. All the matrixes are modified for rendering in 2D space, as is shown in figure \ref{fig:matrix}. In this example, one rectangle with size of 640x360 is rendered to a window with size of 1280x720, shifted by 640 pixels in x direction and 360 pixels in y direction. In other words, by painting a 640x360 rectangle at point (0, 0), one square $x\in[0, 1]$, $y\in[-1, 0]$ should be actually rendered in clip space, since the entire window is equivalent to $x\in[-1, 1]$, $y\in[-1, 1]$ in clip space.
+When developing 2D interfaces, the most intuitive coordination system is pixels. However, since OpenGL is designed for 3D rendering, all rendering instructions are positioned by a special coordination system. In traditional 3D rendering, several matrixes are used to control the position of rendering. All the matrixes are modified for rendering in 2D space, as is shown in figure \ref{fig:matrix}, where local space accepts rendering requests and clip space is the actual space used for rendering in OpenGL. In this example, one rectangle with size of 640x360 is rendered to a window with size of 1280x720, shifted by 640 pixels in x direction and 360 pixels in y direction. In other words, by painting a 640x360 rectangle at point (0, 0), one square $x\in[0, 1]$, $y\in[-1, 0]$ should be actually rendered in clip space, since the entire window is equivalent to $x\in[-1, 1]$, $y\in[-1, 1]$ in clip space.
 
-The coordination of rectangle is first transformed by model matrix to shift the rendering. Afterwards, it is transformed by view matrix into view space. In this step, view matrix describes the camera in this scene, then transfer the world coordination into relative coordination corresponding to the camera. Finally, projection matrix is used to transform the view space into clip space according to OpenGL specifications. In this program, view matrix will always describe a camera looking into the plane in the opposite direction of z-axis, and projection matrix will always transform $x\in[0, width]$, $y\in[-height, 0]$ into $x\in[-1, 1]$, $y\in[-1, 1]$. The model matrix is more flexible. Since model matrix can be used to shift all the rendering instructions, most of widgets relies on it to move inside the window.
+The coordination of rectangle is first transformed by model matrix to shift the rendering. Afterwards, it is transformed by view matrix into view space. In this step, view matrix describes the camera in this scene, by transferring the world coordination into relative coordination corresponding to the camera. Finally, projection matrix is used to transform the view space into clip space according to OpenGL specifications. In this program, view matrix will always describe a camera looking into the plane in the opposite direction of z-axis, and projection matrix will always transform $x\in[0, width]$, $y\in[-height, 0]$ into $x\in[-1, 1]$, $y\in[-1, 1]$. The model matrix is more flexible. Since model matrix can be used to shift all the rendering instructions, most of widgets relies on it to move inside the window.
 
-To provide better control of shifting, model matrixes are kept as a stack, similar to \verb+glPushMatrix+ and \verb+glPopMatrix+ in fixed pipeline used in older versions of OpelGL(ref). Based on this system, shifting can be applied and restored multiple times. When the painting is shifted twice to (1, 1), it actually results in a shift to (2, 2). This is very helpful when rendering widgets inside containers because widget containers are required to provide shifting of child widgets and to be suitable for nested design.
+To provide better control of shifting, model matrixes are kept as a stack, similar to \verb+glPushMatrix+ and \verb+glPopMatrix+ in fixed pipeline used in older versions of OpelGL \cite{opengl}. Based on this system, shifting can be applied and restored multiple times. When the painting is shifted twice to (1, 1), it actually results in a shift to (2, 2). This is very helpful when rendering widgets inside containers because widget containers are required to provide shifting of child widgets and to be suitable for nested design.
 
-To render in 2D space, another modification to OpenGL is that depth test is disabled. The design of OpenGL focuses on rendering in 3D space, where surfaces in the front will cover surfaces in the back, where depth test is used to ensure this behavior. When depth test is disabled, shapes rendered later will always cover shapes rendered earlier, which is more intuitive in 2D rendering.
+To render in 2D space, another modification to OpenGL is that depth test is disabled. The design of OpenGL focuses on rendering in 3D space, where surfaces in the front will cover surfaces in the back, based on depth test. When depth test is disabled, shapes rendered later will always cover shapes rendered earlier, which is more intuitive in 2D rendering.
 
 \subsection{Widgets and Layout}
 
@@ -405,9 +405,9 @@ Widgets are most basic components in the interface. Since many customized widget
   \vspace{-1em}\item Clean up (for example, listeners) when it is removed.
 \end{itemize}
 
-Not every widget need to refresh the content or clean up the resources, but to implement advanced widgets, such functions can be helpful. For example, the widget rendering history of execution need to refresh the content whenever the engine is running. Also, for the widgets listening to events, it is convenient if they are allowed to cancel the listeners registered to the event bus when they are removed, otherwise there might be unexpected event handling and memory leak.
+Not every widget need to refresh the content or clean up the resources, but to implement advanced widgets, such functions can be helpful. For example, the widget rendering the history of execution need to refresh the content whenever the engine is running. Also, for the widgets listening to events, it is convenient if they are allowed to cancel the listeners registered to the event bus when they are removed, otherwise there might be unexpected event handling and memory leak.
 
-The layout is mainly controlled by widget containers (\verb+WContainer+) and pages. Widgets are uniquely positioned by its upper left corner and widget containers are used for the control, as is described in previous section. Figure \ref{fig:container} shows an example of nested containers. In this example, W2 and W3 are containers. W2 is a child of W3 and W1 is a chile of W2.
+The layout is mainly controlled by widget containers (\verb+WContainer+) and pages. Widgets are uniquely positioned by its upper left corner and widget containers are used for the control, as is described in previous section. Figure \ref{fig:container} shows an example of nested containers. In this example, W2 and W3 are containers. W2 is a child of W3 and W1 is a child of W2.
 For children inside containers, vector V1 and V2 are used to describe the offset. When W2 is moved by modifying V1, V2 do not change, making W2 and all its children integrated when moved around.
 
 \begin{figure}[!htb]
@@ -417,7 +417,7 @@ For children inside containers, vector V1 and V2 are used to describe the offset
   \label{fig:container}
 \end{figure}
 
-Pages are advanced version of widget containers, with an extra function to refresh the layout. Whenever the window is resized, this function will be called so the widgets inside the page will be moved according to the new size. There is no dynamic layout in this project, all the widgets are positioned by calculating the offset manually. Since there are not many pages in this project, creating layout manually seems acceptable. 
+Pages are advanced version of widget containers, with an extra function to refresh the layout. Whenever the window is resized, this function will be called so the widgets inside the page will be moved according to the new size. There is no dynamic layout in this project, so all the widgets are positioned by calculating the offset manually. Since there are not many pages in this project, creating layout manually seems acceptable. 
 
 \section{Event System} \label{sec:event}
 
@@ -425,18 +425,18 @@ As described in section \ref{sec:architecture}, communication inside the applica
 
 The implementation of the event bus is very simple and typical. But it has several convenient features:
 \begin{itemize}
-  \item \textbf{Two-phase post:} When broadcasting an event, there are two options: attempt and post. When attempting an event, it can be blocked by listeners, but the post operation cannot be affected. Based on this design, listeners can be registered as subscriber or gate, where gates, invoked when attempting, handle attempts and are allowed to block one event, while subscribers, invoked when posting, can only receive the event. This structure is intended to be used in a two-phase pattern. Before the execution of certain events, the operator should first attempt the event. If the attempt is allowed and the execution is finished, the operator should post the event. There are many alternative designs for similar purpose, but this system seem very light-weighted and introduces less classes.
-  \item \textbf{Inherited types:} When listening to events in superclass, the listeners will be also notified when events in subclass are broadcast. This is implemented by broadcast one event as all its super types. For example, since \verb+EGame.Finish+ is subclass of \verb+EGame+ and \verb+EGame+ implements \verb+Event+, when posting one event \verb+EGame.Finish+, it will also be post as \verb+EGame+ and \verb+Event+. This allows high leveled control of the game. For example, in tutorials, if the developer want to block all unexpected operations, one choice is to listen to \verb+Event+, the class with highest level of abstraction, and block all unexpected ones.
+  \item \textbf{Two-phase post:} When broadcasting an event, there are two options: attempt and post. When attempting an event, it can be blocked by listeners, but the post operation cannot be affected. Based on this design, listeners can be registered as subscriber or gate, where gates, invoked when attempting, handle attempts and are allowed to block one event, while subscribers, invoked when posting, can only receive the event. This structure is intended to be used in a two-phase pattern. Before the execution of certain events, the operator should first attempt the event. If the attempt is allowed and the execution is finished, the operator should post the event. There are many alternative designs for similar purpose, but this system seems very light-weighted and introduces less classes.
+  \item \textbf{Inherited types:} When listening to events in superclass, the listeners will be also notified when events in subclasses are broadcast. This is implemented by broadcast one event as all its super types. For example, since \verb+EGame.Finish+ is subclass of \verb+EGame+ and \verb+EGame+ implements \verb+Event+, when posting one event \verb+EGame.Finish+, it will also be post as \verb+EGame+ and \verb+Event+. This allows high leveled control of the game. For example, in tutorials, if the developer want to block all unexpected operations, one choice is to listen to \verb+Event+, the class with highest level of abstraction, and block all unexpected ones.
   \item \textbf{Ability to unsubscribe:} Since the contexts in this application are frequently modified by changing levels, subscribers have to be updated frequently accordingly. When registering listeners, one extra object, the owner, will be required. Every event listener will be linked to its owner, in a dictionary maintained by the event bus. Therefore, by removing all subscribers linked to certain owner, they can be easily canceled.
 \end{itemize}
 
 Many operations in the game engine are given special events. These operations can include user actions like scheduling tasks and starting the simulation, in addition to state updates of the game engine, like execution of ticks and completion of task graphs. By listening to certain types of event, the developer is actually allowed to insert any logic into the game almost anywhere. Therefore, it is very helpful when implementing advanced interactions.
 
-Tutorials in this project are also built based on the event system. In addition to game events, tutorial events are used to reflect the learning progress. Tutorials use a dedicated widget to display instruction text in multiple pages. When configured to, the widget will trigger certain logic in tutorials when the user switches to a new page, by post one tutorial event. Using this system, tutorials can update the state of the game according to the displayed text, making the content more interactive and easier to understand.
+Tutorials in this project are also built based on the event system. In addition to game events, tutorial events are used to reflect the learning progress. Tutorials use a dedicated widget to display instruction text in multiple pages. When configured to, the widget will trigger certain logic in tutorials when the user switches to a new page, by post one tutorial event. Using this system, tutorials can update the state of the game according to the displayed text, making the content more interactive and related.
 
 \section{Data Driven Format} \label{sec:format}
 
-All the graphs, clusters and levels are data driven in this project, to provide convenience when creating games. Using JSON files, everyone can add extra levels without modifying the code.
+All the graphs, clusters and levels are data driven in this project, to provide convenience when creating games. Using JSON files, everyone can add extra levels without modifying the Java code.
 
 \vspace{0.5em}
 \begin{lstfloat}
@@ -447,7 +447,7 @@ All the graphs, clusters and levels are data driven in this project, to provide 
 \end{lstfloat}
 \vspace{-0.5em}
 
-Listing \ref{lst:tree} shows the directory structure of resource files in this project. Clusters, graphs and games are stored in different folders. When the program starts, all these files will loaded automatically.
+Listing \ref{lst:tree} shows the directory structure of resource files in this project. Clusters, graphs and games are stored in different folders. When the program starts, all these files will be loaded automatically.
 
 \vspace{0.5em}
 \begin{lstfloat}[!htb]
@@ -472,7 +472,7 @@ Listing \ref{lst:tree} shows the directory structure of resource files in this p
   \label{fig:json}
 \end{figure}
 
-Listing \ref{lst:graph} shows an example of task graph in JSON and figure \ref{fig:json-2} shows an example of render result. The format consists two parts: one JSON object called \verb+tasks+ as a dictionary of tasks, and one JSON array called \verb+layout+ to control the layout when rendering. There can be many tasks in one task graph, uniquely identified by a string. For each task, there are two compulsory fields: \verb+time+, describing duration in seconds this task takes when executed on a processor with x1 speed, and \verb+type+ to identify the type of task when some tasks are given speedups on processors. One optional field \verb+after+ is used to describe dependency: for every tasks it depends on, it should also provide the size of data. The structure described in \verb+layout+ will be directly transformed into the layout when rendering. It is required to be an 2D array consisting of task identifiers, with null elements allowed. When null elements are used in the layout, an extra space will be inserted. By inserting one empty slot into the first row of figure \ref{fig:json-1}, it results in the layout in figure \ref{fig:json-2}. 
+Listing \ref{lst:graph} shows an example of task graph in JSON and figure \ref{fig:json-2} shows an example of render result. The format consists of two parts: one JSON object called \verb+tasks+ as a dictionary of tasks, and one JSON array called \verb+layout+ to control the layout when rendering. There can be many tasks in one task graph, uniquely identified by a string. For each task, there are two compulsory fields: \verb+time+, describing duration in seconds this task takes when executed on a processor with x1 speed, and \verb+type+ to identify the type of task when some tasks are given speedups on processors. One optional field \verb+after+ is used to describe dependency: for every tasks it depends on, it should also provide the size of data. The structure described in \verb+layout+ will be directly transformed into the layout when rendering. It is required to be an 2D array consisting of task identifiers, with null elements allowed. When null elements are used in the layout, extra spaces will be inserted. By inserting one empty slot into the first row of figure \ref{fig:json-1}, it results in the layout in figure \ref{fig:json-2}. 
 
 \vspace{0.5em}
 \begin{lstfloat}
@@ -483,7 +483,7 @@ Listing \ref{lst:graph} shows an example of task graph in JSON and figure \ref{f
 \end{lstfloat}
 \vspace{-0.5em}
 
-Listing \ref{lst:cluster} shows an example of cluster in JSON. For each processor, there are three compulsory fields: \verb+processors+ and \verb+layout+, similar to \verb+tasks+ and \verb+layout+ in the syntax of task graphs, and \verb+model+, describing the communication model used in this cluster. When communication model is not ideal (IC), another field \verb+comm+ is compulsory to describe the global communication speed. Each processor has one compulsory field, \verb+speed+, to describe the base speed of the processor, and one optional field, \verb+speedup+, to describe speedup of the processor for different types of tasks. When speedup is not given, the default value is always x1. \verb+layout+ is an array consisting of processor identifiers, in addition to controlling the order when rendering in the interface, it also controls the priority for resource consumption as described in section \ref{sec:simulation}. For the communication model, abbreviations given in section \ref{sec:comm} are used, accepting strings in full uppercase or full lowercase.
+Listing \ref{lst:cluster} shows an example of cluster in JSON. For each cluster, there are three compulsory fields: \verb+processors+ and \verb+layout+, similar to \verb+tasks+ and \verb+layout+ in the syntax of task graphs, and \verb+model+, describing the communication model used in this cluster. When communication model is not ideal (IC), another field \verb+comm+ is compulsory to describe the global communication speed. Each processor has one compulsory field, \verb+speed+, to describe the base speed of the processor, and one optional field, \verb+speedup+, to describe speedups of the processor for different types of tasks. When speedup is not given, the default value is always x1. \verb+layout+ is an array consisting of processor identifiers, in addition to controlling the order when rendering in the interface, it also controls the priority for resource consumption as described in section \ref{sec:simulation}. For the communication model, abbreviations given in section \ref{sec:comm} are used, accepting strings in full uppercase or full lowercase.
 
 \vspace{0.5em}
 \begin{lstfloat}
@@ -494,11 +494,11 @@ Listing \ref{lst:cluster} shows an example of cluster in JSON. For each processo
 \end{lstfloat}
 \vspace{-0.5em}
 
-Listing \ref{lst:game} shows an example of game in JSON. A "game" or "level" in this project is a scenario or a problem, usually consisting of several task graphs and a cluster. One game object have three compulsory fields: \verb+graphs+, an array of graphs, \verb+cluster+ and \verb+desc+. The graphs and clusters used in games are identified and linked by filenames, as is shown in listing \ref{lst:tree}. \verb+desc+ is a short string to describe this level, which will be displayed in related interfaces. Game objects have three optional fields:
+Listing \ref{lst:game} shows an example of game in JSON. A ``game'' or ``level'' in this project is a scenario or a problem, usually consisting of several task graphs and a cluster. One game object have three compulsory fields: \verb+graphs+, an array of graphs, \verb+cluster+ and \verb+desc+. The graphs and clusters used in games are identified and linked by filenames, as is shown in listing \ref{lst:tree}. \verb+desc+ is a short string to describe this level, which will be displayed in related interfaces. Game objects have three optional fields:
 \begin{itemize}
   \item \verb+tutorial+: This field is used to link this level with tutorials discussed in section \ref{sec:event}. Since tutorials need very detailed control of events, they cannot be described in JSON files. Instead, they are built into the program and identified also by strings. When one level starts, if there is linked tutorial, the tutorial object will be created and activated.
   \item \verb+aims+: One level can have several target times as array of integers for seconds. If aims are specified, the program will evaluate the player's performance automatically when all the task graphs are finished, according to aims given, then display the result to the student.
-  \item \verb+times+: Using this field can convert a static level into a dynamic level, by giving entrance times to every graphs. This field have to be an array of integers with the same length as \verb+graphs+. When the game runs to the second specified by the integer, the corresponding task graph will be allowed to enter. When this field exists, since the game mode is actually changed, the game engine will operate according to behavior specified for dynamic levels described in section \ref{sec:modes}.
+  \item \verb+times+: Using this field can convert a static level into a dynamic level, by giving entrance times to every task graphs. This field have to be an array of integers with the same length as \verb+graphs+. When the game runs to the second specified by the integer, the corresponding task graph will be allowed to enter. When this field exists, since the game mode is actually changed, the game engine will operate according to behavior specified for dynamic levels described in section \ref{sec:modes}.
 \end{itemize}
 
 \vspace{0.5em}
@@ -527,9 +527,9 @@ void run(List<Graph> g, Cluster c, Schedule s);
 \end{lstfloat} 
 \vspace{-0.5em}
 
-One main difficulty is to estimate the execution of the schedule, since many frequently used operations like scheduling to the earliest available processor relies on estimation. A very straight-forward choice is to simulate the execution. However, simulations are not only time consuming, it also requires repetition every time the schedule is modified. For task graphs within the size limitation, performance of simulation seems acceptable, but it might not be realistic in real life. Therefore, an estimator is develop to estimate the execution.
+When implementing algorithms, one main difficulty is to estimate the execution of the schedule, since many frequently used operations like scheduling to the earliest available processor relies on estimation. A very straight-forward choice is to simulate the execution. However, simulations are not only time consuming, it also requires repetition every time the schedule is modified. For task graphs within the size limitation, performance of simulation seems acceptable, but it might not be realistic in real life. Therefore, an estimator is develop to estimate the execution.
 
-The estimator is developed based on the relationship given in following equation(ref):
+The estimator is developed based on the following relationship \cite{Robert2011}:
 \begin{equation*}
   \forall e = (T, T') \in E, 
   \begin{cases}
@@ -538,7 +538,7 @@ The estimator is developed based on the relationship given in following equation
 \end{cases}
 \label{eq:task}
 \end{equation*}
-In this equation, $e$ represents edges, or dependencies mentioned previously. T and T' represents two tasks, where T' depends on T. $\sigma(T)$ represents the start time of task T. $w(T)$ represents time to execute task T. $alloc(T)$ returns the processor task T is allocated to. In other words, it describes timing for execution of tasks based on a cluster with unlimited communication resource. For clusters using ideal communication model or schedules generating no conflicts mentioned in section \ref{sec:execution}, it provides accurate estimation except for some edge cases. But if there is any conflict, the estimation will be inaccurate. In most of cases, conflicts do not happen frequently and the error in estimation caused by conflicts do not lead to difference in schedules. However, if the algorithm requires very accurate estimation, the developer should consider simulation or implementing other estimating methods.
+In this equation, $e$ represents edges, or dependencies mentioned previously. T and T' represents two tasks, where T' depends on T. $\sigma(T)$ represents the start time of task T. $w(T)$ represents time to execute task T. $alloc(T)$ returns the processor that task T is allocated to. In other words, it describes timing for execution of tasks based on a cluster with unlimited communication resource. For clusters using ideal communication model or schedules generating no conflicts mentioned in section \ref{sec:execution}, it provides accurate estimation except for some edge cases. But if there is any conflict, the estimation will be inaccurate. In most of cases, conflicts do not happen frequently and the error in estimation caused by conflicts do not lead to difference in schedules. However, if the algorithm requires very accurate estimation, the developer should consider simulation or implementing other estimating methods.
 
 \chapter{Summary of Final System}
 
@@ -558,68 +558,72 @@ This project uses Gradle, a widely used build system to automate these steps. Al
 
 \section{Game Flow}
 
-Due to the limit of length, the game flow will not be introduced in details. For the completed user experience, please refer to the online video \footnote{Available at: WIP}. The entire game is split into 3 sections. The first section introduces basic concepts and interactions. The second section introduces HLFET algorithm and several variants. Two game levels are given in section 2 with one in static mode and another in dynamic mode.
+Due to the limit of length, the game flow will not be introduced in details. For the complete user experience, please refer to the online video \footnote{Available at: WIP}. The entire game is split into 3 sections. The first section introduces basic concepts and interactions. The second section introduces HLFET algorithm and several variants. Two game levels are given in section 3 with one in static mode and another in dynamic mode.
 
 \subsection{Appearance and Components}
+
+Figure \ref{fig:play2} shows an example of menu screen. Using these screens, the user can navigate between sections and select levels. When one section is hovered, the description mentioned in section \ref{sec:format} will be rendered on the right hand side to help the user recognize the content of each section.
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play2.png}
   \caption{The interface for level selection}
-  \label{fig:container}
+  \label{fig:play2}
 \end{figure}
+
+Figure \ref{fig:play1} shows a screenshot of the game, taken from level 3-2. This interface follows the design described in section \ref{sec:interface}. On the left hand side, it shows the game timer, the global communication speed and three processors. On the right hand side, it shows several task graphs, with tasks rendered in different colours for different states: grey for unscheduled, blue for scheduled, yellow for executing and green for finished. At the bottom, there are two rails, one to edit the schedule and another to show the history. Periods of execution are rendered as transparent rectangles in the history timeline since there can be overlapped area, especially for communications, using red for task executions and blue for communications, corresponding to progress bars rendered inside processors. In this example task E in the task graph on the left is hovered, therefore, the task in task graph, the processor (B) executed the task and the period inside the timeline is highlighted. Also, all the communication related to this task are displayed in the task graph.
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play1.png}
   \caption{An example of game interface}
-  \label{fig:container}
+  \label{fig:play1}
 \end{figure}
 
-
-
 \subsection{Tutorial Levels}
+
+Tutorial levels are important to teach concepts and algorithms. Figure \ref{fig:play4} and figure \ref{fig:play5} are two examples of the tutorial. As introduced in section \ref{sec:event}, the widget for tutorials allows advanced rendering inside the widget, where one example is given in figure \ref{fig:play4}, showing how extra components can be rendered in tutorials in addition to texts. 
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play4.png}
   \caption{An example of tutorial with advanced rendering}
-  \label{fig:container}
+  \label{fig:play4}
 \end{figure}
 
+Figure \ref{fig:play5} shows an example of event control. This tutorial introduces how communication is executed in this application. After requiring the user to start simulation, the tutorial pauses the game when the communications are in progress, with explanation of the logic. This is implemented by listening to game ticking events, then pause the game at the tick with certain tick count.
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play5.png}
   \caption{An example of tutorial with paused game}
-  \label{fig:container}
+  \label{fig:play5}
 \end{figure}
 
-
 \subsection{Game Levels}
+
+Figure \ref{fig:play6} shows an screenshot of game level, in addition to figure \ref{fig:play2}. The difference is that figure \ref{fig:play6} shows a static level while figure \ref{fig:play2} shows a dynamic one. As given in figures, for dynamic levels, execution of tasks do not start immediately when game starts because the user have to wait for the task graph to enter and make schedules. For static levels, execution usually starts at the beginning and to be noticed, the tasks in the schedule are not removed when finished. Therefore, when resetting the game, the schedule will be kept, making it easier for the user to modify the previous schedule. Figure \ref{fig:play6} also shows the pop up dialog for performance evaluation when the game is finished, as is mentioned in section \ref{sec:modes} and section \ref{sec:format}. Target time will be green if it is fulfilled, otherwise it will be red.
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play6.png}
   \caption{Pop up dialog for performance evaluation}
-  \label{fig:container}
+  \label{fig:play6}
 \end{figure}
 
 \subsection{Testing Mode}
+
+Figure \ref{fig:play3} shows the interface for scenario construction in testing mode. When the program starts, all the pre-configured clusters and task graphs will be loaded automatically, and displayed in this interface. The player can choose one cluster from the list on the left, and several task graphs, by dragging task graphs from the available list to selected list. When one cluster or task graph is selected, the preview will be rendered to help the user distinguish. When the scenario is constructed, the user can play it like games in static mode.
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=\columnwidth]{play3.png}
   \caption{Construction of scenario in testing mode}
-  \label{fig:container}
+  \label{fig:play3}
 \end{figure}
 
 
 \chapter{Evaluation}
-
-\section{User Testing}
-
-\section{Code Quality}
 
 \chapter{Conclusion}
 

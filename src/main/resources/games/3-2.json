@@ -1,14 +1,20 @@
 {
   "graphs": [
     "3-1",
-    "3-2"
+    "3-2",
+    "2-x"
+  ],
+  "times": [
+    0,
+    4,
+    10
   ],
   "aims": [
-    21,
-    18,
-    15
+    35,
+    30,
+    25
   ],
   "cluster": "3-x",
   "tutorial": "3-2",
-  "desc": "A demonstration of static game."
+  "desc": "A demonstration of dynamic game."
 }

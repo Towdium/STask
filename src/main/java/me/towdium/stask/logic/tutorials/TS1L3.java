@@ -25,10 +25,11 @@ public class TS1L3 extends Tutorial.Impl {
             "A to execute the scheduled task, while processor A have only one channel. " +
             "In this case, the system will pick one communication to start first, and another blocked.\n\n" +
             "Now click on the start button to continue the execution.";
-    static final String S5 = "Although we are working one the same task graph, you can see the result " +
-            "changes a lot for different communication models. This also applies to algorithms for " +
-            "automatic scheduling, making applicability limited to certain model. When learning these " +
-            "algorithms, it's important to distinguish the applicable models.";
+    static final String S5 = "Although we are working on the same task graph, you can see the result " +
+            "changes a lot for different communication models. This is why scheduling algorithms can only " +
+            "apply to certain models. Therefore, when learning these algorithms, it's important to " +
+            "distinguish the applicable models.\n\n" +
+            "This level is finished.";
 
     public TS1L3(Game g) {
         super(g);

@@ -28,14 +28,14 @@ public class TS1L5 extends Tutorial.Impl {
             "to make it run faster. First click on task C in the schedule, then drag the " +
             "buttons in the pop up menu to put task B at the top of the queue.";
     static final String S6 = "Well done. Now let's run it again.";
-    static final String S7 = "Of course there are better schedules for this task graph." +
+    static final String S7 = "Of course there are better schedules for this task graph. " +
             "This is just to demonstrate how it works. When playing with single communication " +
             "models, it's always good to check the order of input.";
     static final String S8 = "Another thing to be noticed is global communication speed is " +
             "changed to 2 in this level (see upper left corner). Therefore, every communication " +
             "takes 2/2=1 seconds to finish.";
-    static final String S9 = "In this game, communication is simulated in a simplified model." +
-            "In real life, it is more flexible, and  brings more difficulties " +
+    static final String S9 = "In this game, communication is simulated in a simplified model. " +
+            "In real life, it is more flexible, and brings more difficulties " +
             "to scheduling algorithms. For example, adding extra delays to communication can " +
             "affect the performance in some cases, but we will not talk about it.\n\n" +
             "This tutorial is finished.";

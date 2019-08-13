@@ -21,15 +21,18 @@ public class TS1L6 extends Tutorial.Impl {
             "we use speedup to represent such behavior.";
     static final String S2 = "Here is one processor. The special speed icon means it has speedup for " +
             "certain types of tasks. When you hover over it, the details will be displayed.";
-    static final String S3 = "When processing task in certain type, the actual speed is " +
+    static final String S3 = "When processing tasks in certain type, the actual speed is " +
             "base speed x speedup.\n\n" +
             "I have made one schedule for you to make use of high speedup of " +
             "processor B for type \u03b2. Let's run it.";
     static final String S4 = "In this level, processor A has base speed 2. " +
             "Therefore, when processing task A, it takes 2/2=1 second.\n\n" +
-            "When processors inside a cluster are different, it is called a heterogeneous " +
+            "Processor B has base speed 1 and x8 speedup for type \u03b2. " +
+            "Therefore, when processing task B, it takes 8/1/8=1 second.";
+    static final String S5 = "When processors inside a cluster are different, it is called a heterogeneous " +
             "cluster, which is another tough topic for scheduling algorithms.\n\n" +
             "This tutorial is finished.";
+
 
     public TS1L6(Game game) {
         super(game);
@@ -77,6 +80,7 @@ public class TS1L6 extends Tutorial.Impl {
         BUS.subscribe(Event.EGame.Finish.class, this, e -> {
             BUS.cancel(this);
             widget.update(S4, true);
+            widget.update(S5, false);
         });
     }
 }

@@ -12,10 +12,9 @@ import static me.towdium.stask.logic.Event.Bus.BUS;
  */
 @SuppressWarnings("DuplicatedCode")
 public class TS3L1 extends Tutorial.Impl {
-    static final String S1 = "This level is the demonstration for dynamic levels. In this level, " +
-            "task graphs will not be given at the beginning. Instead, after the start of game, " +
-            "several task graphs will be given at certain time. Also, the timeline will keep " +
-            "going when no task is being executed.";
+    static final String S1 = "This is one level for demonstration. You can use any strategy to " +
+            "build the schedule to make it run faster, not matter the order of execution. " +
+            "When all the graphs are completed, the system will evaluate it according to the performance.";
 
     public TS3L1(Game game) {
         super(game);

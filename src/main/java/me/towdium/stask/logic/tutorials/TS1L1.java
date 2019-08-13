@@ -42,7 +42,7 @@ public class TS1L1 extends Tutorial.Impl {
             "In this case, the speed is infinity, meaning communication will take no time.";
     static final String S6 = "On the left hand side it shows several processors. " +
             "You can assign tasks to processors by dragging tasks to the task queue " +
-            "At the bottom of the interface.\n\n" +
+            "at the bottom of the interface.\n\n" +
             "For each processor, it shows the name, speed and progress bars of execution " +
             "and communication.";
     static final String S7 = "Let's get started by assigning task A to processor A.";
