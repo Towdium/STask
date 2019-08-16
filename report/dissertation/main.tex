@@ -26,18 +26,28 @@
 \author{Juntong Liu}
 
 \abstract{
+  This project aims to develop an application to teach task graph scheduling. The application includes tutorials for concepts and algorithms in this area, in addition to the ability to simulate the execution of several communication models for arbitrary clusters and task graphs. The development of the application is based on Java and OpenGL (LWJGL). This report will provide detailed description of execution logic for communication models used in this project, with explanation of design and implementation. According to user testing, it shows most students can benefit from this application when learning task graph scheduling, but the learning experience can be further improved by adding more examples and challenges. Finally, more suggestions are given for future work.
 }
 
 \maketitle
 
 \section*{Acknowledgements}
-Any acknowledgements go here. 
+I would like to first thank Professor Murray Cole for his kind help and wise suggestions throughout this project. Secondly I would like to thank all the testers, who I cannot mention the names for anonymity, for their passionate participation and precious time. Finally I would also like to thank developers of LWJGL, an open source Java library that provides convenient accessability to many native resources, which makes it much easier to create games in Java.
+
+\section*{Declaration}
+
+I have read and understood the University's plagiarism guidelines.
 
 \tableofcontents
 \end{preliminary}
 
+\noindent\fbox{%
+  \parbox{0.98\textwidth}{%
+  In order to better understand this application, it is recommended that the reader refer to the online video that provides recording of all the interactions and levels, which is available at \url{https://youtu.be/IfGJpxUXV90}.
+  }%
+}
 
-\chapter{Introduction}
+{\let\clearpage\relax \chapter{Introduction}}
 
 Computing resource is in high demand both in industry and for academic research. In industry, companies are collecting terabytes or even petabytes of user data to provide customized services. Also, machine learning algorithms are widely used to provide suggestions and to extract information from media files. Processing these files and executing these algorithms all requires a huge amount of computing resource. In academic research, many researchers in subjects like hydromechanics and electrics rely on simulation to predict the performance of models. In this case, more computing resource is consumed for better resolution.
 
@@ -54,7 +64,7 @@ In large-scaled systems, tasks in a task graph are managed and scheduled to proc
 
 This project aims to develop a game-like application to help the students learn concepts in task graph scheduling, in addition to algorithms. For any schedule, it can simulate the execution timeline based on a variety of cluster configurations. It also provides a step to step tutorial to help students learn the mechanisms and algorithms. For tutors, this application can also be used for demonstration.
 
-\chapter{Background}
+\chapter[Background]{Background \footnote{Introduction of similar projects is already given in project proposal. To avoid duplication, such section is not given in this report, considering it is not essential to understand the remaining parts of this report.}}
 
 \section{Task Graph Scheduling} \label{sec:tgs}
 
@@ -79,14 +89,14 @@ When one task depends on another task, it usually means the successor requires d
 
 The execution of schedules can be described by many different models. A very simplified model can totally ignore the communication cost, which is used in in figure \ref{fig:example}. For such models, execution time of tasks can be easily described and estimated by mathematical expressions, by sacrificing accuracy of prediction. There are also models providing very detailed description of the behavior, based on clusters in real life. For these models, the mathematical expressions could be very complex, especially when considering competition of resources. Here are several well-developed variances of models:
 \begin{itemize}
-    \item \textbf{Heterogeneous vs.\ homogeneous performance:} For simplified models, processors in the cluster is usually assumed to be equally powerful. Such models are considered to describe homogeneous clusters. In real life, difference in processors is also common. Clusters consisting of different types of processors are called heterogeneous clusters \cite{Topcuoglu}. 
+    \item \textbf{Heterogeneous vs.\ homogeneous performance:} For simplified models, processors in the cluster are usually assumed to be equally powerful. Such models are considered to describe homogeneous clusters. In real life, difference in processors is also common. Clusters consisting of different types of processors are called heterogeneous clusters \cite{Topcuoglu}. 
     \item \textbf{Practical vs.\ ideal (immediate) communication:} As described previously, communication cost can be totally ignored in ideal models. However, there are also many models used to describe the behavior of communication in real life. For example, the communication cost might depend on the size of messages \cite{Robert2011}, or even state of shared resources in the cluster \cite{Kwok1999}.
-    \item \textbf{Single vs.\ multiple communication channels:} The amount of communication channels is one of main difference when describing the communication behavior. For most devices connected the Internet, the primary limit is usually the total bandwidth. But for dedicated clusters, they are usually built on infrastructures with special optimizations for inter-cluster communications. In this case, processors might not suffer from performance loss when communicating with multiple processors.
+    \item \textbf{Single vs.\ multiple communication channels:} The amount of communication channels is one of main difference when describing the communication behavior. For most devices connected to the Internet, the primary limit is usually the total bandwidth. But for dedicated clusters, they are usually built on infrastructures with special optimizations for inter-cluster communications. In this case, processors might not suffer from performance loss when communicating with multiple processors.
 \end{itemize}
 
 \section{HLFET Algorithm}
 
-There are many algorithms for task graph scheduling designed for different models. In this project, only BNP (bounded number of processors) scheduling algorithms for arbitrary task graph will be introduced. Among these algorithms, the HLFET algorithm will be used as the example because it is a simple and typical one of list scheduling algorithms, a group of widely used algorithms.
+There are many algorithms for task graph scheduling designed for different models. In this project, only BNP (bounded number of processors) scheduling algorithms for arbitrary task graph will be introduced. Among these algorithms, the HLFET algorithm \cite{adam1974comparison} will be used as the example because it is a simple and typical one of list scheduling algorithms, a group of widely used algorithms.
 
 The core logic of list scheduling algorithms is to give priorities to tasks according to heuristic functions, then always execute tasks with higher priority as early as possible. It is called list scheduling because tasks are usually sorted into a list based on the priority, and tasks are always taken from the top of the list. In HLFET, priority of tasks is defined as the longest path to exit. In other words, for any path from one task to any exit within the task graph, the priority of this task is defined as the maximum sum of durations for tasks on the path. Following this method, tasks on the critical path are usually given higher priorities. Communication cost is ignored in this algorithm because it is designed for ideal communication model.
 
@@ -96,10 +106,10 @@ P(T5) &= T(T5) = 2\\
 P(T2) &= T(T2) + P(T5) = 2 + 9 = 11\\
 P(T3) &= T(T3) + P(P5) = 2 + 4 = 6\\
 P(T4) &= T(T4) + P(T5) = 2 + 6 = 8\\
-P(T1) &= T(T1) \max(P(T2), P(T3), P(T4)) = 2 + 11 = 13
+P(T1) &= T(T1) + \max(P(T2), P(T3), P(T4)) = 2 + 11 = 13
 \end{align*}
 
-Using the priorities, the tasks are sorted as: T1, T2, T4, T3, T5. Following the strategy described previously, figure \ref{fig:schedule1-2} shows one possible schedule made by HL. One thing to be noticed is HLFET does not explicitly define the behavior if the start time of one task on multiple processors are the same, when trying to execute this task as soon as possible. In this case, HLFET could generate multiple possible schedules.
+Using the priorities, the tasks are sorted as: T1, T2, T4, T3, T5. Following the strategy described previously, figure \ref{fig:schedule1-2} shows one possible schedule made by HLFET. One thing to be noticed is HLFET does not explicitly define the behavior if the start time of one task on multiple processors are the same, when trying to execute this task as soon as possible. In this case, HLFET could generate multiple possible schedules.
 
 \begin{figure}[!htb]
   \centering
@@ -125,7 +135,7 @@ Similar to games, this application is divided into many levels. Each level can h
   
   Compared to static mode, this mode is designed to be more competitive to provide more challenges to students. When playing these levels, student have to analyze task graphs quickly and make schedules immediately. To have better performance, the student need to extract the main characteristics of tasks graphs given, rather than analyzing them using mathematical models, which improves the proficiency of students when using certain techniques. Also, since it generates more pressure and requires less mathematical analysis, it might seems more like a game and more enjoyable for some students.
 
-  \item \textbf{Tutorial mode:} Levels in this mode are usually developed based on static mode. For tutorial levels, some help text will be displayed describe concepts, operations and algorithms. A tutorial can operate on the game engine freely. By listening to operations made by the student, tutorials can be made into an interactive process to help students learn faster. Levels in this mode are usually made educational only. Students can find detailed description of techniques that are required when playing other levels.
+  \item \textbf{Tutorial mode:} Levels in this mode are usually developed based on static mode. For tutorial levels, some help text will be displayed to describe concepts, operations and algorithms. A tutorial can operate on the game engine freely. By listening to operations made by the student, tutorials can be made into an interactive process to help students learn faster. Levels in this mode are usually made educational only. Students can find detailed description of techniques that are required when playing other levels.
 
   \item \textbf{Testing mode:} This mode is also developed based on static mode. In static mode, the user have to use a pre-defined scenario, but in testing mode, the user can create games by selecting clusters and task graphs, then play the the created game freely. This mode also provides several standard algorithms, so that the user can try these algorithms to check the scheduling result. This mode can be helpful for demonstration and testing because the user can build any scenarios according to requirements, in addition to check and compare the behavior of algorithms in such scenarios.
 \end{itemize}
@@ -150,7 +160,7 @@ Two main interactions in this application is hovering and drag \& drop. Hovering
 
 Drag \& drop is used mainly to edit the schedule. The user can schedule one task to one processor by dragging the task from task graph, then drop it inside the task queue. In addition, tasks inside the task queue can also be moved to edit the schedule.
 
-The base resolution of the window is decided to be 1440x720, to make it suitable for most of screens. For a window with limited resolution, number of processors and size of task graphs have to be limited, if they are required to be always visible. After changing the layout several times, the clusters are limited to have no more than 4 processors and the task graphs are required to be no larger than 4x3. According to experience in design of levels, clusters and task graphs in such size is sufficient to construct very complex scenarios, if the purpose of the scenarios is to let humans to make the schedule manually.
+The base resolution of the window is decided to be 1280x720, to make it suitable for most of screens. For a window with limited resolution, number of processors and size of task graphs have to be limited, if they are required to be always visible. After changing the layout several times, the clusters are limited to have no more than 4 processors and the task graphs are required to be no larger than 4x3. According to experience in design of levels, clusters and task graphs in such size is sufficient to construct very complex scenarios, if the purpose of the scenarios is to let humans to make the schedule manually.
 
 \section{Execution Logic} \label{sec:execution}
 
@@ -166,7 +176,7 @@ As is described in section \ref{sec:tgs}, one difficulty in task graph schedulin
   \item \textbf{Ideal (immediate) communication (IC):} Communication does not cost any time. Tasks will only be delayed if any of its dependency is not finished or the processor it is scheduled to is busy.
   \item \textbf{Background communication with multiple channels (BCMC):} One processor can communicate with unlimited amount of processors in both directions. The only limit is one processor can only have one channel sending to another processor, meaning no more than one communication block can be sent from one processor to another at any time. The limit is made since bandwidth of one connection is always limited in real life, although there could be multiple connections.
   \item \label{sec:bcsc} \textbf{Background communication with single channel (BCSC):} One processor can send to or receive from only one processor at any time. Instead of having multiple connections, this model describes processors with single connection, and the total bandwidth is limited. Therefore, one communication in progress can occupy the entire bandwidth, making other communications blocked.
-  \item \textbf{Synchronous (blocked) communication (SC):} One processor cannot execute tasks and communicate with other processors at the same time. Also, it allows only one channel in one direction like described in mode \ref{sec:bcsc}. This model describes the scenario when using synchronous communication libraries like Java IO or MPI synchronous mode in single thread.
+  \item \textbf{Synchronous (blocked) communication (SC):} One processor cannot execute tasks and communicate with other processors at the same time. Also, it allows only one channel in one direction like described in model \ref{sec:bcsc}. This model describes the scenario when using synchronous communication libraries like Java IO or MPI synchronous mode in single thread.
 \end{enumerate}
 
 \subsection{First Conflict and Rule 1}
@@ -197,11 +207,11 @@ With more strict communication models, there can be more conflicts. One option i
   \label{fig:conflict1}
 \end{figure}
 
-In all non-ideal modes, one conflict is when two tasks scheduled on one processor relies on data from another processor, because two data packages have to be sent in certain order. The strategy used is to allow communication required by one task only when it is the first task in the for its scheduled processor (rule 1). In other words, communication required by one task will be delayed if there is any task ahead of it in the schedule. Figure \ref{fig:conflict1} shows one example task graph and three possible execution timelines if T1 is scheduled to processor 1 (P1) and remaining tasks are scheduled to processor 2 (P2). For the task graph, tasks are labeled as ``Tn(Duration)'' and communications are labeled as ``Cn(Duration)''.
+In all non-ideal modes, one conflict occurs when two tasks scheduled on one processor relies on data from another processor, because two data packages have to be sent in certain order. The strategy used is to allow communication required by one task only when it is the first task for its scheduled processor (rule 1). In other words, communication required by one task will be delayed if there is any task ahead of it in the schedule. Figure \ref{fig:conflict1} shows one example task graph and three possible execution timelines if T1 is scheduled to processor 1 (P1) and remaining tasks are scheduled to processor 2 (P2). For the task graph, tasks are labeled as ``Tn(Duration)'' and communications are labeled as ``Cn(Duration)''.
 
-As shown in the timelines, for one given schedule, there could be many results if the order and time of tasks are not explicitly specified. However, according to "rule 1", the execution result will always be timeline 1. Although other strategies can provide better performance like in timeline 2 (also known as early fetch), this rule is chosen for its reliability, simplicity, and less uncertainty. Another option is to leave the decision to students. However, there are two problems: 1) It have to be decided based on very precise estimation of execution, which might be too challenging for a student, even for many algorithms; 2) It will make the interface very complex because it requires precise control of time.
+As shown in the timelines, for one given schedule, there could be many results if the order and time of communications are not explicitly specified. However, according to ``rule 1'', the execution result will always be timeline 1. Although other strategies can provide better performance like in timeline 2 (also known as early fetch), this rule is chosen for its reliability, simplicity, and less uncertainty. Another option is to leave the decision to students. However, there are two problems: 1) It have to be decided based on very precise estimation of execution, which might be too challenging for a student, even for many algorithms; 2) It will make the interface very complex because it requires precise control of time.
 
-\subsection{Second Conflict}
+\subsection{Second Conflict} \label{sec:conflict2}
 
 Another conflict happens only for single channel models, which is the order of communication for one task. Figure \ref{fig:conflict2} shows an example of the conflict. For task graph given in \ref{fig:conflict2-1}, by scheduling T1 to P1, T2 to P2 and T3 to P3, even when rule 1 is applied, there are still multiple possible execution results, which are shown in figure \ref{fig:conflict2-2} and \ref{fig:conflict2-3}. 
 
@@ -231,7 +241,7 @@ Another conflict happens only for single channel models, which is the order of c
 
 The main problem is the order of communications that T3 depends on. When C1 is executed first, the result is figure \ref{fig:conflict2-2} and when C2 is executed first, it generates figure \ref{fig:conflict2-3}. A straight forward solution is to always attempt to receive the data that is available earlier, which is C1 in this case, similar to greedy strategies. According to the figure, it provides better performance indeed. However, in some other cases, when another task Tx is assigned to P2, assuming synchronous communication model, C2 can be terribly delayed.
 
-According to the timelines, it seems changing the order of communication can have significant effect over execution of other tasks, especially when the resources are limited. Therefore, the decision is left to the student. In multiple communication models, since there is no such conflict, the system will handle communication automatically, while in single communication models, the student have to decide the order manually. However, it does not mean tasks being executed can be paused to execute communications. When one task have been under execution, communications will be delayed until execution finishes.
+According to the timelines, it seems changing the order of communication can have significant effect over execution of other tasks, especially when the resources are limited. Therefore, the decision is left to the student. In multiple communication models, since there is no such conflict, the system will handle communication automatically, while in single communication models, the student have to decide the order manually. In this case, the processor will strictly follow the order when fetching data.
 
 \subsection{Third Conflict and Rule 2} \label{sec:rule2}
 
@@ -255,7 +265,7 @@ In synchronous communication model, there is also conflict between execution of 
   \label{fig:conflict3}
 \end{figure}
 
-As can be observed in figures, if processors are allowed to execute next task before communication, it is possible to block other processors for a long time, when there are many connected tasks. To remove unnecessary delay caused by this conflict, the choice is to force processors communicate before executing tasks (rule 2). Under this rule, the result execution will always be figure \ref{fig:conflict3-2}.
+As can be observed in figures, if processors are allowed to execute next task before communication, it is possible to block other processors for a long time, when there are many connected tasks. To remove unnecessary delay caused by this conflict, the choice is to force processors communicate before executing tasks (rule 2). Under this rule, the result execution will always be figure \ref{fig:conflict3-2}. However, it does not mean tasks being executed can be paused to execute communications. When one task have been under execution, communications will be delayed until execution finishes.
 
 \subsection{Other Conflicts and Behavior} \label{sec:conflict}
 
@@ -287,32 +297,46 @@ To summarize, for conflicts stated in previous sections, when any of them exists
 
 This project is designed to be a cross-platform desktop application. While C++ is the typical choice for such requirements, Java is chosen as the main language in development. 
 
-The biggest difficulty of using C++ is compilation on different platforms. For example, programs on Windows are usually compiled against all DLLs (dynamically linked libraries) selected and provided by the developer and distributed with all its dependencies bundled. However on Linux, programs are usually compiled against SOs (shared objects) provided by system, then distributed as source file or single binary file. Such difference brings complexity in compilation and potential issues in distribution.
-
-Oppositely, compilation of Java file is much easier. With help of virtual machine, compiled binary files can be executed on different platforms without any extra step. Since Java executable files are usually packed in Jar files, distribution is also convenient.
+The biggest difficulty of using C++ is compilation on different platforms. For example, programs on Windows are usually compiled against all DLLs (dynamically linked libraries) selected and provided by the developer and distributed with all its dependencies bundled. However on Linux, programs are usually compiled against SOs (shared objects) provided by system, then distributed as source file or single binary file. Such difference brings complexity in compilation and potential issues in distribution. Oppositely, compilation of Java file is much easier. With help of virtual machine, compiled binary files can be executed on different platforms without any extra step.
 
 \subsection{GUI Library} \label{sec:opengl}
 
 As is said in previous sections, the interface is designed to be interactive, which means the application will heavily rely on operations like hovering and drag \& drop. Also, it requires rendering overlays and transparency frequently. For widgets based traditional GUI frameworks, these operations usually requires usage of complex or low level APIs, which brings difficulty in development and potential compatibility issues. Therefore, games are usually developed based on dedicated GUI frameworks.
 
-GUI frameworks used in games are usually built on low level libraries like DirectX and OpenGL. One reason is they are usually directly connected to hardware operations, which saves much performance in rendering complex shapes. Another reason is these libraries allows GUI frameworks developed in immediate mode, making it easier to develop highly dynamic scenes. Compared to retained mode, the developer do not need to refresh windows manually in immediate mode because every frame is refreshed and rendered separately.
+GUI frameworks used in games are usually built on low level libraries like DirectX and OpenGL \cite{openglw}. One reason is they are usually directly connected to hardware operations, which saves much performance in rendering complex shapes. Another reason is these libraries allows GUI frameworks developed in immediate mode, making it easier to develop highly dynamic scenes. Compared to retained mode, the developer do not need to refresh windows manually in immediate mode because every frame is refreshed and rendered separately.
 
-OpenGL is chosen as the rendering library for its cross-platform availability and simplicity. Although OpenGL do not provide APIs in Java, there are several libraries in Java providing the bridge. Among these libraries, LWJGL 3 is chosen for several reasons:
+OpenGL is chosen as the rendering library for its cross-platform availability and simplicity. Although OpenGL do not provide APIs in Java, there are several libraries in Java providing the bridge. Among these libraries, LWJGL 3 \cite{lwjgl} is chosen for several reasons:
 
 \begin{itemize}
-  \vspace{-1em}\item It includes bridges to several convenient native libraries like STB and GLFW.
+  \vspace{-1em}\item It also includes bridges to several native libraries like STB \cite{stb} and GLFW \cite{glfw}.
   \vspace{-1em}\item It has very good documents and community support.
   \vspace{-1em}\item It provides full exposure of OpenGL APIs.
   \vspace{-1em}\item It it up-to-date.
 \end{itemize}
 
-With help of LWJGL, programs written in Java can still easily access native libraries, while there is no need to have special compilation steps for different platforms because the dependencies are already included and handled by LWJGL.
+With help of LWJGL, programs written in Java can still easily access native libraries, while there is no need to have special compilation steps for different platforms, because the dependencies are already included and handled by LWJGL.
 
-\chapter{Implementation}
+\subsection{Distribution}
+
+The expected format for distribution in this project is Jar file, which is the typical format for Java executables. Jar format a variant of ZIP format, a widely used archive file format. Base on this format, all the resources, platform-specific binaries and Java binaries (classes) can be compressed into one file, making it nice for distribution, especially for cross-platform applications. However, some projects, although they are developed in Java, choose not to use Jar files for distribution for several reasons:
+\begin{itemize}
+  \item Jar files relies on JRE to execute. If JRE is not pre-installed to the user's device, the user have to download and install it separately. Also, since this project is developed based on Java 8, if the installed JRE is for older versions of Java, it will also fail to execute, making things more confusing.
+  \item Running Jar files is not always simple. For Windows, if the file handlers are not configured correctly, double clicking the Jar file might not start the application. For Linux, Jar executables are usually not recognized. In such cases, the user have to use commands to execute it.
+\end{itemize}
+
+Since this project mainly aims at computer science students, they should be able to solve the problems, or to find the solution with little help.
+
+\subsection{Build System}
+
+This project is built based on many dependencies and managing the dependencies is sometimes troublesome. The developer need to download all the libraries and configure them in environment variables or inside the IDE. When compiling the project, the developer also need to merge all the dependencies into the Jar file, otherwise the user have to download all the dependencies and configure themselves, which can be terrible even for experienced users. 
+
+This project uses Gradle, a widely used build system to automate these steps. All the dependencies are configured in the file \verb+build.gradle+. If the project is cloned to local directory, by executing \verb+gradlew build+, the system will automatically fetch all the libraries from Maven repositories online and configure them correctly. Then the developer can find the output Jar file inside \verb+build/libs+. When configured to, the system can also merge all the dependencies into the output file. More conveniently, most of IDEs have support for Gradle. If someone wants to further develop this project, they can easily set up the development environment by downloading all the source files and importing the Gradle project.
+
+\chapter[Implementation]{Implementation \footnote{Source code is available at \url{https://github.com/Towdium/STask}.}}
 
 \section{General Architecture} \label{sec:architecture}
 
-The core part of this project follows the widely used MVC (model-view-controller) architecture. View classes include \verb+Window+, \verb+Page+ and \verb+Widget+. Model classes include \verb+Cluster+, \verb+Graph+ (for task graphs) and \verb+Schedule+. \verb+Game+ objects work as the controller. Compared to typical implementations of MVC, modules in this project is more flexible and coupled. For example, for some simple interfaces, user input can be handled directly within the view object (\verb+Page+), without using external controllers.
+The core part of this project follows the widely used MVC (model-view-controller) architecture \cite{buschmann1996patternoriented}. View classes include \verb+Window+, \verb+Page+ and \verb+Widget+. Model classes include \verb+Cluster+, \verb+Graph+ (for task graphs) and \verb+Schedule+. \verb+Game+ objects work as the controller. Compared to typical implementations of MVC, modules in this project are more flexible and coupled. For example, for some simple interfaces, user input can be handled directly within the view object (\verb+Page+), without using external controllers.
 
 
 \begin{figure}[!htb] 
@@ -324,7 +348,7 @@ The core part of this project follows the widely used MVC (model-view-controller
 
 Since the GUI framework is built based on low level APIs, the main loop of the program have to be explicitly created. The main loop provides the basic ticking mechanism, driving all the underlying layers following the structure in figure \ref{fig:architecture}: The \verb+Window+ object checks user input at every tick, and refreshes the frame based on a fixed interval. Inside every refresh operation, the ticking call will be distributed to all the \verb+Pages+ and \verb+Widgets+. When some special widgets are refreshed, the ticking call will be passed to the game engine. Based on another interval, the state of game will be updated.
 
-Other operations are also passed between modules following the same structure: Modules on the right hand side is responsible to operate according to instructions from modules on the left hand side. One main reason is references in this project are usually held in single direction to keep the structure clean. However, there are some scenarios that modules on the right hand side need to notify modules on the left hand side. For example, the controller will let the view to show statistics when the game is finished. Such operations are implemented based on the event system described in section \ref{sec:event}. Using the event bus, events can be broadcast globally without reference of certain objects.
+Other operations are also passed between modules following the same structure: Modules on the right hand side is responsible to operate according to instructions from modules on the left hand side. One main reason is that references in this project are usually held in single direction to keep the structure clean. However, there are some scenarios that modules on the right hand side need to notify modules on the left hand side. For example, the controller will let the view to show statistics when the game is finished. Such operations are implemented based on the event system described in section \ref{sec:event}. Using the event bus, events can be broadcast globally without reference of certain objects.
 
 \section{Simulation Engine}
 
@@ -335,9 +359,9 @@ There are mainly two ways to predict the execution results: calculate the timeli
 It seems calculation methods are much simpler and efficient, but the simulation method is used for several reasons:
 
 \begin{itemize}
-  \item It's hard to find a generic expression for different scenarios in calculation methods. For example, in ideal communication model, for one task, the earliest start time is maximum of the finish times of all its dependencies and processor's earliest available time. While for BCMC model, the finish times of dependencies will be changed to finish time added by communication time, if the tasks are executed on different processors. For similar reasons, the expression will be very complex for some communication models. However for simulation, the developer only need to describe the actual behavior of each processor, according to requirements of the communication model, which is usually called transition functions. Therefore, changing in communication models is equivalent to changing the transition function, which is significantly easier to implement and validate.
+  \item It is hard to find a generic expression for different scenarios in calculation methods. For example, in ideal communication model, for one task, the earliest start time is maximum of the finish times of all its dependencies and processor's earliest available time. While for BCMC model, the finish times of dependencies will be changed to finish time added by communication time, if the tasks are executed on different processors. For similar reasons, the expression will be very complex for some communication models. However for simulation, the developer only need to describe the actual behavior of each processor, according to requirements of the communication model, which is usually called transition functions. Therefore, changing communication models is equivalent to changing the transition function, which is significantly easier to implement and validate.
   \item The execution uses tasks as unit, rather than time in calculation models. In other words, the tasks are atomic. For example, when one task is executed by calculation, it takes the entire period in the timeline immediately. Because of this nature, the developer have to check the states of all related processors in the entire period for conflicts. Also, the execution order of tasks have to be carefully arranged for correct behavior. Although this problem can be resolved by always executing tasks scheduled to the earliest available processor, for tasks with communications, it will become very complicated because workloads are tightly coupled and shared by processors.
-  \item Simulation models are more suitable for animations. This application is required to ``run'' a schedule. When cursor on the timeline moves, simulation models are actually running the tick under the cursor. Therefore, the animated execution is actually rendering the history of simulation engine in real time. However for calculation modes, extra steps are required to "make up" the animated execution.
+  \item Simulation models are more suitable for animations. This application is required to ``run'' a schedule. When cursor on the timeline moves, simulation models are actually running the tick under the cursor. Therefore, the animated execution is actually rendering the history of simulation engine in real time. However for calculation modes, extra steps are required to ``make up'' the animated execution.
 \end{itemize}
 
 \subsection{Execution of Simulation} \label{sec:simulation}
@@ -359,15 +383,15 @@ One tick is separated into 3 phases for two reasons:
   \item Between phase 2 and phase 3, the state is written to history. The basic concept is processors only decides what to do in one tick inside the two pre-tick phases, while no execution is performed, making the end of phase 2 suitable to record the state. If phase 2 and 3 are merged and history is updated at phase 3, one apparent consequence is that execution of tasks taking only 1 tick will never be recorded because the execution is finished inside the tick. Actually, the result is execution of every task will miss 1 tick in history. There is work-around for this problem, but to keep the states clean, phase 2 and phase 3 are kept separated.
 \end{itemize}
 
-Within one phase, all processors in the cluster will be traversed, following the order given in layout described in section \ref{sec:format}. When there is potential competition of resource, execution will always follow the "first come first served" logic. Taking the conflict described in section \ref{sec:conflict}, if P2 is positioned before P3 in layout, the timeline in figure \ref{fig:conflict4-2} will always happen, because P2 is ticked earlier in first pre-tick and it occupies the communication channel before P3 attempts to. Oppositely, if P3 is positioned before P2, the timeline in section \ref{fig:conflict4-3} will always happen.
+Within one phase, all processors in the cluster will be traversed, following the order given in layout to be described in section \ref{sec:format}. When there is potential competition of resource, execution will always follow the "first come first served" logic. Taking the conflict described in section \ref{sec:conflict}, if P2 is positioned before P3 in layout, the timeline in figure \ref{fig:conflict4-2} will always happen, because P2 is ticked earlier in first pre-tick and it occupies the communication channel before P3 attempts to. Oppositely, if P3 is positioned before P2, the timeline in section \ref{fig:conflict4-3} will always happen.
 
 \subsection{Float Error Handling}
 
 The progresses of all communications and executions of tasks are stored as double-precision float numbers, because the base speed and speedups of processors are allowed to be float numbers, using 0 for started and 1 for finished. When using float numbers in simulations, the developer need to be careful with the error. For example, if a processor completes 20\% of the task (0.2 out of 1), when 5 ticks are completed, the progress might not be 1. The value is usually a number slightly smaller or larger than 1 because 0.2 cannot be precisely represented by float numbers.
 
-The solution is to have an acceptable margin of error. For example, consider $1 - 10^{-5}$ to be finished. However, the margin have to be decided carefully. If the margin too small, the value could easily fall outside the range. While if the margin is too large, which is larger than the difference generated by one iteration, the value can be considered finished before reaching the theoretical amount of iterations.
+The solution is to have an acceptable margin of error. For example, consider $1 - 10^{-5}$ to be finished. However, the margin have to be decided carefully. If the margin too small, the value could easily fall outside the range. Oppositely, if the margin is too large, which is larger than the difference generated by one tick, the value can be considered finished before reaching the theoretical amount of ticks.
 
-There is no ideal value for the margin. For longer tasks that takes more iterations to finish, the difference in one iteration is smaller, while the accumulated error is larger. The typical value of error $\epsilon$ is about $10^{-16} \sim 10^{-15}$ when using double-precision floats. For a task that requires n iterations, the difference of one iteration is $1/n$ and the accumulated error is $n\epsilon$. To achieve a balance, $\epsilon_0 = \sqrt{\epsilon} \approx 10^{-8}$ is used as the margin of error. In this case, the simulation will have error of 1 tick for tasks taking over $10^7$ ticks, which is equivalent to over 30 hours, assuming 80 tick per second. Since this project is developed for teaching rather than for evaluation of large systems, tasks in this program usually takes only several seconds. In this case, the error should not cause any inaccuracy in the results. 
+There is no ideal value for the margin. For longer tasks that takes more ticks to finish, the difference in one tick is smaller, while the accumulated error is larger. The typical value of error $\epsilon$ is about $10^{-16} \sim 10^{-15}$ when using double-precision floats. For a task that requires n ticks, the difference of one tick is $1/n$ and the accumulated error is $n\epsilon$. To achieve a balance, $\epsilon_0 = \sqrt{\epsilon} \approx 10^{-8}$ is used as the margin of error. In this case, the simulation will have error of 1 tick for tasks taking over $10^7$ ticks, which is equivalent to over 30 hours, assuming 80 ticks per second. Since this project is developed for teaching rather than for evaluation of large systems, tasks in this program usually takes only several seconds. In this case, the error should not cause any inaccuracy in the results. 
 
 \section{GUI Framework and Interfaces}
 
@@ -427,7 +451,7 @@ As described in section \ref{sec:architecture}, communication inside the applica
 The implementation of the event bus is very simple and typical. But it has several convenient features:
 \begin{itemize}
   \item \textbf{Two-phase post:} When broadcasting an event, there are two options: attempt and post. When attempting an event, it can be blocked by listeners, but the post operation cannot be affected. Based on this design, listeners can be registered as subscriber or gate, where gates, invoked when attempting, handle attempts and are allowed to block one event, while subscribers, invoked when posting, can only receive the event. This structure is intended to be used in a two-phase pattern. Before the execution of certain events, the operator should first attempt the event. If the attempt is allowed and the execution is finished, the operator should post the event. There are many alternative designs for similar purpose, but this system seems very light-weighted and introduces less classes.
-  \item \textbf{Inherited types:} When listening to events in superclass, the listeners will be also notified when events in subclasses are broadcast. This is implemented by broadcast one event as all its super types. For example, since \verb+EGame.Finish+ is subclass of \verb+EGame+ and \verb+EGame+ implements \verb+Event+, when posting one event \verb+EGame.Finish+, it will also be post as \verb+EGame+ and \verb+Event+. This allows high leveled control of the game. For example, in tutorials, if the developer want to block all unexpected operations, one choice is to listen to \verb+Event+, the class with highest level of abstraction, and block all unexpected ones.
+  \item \textbf{Inherited types:} When listening to events in superclass, the listeners will be also notified when events in subclasses are broadcast. This is implemented by broadcasting one event as all its super types. For example, since \verb+EGame.Finish+ is subclass of \verb+EGame+ and \verb+EGame+ implements \verb+Event+, when posting one event \verb+EGame.Finish+, it will also be post as \verb+EGame+ and \verb+Event+. This allows high leveled control of the game. For example, in tutorials, if the developer want to block all unexpected operations, one choice is to listen to \verb+Event+, the class with highest level of abstraction, and block all unexpected ones.
   \item \textbf{Ability to unsubscribe:} Since the contexts in this application are frequently modified by changing levels, subscribers have to be updated frequently accordingly. When registering listeners, one extra object, the owner, will be required. Every event listener will be linked to its owner, in a dictionary maintained by the event bus. Therefore, by removing all subscribers linked to certain owner, they can be easily canceled.
 \end{itemize}
 
@@ -495,7 +519,7 @@ Listing \ref{lst:cluster} shows an example of cluster in JSON. For each cluster,
 \end{lstfloat}
 \vspace{-0.5em}
 
-Listing \ref{lst:game} shows an example of game in JSON. A ``game'' or ``level'' in this project is a scenario or a problem, usually consisting of several task graphs and a cluster. One game object have three compulsory fields: \verb+graphs+, an array of graphs, \verb+cluster+ and \verb+desc+. The graphs and clusters used in games are identified and linked by filenames, as is shown in listing \ref{lst:tree}. \verb+desc+ is a short string to describe this level, which will be displayed in related interfaces. Game objects have three optional fields:
+Listing \ref{lst:game} shows an example of game in JSON. A ``game'' or ``level'' in this project is a scenario or a problem, usually consisting of several task graphs and a cluster. One game object have three compulsory fields: \verb+graphs+, an array of graphs, \verb+cluster+ and \verb+desc+. The graphs and clusters used in games are identified and linked by filenames, as is shown in listing \ref{lst:tree}. \verb+desc+ is a short string to describe this level, which will be displayed in related interfaces. Game objects also have three optional fields:
 \begin{itemize}
   \item \verb+tutorial+: This field is used to link this level with tutorials discussed in section \ref{sec:event}. Since tutorials need very detailed control of events, they cannot be described in JSON files. Instead, they are built into the program and identified also by strings. When one level starts, if there is linked tutorial, the tutorial object will be created and activated.
   \item \verb+aims+: One level can have several target times as array of integers for seconds. If aims are specified, the program will evaluate the player's performance automatically when all the task graphs are finished, according to aims given, then display the result to the student.
@@ -515,20 +539,14 @@ Listing \ref{lst:levels} defines all the levels in the application. The levels a
 
 \section{Algorithms and Estimator}
 
-In testing mode described in section \ref{sec:modes}, users are allowed to use standard algorithms to create schedules based on any combination of clusters and task graphs. Therefore, there should be an API for developers to implement algorithms and to interact with the game engine. Listing \ref{lst:algorithm} shows the interface of algorithms. One algorithm should be instantiated as one object, with function \verb+run+. Every time the algorithm is invoked, this function will be called with a list of task graphs, a cluster and an empty \verb+Schedule+ object that the algorithm can operate on. One thing to be noticed is execution of this function should not rely on any state stored inside the algorithm object because it is not determined when and how many times this function will be called.
+In testing mode described in section \ref{sec:modes}, users are allowed to use standard algorithms to create schedules based on any combination of clusters and task graphs. Therefore, there should be an API for developers to implement algorithms and to interact with the game engine. 
+The interface of algorithms is given as follows:
+\vspace{0.5em}\begin{lstlisting}
+  void run(List<Graph> g, Cluster c, Schedule s);
+\end{lstlisting}
+One algorithm should be instantiated as one object, with function \verb+run+. Every time the algorithm is invoked, this function will be called with a list of task graphs, a cluster and an empty \verb+Schedule+ object that the algorithm can operate on. One thing to be noticed is execution of this function should not rely on any state stored inside the algorithm object because it is not determined when and how many times this function will be called.
 
-\vspace{0.5em}
-\begin{lstfloat}
-  \begin{lstlisting}
-void run(List<Graph> g, Cluster c, Schedule s);
-  \end{lstlisting}
-  \caption{Interface of algorithms}
-  \label{lst:algorithm}
-  \vspace{-1em}
-\end{lstfloat} 
-\vspace{-0.5em}
-
-When implementing algorithms, one main difficulty is to estimate the execution of the schedule, since many frequently used operations like scheduling to the earliest available processor relies on estimation. A very straight-forward choice is to simulate the execution. However, simulations are not only time consuming, it also requires repetition every time the schedule is modified. For task graphs within the size limitation, performance of simulation seems acceptable, but it might not be realistic in real life. Therefore, an estimator is develop to estimate the execution.
+When implementing algorithms, one main difficulty is to estimate the execution of the schedule, since many frequently used operations like scheduling to the earliest available processor relies on estimation. A very straight-forward choice is to simulate the execution. However, simulations are not only time consuming, it also requires repetition every time the schedule is modified. For task graphs within the size limitation, performance of simulation seems acceptable, but it might not be realistic in real life. Therefore, an estimator is developed to estimate the execution.
 
 The estimator is developed based on the following relationship \cite{Robert2011}:
 \begin{equation*}
@@ -541,27 +559,11 @@ The estimator is developed based on the following relationship \cite{Robert2011}
 \end{equation*}
 In this equation, $e$ represents edges, or dependencies mentioned previously. T and T' represents two tasks, where T' depends on T. $\sigma(T)$ represents the start time of task T. $w(T)$ represents time to execute task T. $alloc(T)$ returns the processor that task T is allocated to. In other words, it describes timing for execution of tasks based on a cluster with unlimited communication resource. For clusters using ideal communication model or schedules generating no conflicts mentioned in section \ref{sec:execution}, it provides accurate estimation except for some edge cases. But if there is any conflict, the estimation will be inaccurate. In most of cases, conflicts do not happen frequently and the error in estimation caused by conflicts do not lead to difference in schedules. However, if the algorithm requires very accurate estimation, the developer should consider simulation or implementing other estimating methods.
 
-\chapter{Summary of Final System}
+\chapter{Summary of Game Flow}
 
-\section{Compilation and Distribution}
+Due to the limit of thesis length, the game flow will not be introduced in details. For the complete user experience, please refer to the online video \footnote{Available at: \url{https://youtu.be/IfGJpxUXV90}}. The entire game is split into 3 sections. The first section introduces basic concepts and interactions. The second section introduces HLFET algorithm and several variants. Two game levels are given in section 3 with one in static mode and another in dynamic mode.
 
-The expected format for distribution in this project is Jar file, which is the typical format for Java executables. Jar format a variant of ZIP format, a widely used archive file format. Base on this format, all the resources, platform-specific binaries and Java binaries (classes) can be compressed into one file, making it nice for distribution, especially for cross-platform applications. However, some projects, although they are developed in Java, choose not to use Jar files for distribution for several reasons:
-\begin{itemize}
-  \item Jar files relies on JRE to execute. If JRE is not pre-installed to the user's device, the user have to download and install it separately. Also, since this project is developed based on Java 8, if the installed JRE is for older versions of Java, it will also fail to execute, making things more confusing.
-  \item Running Jar files is not always simple. For Windows, if the file handlers are not configured correctly, double clicking the Jar file might not start the application. For Linux, Jar executables are usually not recognized. In such cases, the user have to use commands to execute it.
-\end{itemize}
-
-Since this project mainly aims at computer science students, they should be able to solve the problems, or to find the solution with little help.
-
-This project is built based on many dependencies and managing the dependencies is sometimes troublesome. The developer need to download all the libraries and configure them in environment variables or inside the IDE. When compiling the project, the developer also need to put all the dependencies into the Jar file, otherwise the user have to download all the dependencies and configure themselves, which can be terrible even for experienced users. 
-
-This project uses Gradle, a widely used build system to automate these steps. All the dependencies are configured in the file \verb+build.gradle+. If the project is cloned to local directory, by executing \verb+gradlew build+, the system will automatically fetch all the libraries from Maven repositories online and configure them correctly. Then the developer can find the output Jar file inside \verb+build/libs+. When configured to, the system can also merge all the dependencies into the output file. More conveniently, most of IDEs have support for Gradle. If someone wants to further develop this project, they can easily set up the development environment by downloading all the source files and importing the Gradle project.
-
-\section{Game Flow}
-
-Due to the limit of length, the game flow will not be introduced in details. For the complete user experience, please refer to the online video \footnote{Available at: WIP}. The entire game is split into 3 sections. The first section introduces basic concepts and interactions. The second section introduces HLFET algorithm and several variants. Two game levels are given in section 3 with one in static mode and another in dynamic mode.
-
-\subsection{Appearance and Components}
+\section{Appearance and Components}
 
 Figure \ref{fig:play2} shows an example of menu screen. Using these screens, the user can navigate between sections and select levels. When one section is hovered, the description mentioned in section \ref{sec:format} will be rendered on the right hand side to help the user recognize the content of each section.
 
@@ -581,7 +583,7 @@ Figure \ref{fig:play1} shows a screenshot of the game, taken from level 3-2. Thi
   \label{fig:play1}
 \end{figure}
 
-\subsection{Tutorial Levels}
+\section{Tutorial Levels}
 
 Tutorial levels are important to teach concepts and algorithms. Figure \ref{fig:play4} and figure \ref{fig:play5} are two examples of the tutorial. As introduced in section \ref{sec:event}, the widget for tutorials allows advanced rendering inside the widget, where one example is given in figure \ref{fig:play4}, showing how extra components can be rendered in tutorials in addition to texts. 
 
@@ -601,7 +603,7 @@ Figure \ref{fig:play5} shows an example of event control. This tutorial introduc
   \label{fig:play5}
 \end{figure}
 
-\subsection{Game Levels}
+\section{Game Levels}
 
 Figure \ref{fig:play6} shows an screenshot of game level, in addition to figure \ref{fig:play2}. The difference is that figure \ref{fig:play6} shows a static level while figure \ref{fig:play2} shows a dynamic one. As given in figures, for dynamic levels, execution of tasks do not start immediately when game starts because the user have to wait for the task graph to enter and make schedules. For static levels, execution usually starts at the beginning and to be noticed, the tasks in the schedule are not removed when finished. Therefore, when resetting the game, the schedule will be kept, making it easier for the user to modify the previous schedule. Figure \ref{fig:play6} also shows the pop up dialog for performance evaluation when the game is finished, as is mentioned in section \ref{sec:modes} and section \ref{sec:format}. Target time will be green if it is fulfilled, otherwise it will be red.
 
@@ -612,7 +614,7 @@ Figure \ref{fig:play6} shows an screenshot of game level, in addition to figure 
   \label{fig:play6}
 \end{figure}
 
-\subsection{Testing Mode}
+\section{Testing Mode}
 
 Figure \ref{fig:play3} shows the interface for scenario construction in testing mode. When the program starts, all the pre-configured clusters and task graphs will be loaded automatically, and displayed in this interface. The player can choose one cluster from the list on the left, and several task graphs, by dragging task graphs from the available list to selected list. When one cluster or task graph is selected, the preview will be rendered to help the user distinguish. When the scenario is constructed, the user can play it like games in static mode.
 
@@ -623,16 +625,54 @@ Figure \ref{fig:play3} shows the interface for scenario construction in testing 
   \label{fig:play3}
 \end{figure}
 
+\chapter{User Testing} \label{sec:testing}
 
-\chapter{Evaluation}
+User testing of this project follows 5 user assumption \cite{Virzi1992}. Therefore, 5 students were invited to try this application and leave comments. The students were suggested to go through all the single-player levels, then answer a questionnaire. The duration varied for each student, from 40 minutes to over 2 hours. The questionnaire has two parts. The first part mainly focuses on collecting feedbacks from testers, and the second part evaluates understanding of testers about task graph scheduling after playing the game.
+
+Although most tester provided very positive comments about the overall learning experience, there was difference in feedbacks for many details:
+\begin{itemize}
+  \item Testers' feeling about difficulty was very different. According to observation, some testers had difficulty to follow the tutorial. They had to frequently confirm the execution logic with the developer and requested for extra explanations. Oppositely, some testers read the tutorials very fast. The main reason might be the difference in background knowledge. One tester said "There should be a prerequisite course to play it".
+  \item Testers had different opinion about dynamic and static mode. Some tester enjoyed playing static mode because it provides sufficient time to analyze the situation and they can be more relaxed. The testers were not required to achieve all the targets, but some insisted to, which indicated they enjoyed optimizing the schedule. For other testers, they enjoyed dynamic mode because it is more challenging, which can be confirmed by their tones when talking. However, some testers had negative comment about dynamic mode because they felt ``forced'' to finish the execution within the time limit. 
+\end{itemize}
+
+There were also difference in their behavior when playing:
+\begin{itemize}
+  \item When reading the tutorials, some testers needed immediate confirmation about their understanding. When informed ``It will be given in following pages'', they felt anxious. Testers with this behavior usually read slowly, but had good understanding about the logic. Another behavior was going through the tutorial silently, but when asked about the execution logic, some testers with this behavior failed to explain, while the understanding of some testers was still solid.
+  \item When playing game levels, their strategy was different. A very common strategy was to first create an schedule with acceptable performance, then improve the performance by moving tasks to fill the empty slots. Another strategy was to evaluate the execution for each task then make the schedule based on the evaluation. This strategy usually takes more time to complete the schedule, but it also achieves schedules with good performance.
+\end{itemize}
+
+There were also many constructive suggestions:
+\begin{enumerate}
+  \item There should be more tiny games after tutorial levels. The first reason is tutorial levels can be boring, adding games improves the learning experience. The second reason is that it provides good chance to reinforce the understanding.
+  \item For tutorials of user interactions, there should be extra labels on the screen to help the users. Most testers said that the description is clear enough, but it can still be confusing with only words.
+  \item Processors and tasks in different task graphs should not share the same name. It is very possible to make the user confused.
+\end{enumerate}
+
+The test result for learning outcome was also interesting. Most of users felt confident about their understanding of communication modes and HLFET algorithm when they were finishing the tutorials, but when asked at the end of game levels, nearly all the testers had forgotten the details. However, their understanding could be confirmed by practical tasks: many testers achieved schedules with performance close to optimum in game levels and when asked to estimate the execution of one schedule, most testers provided reasonable answer with explanations. Generally speaking, teaching algorithms with games seems promising and welcomed. However, since it is described as a game, students are less patient when reading the tutorials compared to reading papers. Therefore, the main difficulty is that the content have to be carefully designed to both provide clear descriptions and attract the students' attention.
 
 \chapter{Conclusion}
 
+\section{Self Evaluation}
+
+This project contains about 7300 lines of Java code and about 700 lines of JSON code for data-driven structures. One main issue about the code base is that it lacks documentation. Comments are only given for very confusing logics, due to the limit of time. To provide better appearance and interactions, this project is built bases on LWJGL, a less used platform for GUI applications. Since LWJGL provides only low level APIs, there are many hardware related code used in this project, making it more difficult to understand and maintain for unexperienced developers.
+
+The GUI framework also need improvements. According to the single-directional structure described in section \ref{sec:architecture}, only high level components can hold reference of low level components. This design provides simplicity in many cases, but when low level components are trying to acquire references of high level components, for example when getting the global position of the widget inside the window, it have to rely on some less intuitive structures like static references, generating more pressure for the framework to maintain the state. Also, this logic cannot be replaced based on event system because events are designed for global broadcasts, abusing events can lead to unnecessary performance cost.
+
+The compatibility for different platforms seems acceptable. This project is mainly developed on Linux, but when executed on testers' computers running Windows, all the rendering and behavior seems unchanged. The only known issue with compatibility is antialiasing fails to work when executed on Linux using dedicated graphics card, although it do not lead to severe issues in appearance. This issue can be fixed by further tweaking options of OpenGL. 
+
+For learning experience, the main issue is that it lacks some contents. The current application provides a detailed tutorial for concepts and interactions, but it only provides tutorial for one algorithm with three variants. For testing mode, it only provides implementation of the three variants as well. There are two difficulties when creating tutorials. The first difficulty is that it is time consuming to find typical task graphs to reveal certain issues, in addition to avoid conflicts and execution details that are not introduced. Another difficulty is that it requires much work to implement each tutorial level, including writing descriptions and handling events, although the framework is already convenient for developers. Also, when creating game levels, the developer need to be experienced to set the target times, requiring the developer to play each level for dozens of times.
+
 \section{Future Suggestions} 
 
-% Non exclusive communication
+There are several suggestions for future works:
 
-\section{Final Comments}
+\begin{itemize}
+  \item As mentioned in section \ref{sec:testing}, more game levels can be added corresponding to each tutorial level. This could be helpful to improve the learning experience. Also, tutorials for more algorithms can be included.
+  \item The current implementation allows user to schedule tasks to processors and to change the order of tasks in the schedule by drag \& drop. It should also allow the user to cancel the schedule of one task by dragging the task out of the task queue.
+  \item A multiplayer game can be built based on dynamic mode. Compared to competing with target times, playing with friends might be more interesting. Also, students can learn from each other by exchanging the strategies.
+  \item In this application, all communication models are based on an ``exclusive'' assumption, which means communication of one data packet will always occupy the entire channel, making other communications blocked. However in real life, communication is usually limited only by bandwidth. It is common to have multiple network communications at the same time, but the speed of each communication will be reduced due to the overall limit of bandwidth. Such ``non-exclusive'' communication models can be included.
+\end{itemize}
+
 
 \bibliographystyle{myunsrt}
 \bibliography{main}

@@ -1,1 +1,0 @@
-- Variable length in schedule widget
